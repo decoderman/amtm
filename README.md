@@ -7,6 +7,7 @@ Discuss and read more on the SmallNetBuilders Forum:
 
 #### How to install on Asuswrt-Merlin
 Enter this into your favorite SSH terminal:
+
 curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
 Screenshot of v0.1:
