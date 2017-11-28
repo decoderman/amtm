@@ -46,7 +46,7 @@ about_amtm(){
 	echo "https://www.snbforums.com/members/thelonelycoder.25480/"
 	echo "https://github.com/decoderman"
 	echo
-	echo "Contributors: Add your handle here..."
+	echo "Contributors: Adamm"
 	echo
 	echo "Legal Boilerplate:"
 	echo "$thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)"
