@@ -8,7 +8,6 @@
 # Set environment PATH to system binaries
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 
-
 # Author: thelonelycoder / decoderman
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://github.com/decoderman
@@ -18,9 +17,9 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 # /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
 # Version, release date
-version=0.1
-release="November 27 2017"
-title="SNBForums Asuswrt-Merlin Terminal Menu"
+version=0.2
+release="November 30 2017"
+title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
 # Functions follow
@@ -28,54 +27,57 @@ about_amtm(){
 	echo
 	print_dash_line
 	echo
-	echo "About $thisScript, the $title"
-	echo "Version $version, released on $release"
+	echo " About $thisScript, the $title"
+	echo " Version $version, released on $release"
 	echo
-	echo "A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware"
+	echo " A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware"
 	echo
-	echo "For updates and discussion visit this thread"
-	echo "https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/"
+	echo " For updates and discussion visit this thread"
+	echo " https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/"
 	echo
-	echo "Project is hosted on GitHub:"
-	echo "https://github.com/decoderman/amtm"
+	echo " Project is hosted on GitHub:"
+	echo " https://github.com/decoderman/amtm"
 	echo
-	echo "This tool was suggested by SNB Member @Raphie here:"
-	echo "https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/page-71#post-360428"
+	echo " This tool was suggested by SNB Member @Raphie here:"
+	echo " https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/page-71#post-360428"
 	echo
-	echo "Author: thelonelycoder / decoderman"
-	echo "https://www.snbforums.com/members/thelonelycoder.25480/"
-	echo "https://github.com/decoderman"
+	echo " Author: thelonelycoder / decoderman"
+	echo " https://www.snbforums.com/members/thelonelycoder.25480/"
+	echo " https://github.com/decoderman"
 	echo
-	echo "Contributors: Add your handle here..."
+	echo " Contributors: Adamm"
 	echo
-	echo "Legal Boilerplate:"
-	echo "$thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)"
-	echo "https://opensource.org/licenses/GPL-3.0"
+	echo " Legal Boilerplate:"
+	echo " $thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)"
+	echo " https://opensource.org/licenses/GPL-3.0"
 	echo
-	read -r -p "Hit [Enter] to return to menu ";echo
+	read -r -p " Hit [Enter] to return to menu ";echo
 	show_amtm menu
 }
 
 print_dash_line(){
-     echo "----------------------------------------"
+	echo "---------------------------------------"
 }
 
 print_info_line(){
-echo -e "\\n----------------| INFO |----------------\\n"
+	echo
+	echo "---------------| INFO |----------------"
+	echo
 }
 
 print_end_line(){
-  echo -e "________________________________________\\n"
+	echo -e "${redLineColor}_______________________________________$nc\\n"
 }
 
 continue_dialog(){
+	echo
 	print_dash_line
 	while true;do
-		echo -en "Continue? [1=Yes 2=No] ";read -r continue
+		echo -en "\\n Continue? [1=Yes e=Exit] ";read -r continue
 		case $continue in
 			1)	echo;break;;
-			2)	show_amtm menu;break;;
-			*)	echo -e "\\n input is not an option\\n";;
+		 [Ee])	show_amtm menu;break;;
+			*)	echo;echo " input is not an option";echo;;
 		esac
 	done
 }
@@ -92,40 +94,51 @@ install_amtm(){
 	# install to /jffs/scripts/$thisScript
 	[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
 	chmod 0755 /jffs/scripts/$thisScript
-	installWith="/jffs/scripts/$thisScript"
+	startWith="/jffs/scripts/$thisScript"
 
-	# add link to /opt/bin whenever found (will be checked again at every start further down
+	# add link to /opt/bin whenever found, will be re-checked at every start further down
 	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
-		installWith=$thisScript
+		chmod 0755 /opt/bin/$thisScript
+		startWith=$thisScript
 	fi
 
 	# reboot if custom scripts were not enabled before
 	if [ "$forcereboot" = "1" ]; then
+		clear
+		print_info_line
+		echo " $title"
+		echo " successfully installed!"
 		echo
-		echo -e "\\n$title\\nsuccessfully installed!\\nYou can start it with \"$installWith\"\\n(without the quotes)\\n"
-		echo "But first, a reboot of your router is required to finish the install."
-		read -r -p "Hit [Enter] to confirm ";echo
+		echo " You can start it with:"
+		echo " $startWith"
+		echo
+		echo " But first, a reboot of your router is"
+		echo " required to finish the install."
+		echo
+		read -r -p " Hit [Enter] to confirm ";echo
 		reboot
 		exit 0
 	else
-		[ "$0" = "/jffs/scripts/$thisScript" ] && sameshell= || sameshell="exec"
-		$sameshell /jffs/scripts/$thisScript "$title\\nsuccessfully installed!\\nYou can now start it with \"$installWith\"\\n(without the quotes)"
+		if [ "$0" = "/jffs/scripts/$thisScript" ]; then
+			sameshell=
+		else
+			sameshell="exec"
+			rm -f "$0"
+		fi
+		"$sameshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can now start it with:\\n $startWith"
 	fi
 }
 
 remove_amtm(){
-	print_dash_line
-	echo
-	echo "1  Remove $thisScript"
-	echo "2  Return to menu"
-	echo
+	print_info_line
+	echo " Do you want to remove $thisScript now?"
 	continue_dialog
 
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
-	echo "Removed all traces of $thisScript"
+	echo " Removed all traces of $thisScript"
 	echo
 	exit 0
 }
@@ -136,155 +149,244 @@ update_amtm(){
 	curl -fs --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm "Update aborted,\\ncould not retrieve version"
 	remotever="$(curl -fs --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 
-	[ "$version" = "$remotever" ] && show_amtm "$title\\nis up to date: v$remotever"
+	if [ "$version" = "$remotever" ]; then
+		print_info_line
+		echo " No new version is available,"
+		echo " do you want to update anyway?"
+		continue_dialog
+		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to v$remotever"
+	fi
 
 	if [ "$version" != "$remotever" ]; then
-		echo -e "\\n$title\\nupdate available: v$version to v$remotever\\nupdating $thisScript now...\\n"
-		curl -fs --retry 3 "$remoteurl" -o "$0" && exec /jffs/scripts/$thisScript "$title\\nupdated: from v$version to v$remotever"
+		print_info_line
+		echo " An update is available:"
+		echo " From v$version to v$remotever"
+		echo
+		echo " Do you want to update now?"
+		continue_dialog
+		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from v$version to v$remotever"
 	fi
 }
 
 recheck_opt(){
-	# recheck if /opt/bin has come available
+	# recheck if /opt/bin has become available
 	if [ "$0" = "/jffs/scripts/$thisScript" ] && [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
-		show_amtm "/opt/bin detected!\\nYou can now start $thisScript with \"$thisScript\"\\n(without the quotes)\\n"
+		chmod 0755 /opt/bin/$thisScript
+		show_amtm " /opt/bin detected!\\n\\n You can now start $thisScript with:\\n $thisScript"
 	fi
+}
+
+# standard red
+theme_standard(){
+redLineColor='\033[0;31m'
+ired_bg='\e[41m'
+errBg='\e[41m'
+igreen_bg='\e[42m'
+nc='\033[00m'
+}
+# green
+theme_green(){
+redLineColor='\033[0;33m'
+ired_bg='\e[42m'
+errBg='\e[41m'
+igreen_bg='\e[42m'
+nc='\033[00m'
+}
+# blue
+theme_blue(){
+redLineColor='\033[0;34m'
+ired_bg='\033[44m'
+errBg='\033[0;101m'
+igreen_bg='\033[0;104m'
+nc='\033[00m'
+}
+# blue on white
+theme_blue_on_white(){
+redLineColor='\033[0;34m'
+ired_bg='\033[0;104m'
+errBg='\033[0;101m'
+igreen_bg='\033[0;104m'
+nc='\033[00m'
+}
+# high contrast
+theme_high_contrast(){
+redLineColor='\033[0;91m'
+ired_bg='\033[41m'
+errBg='\033[41m'
+igreen_bg='\033[42m'
+nc='\033[00m'
+}
+# no colors
+theme_white_on_black(){
+redLineColor=''
+ired_bg=''
+errBg=''
+igreen_bg=''
+nc=''
+}
+
+# Use selected color theme when AB-Solution is installed
+check_AB_theme(){
+abcfg="find /mnt/*/adblocking/.config/ab-solution.cfg"
+[ "$($abcfg 2> /dev/null)" ] && appTheme=$(grep "appTheme=" "$($abcfg)" | sed -e 's/appTheme="//; s/"//')
+[ -z "$appTheme" ] && appTheme=white_on_black
+theme_$appTheme
 }
 
 show_amtm(){
 	clear
+	check_AB_theme
 
 	# amtm header
+	echo
+	echo -e "$ired_bg $title $nc"
+	printf "\\n%-21s%s\\n" " $thisScript $version" "by thelonelycoder"
 	print_dash_line
-	echo " $title"
-	print_dash_line
-	printf "%-23s%s\\n" "$thisScript v$version" "by thelonelycoder"
-	echo -e "\\n   --SNBForums scripts--"
 
-	# Menu's in alphabetical order
+	# show router info, helpful when installing scripts
+	[ -z "$(nvram get odmpid)" ] && routerName=$(nvram get productid) || routerName=$(nvram get odmpid)
+	echo " $routerName $(uname -m) $(nvram get buildno) $(nvram get lan_ipaddr)"
+	print_dash_line
+	echo
+	echo "    SNBForum scripts"
+
+	# Menu in alphabetical order
 
 	# 1 AB-Solution menu
 	if [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
-		printf "%-11s%s\\n" "1  Open" "AB-Solution"
+		printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
 
-		if [ -f /opt/bin/ab-solution ]; then
+		if [ -f /opt/bin/ab-solutions ]; then
 
 			case_1(){
 				clear
 				ab-solution
 				show_amtm menu
 			}
+			abs="ab-solution skip"
 		else
 
 			case_1(){
 				clear
-				exec sh "$HOME/ab-solution.sh"
+				sh "$HOME/ab-solution.sh"
+				show_amtm menu
 			}
+			abs="sh $HOME/ab-solution.sh skip"
 		fi
+	elif [ "$(find /mnt/*/ab-solution.sh 2> /dev/null)" ];then
+			# this is the worst case: device name changed or something bad happened
+			printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
+			printf "%3s$errBg %-35s$nc\\n" "" "Warning AB-Solution in error state"
+			printf "%3s$errBg %-35s$nc\\n" "" "Open it now to correct errors"
+
+			case_1(){
+				sh "$(find /mnt/*/ab-solution.sh)"
+				show_amtm menu
+			}
+			abs="sh $(find /mnt/*/ab-solution.sh) verbose"
 	else
-		printf "%-11s%s\\n" "1  Install" "AB-Solution"
+		printf "$errBg 1 $nc %-9s%s\\n" "install" "AB-Solution"
 
 		case_1(){
-			clear
 			print_info_line
-			echo -e "This installs AB-Solution\\nTHE Ad-Blocking Solution."
-			echo -e "Author: thelonelycoder"
-			echo -e "Thread: https://www.snbforums.com/threads/ab-solution-the-ad-blocking-solution-v3-10.37511/"
+			echo " This installs AB-Solution,"
+			echo " the Ad-Blocking Solution."
+			echo " Author: thelonelycoder"
+			echo " https://www.snbforums.com/threads/ab-solution-the-ad-blocking-solution-v3-10.37511/"
 			continue_dialog
-			exec curl -O ab-solution.info/releases/latest/ab-solution.sh && sh ab-solution.sh
+			curl -O ab-solution.info/releases/latest/ab-solution.sh && sh ab-solution.sh
+			show_amtm " AB-Solution installed."
 		}
 	fi
 
 
 	# 2 dnscrypt installer menu
 	if [ -d /jffs/dnscrypt ]; then
-		printf "%-11s%s\\n" "2  Update" "dnscrypt installer"
+		printf "$igreen_bg 2 $nc %-9s%s\\n" "update" "dnscrypt installer"
 
 		case_2(){
-			clear
 			print_info_line
-			echo -e "This updates dnscrypt installer"
+			echo " This updates dnscrypt installer"
 			continue_dialog
 			curl -L -s -k -O https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer && sh installer ; rm installer
-			show_amtm "dnscrypt installer updated."
+			show_amtm " dnscrypt installer updated."
 		}
 	else
-		printf "%-11s%s\\n" "2  Install" "dnscrypt installer"
+		printf "$errBg 2 $nc %-9s%s\\n" "install" "dnscrypt installer"
 
 		case_2(){
-			clear
+
 			print_info_line
-			echo -e "This installs dnscrypt installer on your router."
-			echo -e "Author: bigeyes0x0"
-			echo -e "Thread: https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/"
+			echo " This installs dnscrypt installer on your router."
+			echo " Author: bigeyes0x0"
+			echo " https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/"
 			continue_dialog
 			curl -L -s -k -O https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer && sh installer ; rm installer
-			show_amtm "dnscrypt installer installed."
+			show_amtm " dnscrypt installer installed."
 		}
 	fi
 
 
 	# 3 Entware menu
 	if [ "$(which opkg)" ]; then
-		printf "%-11s%s\\n" "3  Update" "Entware"
+		printf "$igreen_bg 3 $nc %-9s%s\\n" "update" "Entware"
 
 		case_3(){
-			clear
 			print_info_line
-			echo -e "This updates and upgrades Entware packages"
+			echo " This updates and upgrades Entware packages"
 			continue_dialog
 			opkg update && opkg upgrade
-			show_amtm "Entware packages updated and upgraded."
+			show_amtm " Entware packages updated and upgraded."
 		}
 	else
-		printf "%-11s%s\\n" "3  Install" "Entware"
+		printf "$errBg 3 $nc %-9s%s\\n" "install" "Entware"
 
 		case_3(){
-			clear
 			print_info_line
-			echo -e "This installs Entware on your router.\\nNote that if you plan to install AB-Solution,"
-			echo -e "Entware is best installed by it."
-			echo -e "Authors: ryzhov_al, mstombs, others"
+			echo " This installs Entware on your router."
+			echo " Note that if you plan to install AB-Solution,"
+			echo " Entware is best installed by it."
+			echo " Authors: ryzhov_al, zyxmon, others"
+			echo " GitHub: https://github.com/Entware-ng/Entware-ng"
 			continue_dialog
 			sh /usr/sbin/entware-setup.sh
-			show_amtm "Entware installed."
+			show_amtm " Entware installed."
 		}
 	fi
 
 
 	# 4 Pixelserv menu
 	if [ "$(which pixelserv-tls)" ]; then
-		printf "%-11s%s\\n" "4  Install" "pixelserv-tls beta version"
+		printf "$errBg 4 $nc %-9s%s\\n" "install" "pixelserv-tls beta version"
 
 		case_4(){
-			clear
 			print_info_line
-			echo -e "This install the latest pixelserv-tls beta version."
-			echo -e "Be aware this is for advanced users only."
-						 
-														
+			echo " This install the latest pixelserv-tls beta version."
+			echo " Be aware this is for advanced users only."
+			echo " Author: qvic"
+			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
 			continue_dialog
 			sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/install-beta.sh)"
 			/opt/etc/init.d/S80pixelserv-tls restart
-			show_amtm "latest pixelserv-tls beta version installed\\nand restarted."
+			show_amtm " latest pixelserv-tls beta version\\n installed and restarted."
 		}
 	else
-		printf "%-11s%s\\n" "4  Install" "pixelserv-tls with Entware"
+		printf "$errBg 4 $nc %-9s%s\\n" "install" "pixelserv-tls with Entware"
 
 		case_4(){
-			clear
 			print_info_line
-			echo -e "This installs pixelserv-tls on your router.\\nNote that if you plan to install AB-Solution,"
-			echo -e "pixelserv-tls is best installed by it."
-			echo -e "Author: qvic"
-			echo -e "Thread: https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
+			echo " This installs pixelserv-tls on your router."
+			echo " Note that if you plan to install AB-Solution,"
+			echo " pixelserv-tls is best installed by it."
+			echo " Author: qvic"
+			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
 			continue_dialog
 			if [ "$(which opkg)" ]; then
 				opkg install pixelserv-tls
-				show_amtm "pixelserv-tls installed."
+				show_amtm " pixelserv-tls installed."
 			else
-				show_amtm "pixelserv-tls failed, install Entware first."
+				show_amtm " pixelserv-tls install failed,\\n install Entware first."
 			fi
 		}
 	fi
@@ -292,34 +394,33 @@ show_amtm(){
 
 	# 5 Skynet menu
 	if [ -f /jffs/scripts/firewall ] && grep -q "sh /jffs/scripts/firewall" /jffs/scripts/firewall-start; then
-		printf "%-11s%s\\n" "5  Open" "Skynet"
+		printf "$igreen_bg 5 $nc %-9s%s\\n" "Open" "Skynet"
 
 		case_5(){
 			/jffs/scripts/firewall
 			show_amtm menu
 		}
 	else
-		printf "%-11s%s\\n" "5  Install" "Skynet"
+		printf "$errBg 5 $nc %-9s%s\\n" "install" "Skynet"
 
 		case_5(){
-			clear
 			print_info_line
-			echo -e "This installs Skynet on your router."
-			echo -e "Author: Adamm"
-			echo -e "Thread: https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/"
+			echo " This installs Skynet on your router."
+			echo " Author: Adamm"
+			echo " https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/"
 			continue_dialog
 			curl --retry 3 "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
-			show_amtm "Skynet installed."
+			show_amtm " Skynet installed."
 		}
 	fi
 
 
-	# amtm menu at bottom
-	echo -e "\\n   --$thisScript options--"
-	echo "u  Update"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && echo "r  Remove"  || echo "i  Install"
-	echo "a  About"
-	echo "e  Exit"
+	# amtm menu
+	echo
+	echo -e "$igreen_bg u $nc update"
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && echo -e "$igreen_bg r $nc remove"  || echo -e "$igreen_bg i $nc install"
+	echo -e "$igreen_bg a $nc about"
+	echo -e "$igreen_bg e $nc exit"
 
 	# Output under amtm menu, the notification area. $1 can be passed as positional parameter
 	if [ "$1" = "menu" ]; then
@@ -334,11 +435,11 @@ show_amtm(){
 	while true; do
 
 		# Input prompt
-		echo -en "Enter selection: ";read -r selection
+		echo -en "$ired_bg What do you want to do? $nc  ";read -r selection
 
 		case $selection in
 
-			# Scripts go her
+			# Scripts go here
 			1) case_1;break;;
 			2) case_2;break;;
 			3) case_3;break;;
@@ -351,7 +452,9 @@ show_amtm(){
 			[Rr]) 	remove_amtm;break;;
 			[Aa]) 	about_amtm;break;;
 			[Ee]) 	echo;exit 0;break;;
-				*) 	echo -e "\\ninput is not an option\\n";;
+			  11) 	exec "$0";break;; # hidden dev option
+			  1s) 	$abs;show_amtm menu;break;; # hidden dev option
+			   *)	echo;echo " input is not an option";echo;;
 
 		esac
 
@@ -361,8 +464,9 @@ show_amtm(){
 # asks to install, show menu, pass along positional parameter
 if [ ! -f "/jffs/scripts/$thisScript" ]; then
 	echo
-	print_dash_line
-	echo -e "\\nDo you want to install $thisScript, the\\n$title?\\n"
+	print_info_line
+	echo " Do you want to install $thisScript, the"
+	echo " $title?"
 	continue_dialog
 	install_amtm
 elif [ -z "$1" ]; then

@@ -8,8 +8,8 @@ Discuss and read more on the SmallNetBuilders Forum:
 #### How to install on Asuswrt-Merlin
 Enter this into your favorite SSH terminal:
 
-/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
+`/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
-Screenshot of v0.1:
+Screenshot of v0.2, now uses selected color theme when AB-Solution is installed:
 
-<img src="https://i.imgur.com/xvpwx9o.png" title="amtm v0.1" /></a>
+<img src="https://i.imgur.com/8uY1pSa.png" title="amtm v0.2" /></a>
