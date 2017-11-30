@@ -362,7 +362,7 @@ show_amtm(){
 
 		case_4(){
 			print_info_line
-			echo " This install the latest pixelserv-tls beta version."
+			echo " This installs the latest pixelserv-tls beta version."
 			echo " Be aware this is for advanced users only."
 			echo " Author: qvic"
 			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
@@ -394,7 +394,7 @@ show_amtm(){
 
 	# 5 Skynet menu
 	if [ -f /jffs/scripts/firewall ] && grep -q "sh /jffs/scripts/firewall" /jffs/scripts/firewall-start; then
-		printf "$igreen_bg 5 $nc %-9s%s\\n" "Open" "Skynet"
+		printf "$igreen_bg 5 $nc %-9s%s\\n" "open" "Skynet"
 
 		case_5(){
 			/jffs/scripts/firewall
