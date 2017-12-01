@@ -51,6 +51,8 @@ about_amtm(){
 	echo " $thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)"
 	echo " https://opensource.org/licenses/GPL-3.0"
 	echo
+	print_dash_line
+	echo
 	read -r -p " Hit [Enter] to return to menu ";echo
 	show_amtm menu
 }
@@ -75,9 +77,9 @@ continue_dialog(){
 	while true;do
 		echo -en "\\n Continue? [1=Yes e=Exit] ";read -r continue
 		case $continue in
-			1)	echo;break;;
-		 [Ee])	show_amtm menu;break;;
-			*)	echo;echo " input is not an option";echo;;
+			1)		echo;break;;
+			[Ee])	show_amtm menu;break;;
+			*)		echo;echo " input is not an option";echo;;
 		esac
 	done
 }
@@ -117,16 +119,17 @@ install_amtm(){
 		echo " required to finish the install."
 		echo
 		read -r -p " Hit [Enter] to confirm ";echo
+		[ "$0" != "/jffs/scripts/$thisScript" ] && rm -f "$0"
 		reboot
 		exit 0
 	else
 		if [ "$0" = "/jffs/scripts/$thisScript" ]; then
-			sameshell=
+			subshell=
 		else
-			sameshell="exec"
+			subshell="exec"
 			rm -f "$0"
 		fi
-		"$sameshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can now start it with:\\n $startWith"
+		"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can now start it with:\\n $startWith"
 	fi
 }
 
@@ -134,7 +137,6 @@ remove_amtm(){
 	print_info_line
 	echo " Do you want to remove $thisScript now?"
 	continue_dialog
-
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
@@ -146,7 +148,7 @@ remove_amtm(){
 update_amtm(){
 	remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
 	# thanks @Adamm, liked your updater
-	curl -fs --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm "Update aborted,\\ncould not retrieve version"
+	curl -fs --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
 	remotever="$(curl -fs --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 
 	if [ "$version" = "$remotever" ]; then
@@ -179,51 +181,51 @@ recheck_opt(){
 
 # standard red
 theme_standard(){
-redLineColor='\033[0;31m'
-ired_bg='\e[41m'
-errBg='\e[41m'
-igreen_bg='\e[42m'
-nc='\033[00m'
+	redLineColor='\033[0;31m'
+	ired_bg='\e[41m'
+	errBg='\e[41m'
+	igreen_bg='\e[42m'
+	nc='\033[00m'
 }
 # green
 theme_green(){
-redLineColor='\033[0;33m'
-ired_bg='\e[42m'
-errBg='\e[41m'
-igreen_bg='\e[42m'
-nc='\033[00m'
+	redLineColor='\033[0;33m'
+	ired_bg='\e[42m'
+	errBg='\e[41m'
+	igreen_bg='\e[42m'
+	nc='\033[00m'
 }
 # blue
 theme_blue(){
-redLineColor='\033[0;34m'
-ired_bg='\033[44m'
-errBg='\033[0;101m'
-igreen_bg='\033[0;104m'
-nc='\033[00m'
+	redLineColor='\033[0;34m'
+	ired_bg='\033[44m'
+	errBg='\033[0;101m'
+	igreen_bg='\033[0;104m'
+	nc='\033[00m'
 }
 # blue on white
 theme_blue_on_white(){
-redLineColor='\033[0;34m'
-ired_bg='\033[0;104m'
-errBg='\033[0;101m'
-igreen_bg='\033[0;104m'
-nc='\033[00m'
+	redLineColor='\033[0;34m'
+	ired_bg='\033[0;104m'
+	errBg='\033[0;101m'
+	igreen_bg='\033[0;104m'
+	nc='\033[00m'
 }
 # high contrast
 theme_high_contrast(){
-redLineColor='\033[0;91m'
-ired_bg='\033[41m'
-errBg='\033[41m'
-igreen_bg='\033[42m'
-nc='\033[00m'
+	redLineColor='\033[0;91m'
+	ired_bg='\033[41m'
+	errBg='\033[41m'
+	igreen_bg='\033[42m'
+	nc='\033[00m'
 }
 # no colors
 theme_white_on_black(){
-redLineColor=''
-ired_bg=''
-errBg=''
-igreen_bg=''
-nc=''
+	redLineColor=
+	ired_bg=
+	errBg=
+	igreen_bg=
+	nc=
 }
 
 # Use selected color theme when AB-Solution is installed
@@ -274,17 +276,17 @@ show_amtm(){
 			}
 			abs="sh $HOME/ab-solution.sh skip"
 		fi
-	elif [ "$(find /mnt/*/ab-solution.sh 2> /dev/null)" ];then
-			# this is the worst case: device name changed or something bad happened
-			printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
-			printf "%3s$errBg %-35s$nc\\n" "" "Warning AB-Solution in error state"
-			printf "%3s$errBg %-35s$nc\\n" "" "Open it now to correct errors"
+	elif [ "$(find /mnt/*/ab-solution.sh 2> /dev/null)" ]; then
+		# this is the worst case: device name changed or something bad happened
+		printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
+		printf "%3s$errBg %-35s$nc\\n" "" "Warning AB-Solution in error state"
+		printf "%3s$errBg %-35s$nc\\n" "" "Open it now to correct errors"
 
-			case_1(){
-				sh "$(find /mnt/*/ab-solution.sh)"
-				show_amtm menu
-			}
-			abs="sh $(find /mnt/*/ab-solution.sh) verbose"
+		case_1(){
+			sh "$(find /mnt/*/ab-solution.sh)"
+			show_amtm menu
+		}
+		abs="sh $(find /mnt/*/ab-solution.sh) verbose"
 	else
 		printf "$errBg 1 $nc %-9s%s\\n" "install" "AB-Solution"
 
@@ -435,26 +437,26 @@ show_amtm(){
 	while true; do
 
 		# Input prompt
-		echo -en "$ired_bg What do you want to do? $nc  ";read -r selection
+		echo -en "$ired_bg What do you want to do? $nc ";read -r selection
 
 		case $selection in
 
 			# Scripts go here
-			1) case_1;break;;
-			2) case_2;break;;
-			3) case_3;break;;
-			4) case_4;break;;
-			5) case_5;break;;
+			1)		case_1;break;;
+			2)		case_2;break;;
+			3)		case_3;break;;
+			4)		case_4;break;;
+			5)		case_5;break;;
 
 			# amtms own options
-			[Uu]) 	update_amtm;break;;
-			[Ii]) 	install_amtm;break;;
-			[Rr]) 	remove_amtm;break;;
-			[Aa]) 	about_amtm;break;;
-			[Ee]) 	echo;exit 0;break;;
-			  11) 	exec "$0";break;; # hidden dev option
-			  1s) 	$abs;show_amtm menu;break;; # hidden dev option
-			   *)	echo;echo " input is not an option";echo;;
+			[Uu])	update_amtm;break;;
+			[Ii])	install_amtm;break;;
+			[Rr])	remove_amtm;break;;
+			[Aa])	about_amtm;break;;
+			[Ee])	echo;exit 0;break;;
+			11)		exec "$0";break;; # hidden dev option
+			1s)		$abs;show_amtm menu;break;; # hidden dev option
+			*)		echo;echo " input is not an option";echo;;
 
 		esac
 
