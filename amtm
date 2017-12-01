@@ -259,7 +259,7 @@ show_amtm(){
 	if [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
 		printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
 
-		if [ -f /opt/bin/ab-solutions ]; then
+		if [ -f /opt/bin/ab-solution ]; then
 
 			case_1(){
 				clear
