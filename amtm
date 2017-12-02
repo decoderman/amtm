@@ -53,7 +53,8 @@ about_amtm(){
 	echo
 	print_dash_line
 	echo
-	read -r -p " Hit [Enter] to return to menu ";echo
+	printf " Hit [Enter] to return to menu "
+	read -r;echo
 	show_amtm menu
 }
 
@@ -118,7 +119,8 @@ install_amtm(){
 		echo " But first, a reboot of your router is"
 		echo " required to finish the install."
 		echo
-		read -r -p " Hit [Enter] to confirm ";echo
+		printf " Hit [Enter] to confirm "
+		read -r;echo
 		[ "$0" != "/jffs/scripts/$thisScript" ] && rm -f "$0"
 		reboot
 		exit 0
