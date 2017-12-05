@@ -103,7 +103,7 @@ install_amtm(){
 	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
 		chmod 0755 /opt/bin/$thisScript
-		startWith=$thisScript
+		startWith="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 	fi
 
 	# reboot if custom scripts were not enabled before
@@ -114,7 +114,7 @@ install_amtm(){
 		echo " successfully installed!"
 		echo
 		echo " You can start it with:"
-		echo " $startWith"
+		echo -e " $startWith"
 		echo
 		echo " But first, a reboot of your router is"
 		echo " required to finish the install."
@@ -177,7 +177,7 @@ recheck_opt(){
 	if [ "$0" = "/jffs/scripts/$thisScript" ] && [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
 		chmod 0755 /opt/bin/$thisScript
-		show_amtm " /opt/bin detected!\\n\\n You can now start $thisScript with:\\n $thisScript"
+		show_amtm " /opt/bin detected!\\n\\n You can now start $thisScript with:\\n /jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 	fi
 }
 
