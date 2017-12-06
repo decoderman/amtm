@@ -30,9 +30,9 @@ about_amtm(){
 	echo " About $thisScript, the $title"
 	echo " Version $version, released on $release"
 	echo
-	echo " A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware"
+	echo " A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware."
 	echo
-	echo " For updates and discussion visit this thread"
+	echo " For updates and discussion visit this thread:"
 	echo " https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/"
 	echo
 	echo " Project is hosted on GitHub:"
@@ -368,7 +368,7 @@ show_amtm(){
 			print_info_line
 			echo " This installs the latest pixelserv-tls beta version."
 			echo " Be aware this is for advanced users only."
-			echo " Author: qvic"
+			echo " Author: kvic"
 			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
 			continue_dialog
 			sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/install-beta.sh)"
@@ -383,7 +383,7 @@ show_amtm(){
 			echo " This installs pixelserv-tls on your router."
 			echo " Note that if you plan to install AB-Solution,"
 			echo " pixelserv-tls is best installed by it."
-			echo " Author: qvic"
+			echo " Author: kvic"
 			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
 			continue_dialog
 			if [ "$(which opkg)" ]; then
