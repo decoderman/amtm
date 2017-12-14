@@ -17,7 +17,11 @@ Screenshot of v0.2, now uses selected color theme when AB-Solution is installed:
 #### This script currently supports
 
 [AB-Solution - Maintained By thelonelycoder](https://www.snbforums.com/threads/ab-solution-the-ad-blocking-solution-v3-11.37511/)
+ 
 [DNSCrypt - Maintained By bigeyes0x0](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/)
+ 
 [Entware-ng - Maintained By zyxmon & ryzhovau](https://github.com/Entware-ng/Entware-ng)
+ 
 [Pixelserv-tls - Maintained By kvic](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/)
+ 
 [Skynet - Maintained By Adamm](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/)
