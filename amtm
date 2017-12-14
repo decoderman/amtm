@@ -397,7 +397,7 @@ show_amtm(){
 
 
 	# 5 Skynet menu
-	if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* #Skynet" /jffs/scripts/firewall-start; then
+	if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start; then
 		printf "$igreen_bg 5 $nc %-9s%s\\n" "open" "Skynet"
 
 		case_5(){
