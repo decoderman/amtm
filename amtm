@@ -150,8 +150,8 @@ remove_amtm(){
 update_amtm(){
 	remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
 	# thanks @Adamm, liked your updater
-	curl -fs --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
-	remotever="$(curl -fs --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
+	curl -fsN --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
+	remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 
 	if [ "$version" = "$remotever" ]; then
 		print_info_line
