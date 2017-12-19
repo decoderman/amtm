@@ -17,8 +17,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 # /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
 # Version, release date
-version=0.2
-release="November 30 2017"
+version=1.0
+release="December 19 2017"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -41,7 +41,7 @@ about_amtm(){
 	echo " This tool was suggested by SNB Member @Raphie here:"
 	echo " https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/page-71#post-360428"
 	echo
-	echo " Author: thelonelycoder / decoderman"
+	echo " Author: thelonelycoder/decoderman"
 	echo " https://www.snbforums.com/members/thelonelycoder.25480/"
 	echo " https://github.com/decoderman"
 	echo
@@ -77,7 +77,7 @@ continue_dialog(){
 	print_dash_line
 	while true;do
 		echo -en "\\n Continue? [1=Yes e=Exit] ";read -r continue
-		case $continue in
+		case "$continue" in
 			1)		echo;break;;
 			[Ee])	show_amtm menu;break;;
 			*)		echo;echo " input is not an option";echo;;
@@ -97,13 +97,13 @@ install_amtm(){
 	# install to /jffs/scripts/$thisScript
 	[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
 	chmod 0755 /jffs/scripts/$thisScript
-	startWith="/jffs/scripts/$thisScript"
+	message="/jffs/scripts/$thisScript"
 
 	# add link to /opt/bin whenever found, will be re-checked at every start further down
 	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
 		chmod 0755 /opt/bin/$thisScript
-		startWith="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
+		message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 	fi
 
 	# reboot if custom scripts were not enabled before
@@ -114,7 +114,7 @@ install_amtm(){
 		echo " successfully installed!"
 		echo
 		echo " You can start it with:"
-		echo -e " $startWith"
+		echo -e " $message"
 		echo
 		echo " But first, a reboot of your router is"
 		echo " required to finish the install."
@@ -131,7 +131,7 @@ install_amtm(){
 			subshell="exec"
 			rm -f "$0"
 		fi
-		"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can now start it with:\\n $startWith"
+		"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can now start it with:\\n $message"
 	fi
 }
 
@@ -149,7 +149,6 @@ remove_amtm(){
 
 update_amtm(){
 	remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
-	# thanks @Adamm, liked your updater
 	curl -fsN --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
 	remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 
@@ -173,12 +172,162 @@ update_amtm(){
 }
 
 recheck_opt(){
-	# recheck if /opt/bin has become available
-	if [ "$0" = "/jffs/scripts/$thisScript" ] && [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
+	# recheck when /opt/bin has become available
+	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ] && [ "$0" = "/jffs/scripts/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
 		chmod 0755 /opt/bin/$thisScript
 		show_amtm " /opt/bin detected!\\n\\n You can now start $thisScript with:\\n /jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 	fi
+}
+
+# swap) create or delete Swap file
+manage_swap(){
+if [ "$1" = "create" ]; then
+	echo
+	while true;do
+		case "$continue" in
+			1)	clear
+				print_dash_line
+				echo
+				echo " Listing compatible device(s) for"
+				echo " a Swap file:"
+				echo
+				i=1
+				for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4|tfat|exfat" | cut -d" " -f3); do
+					echo -e " $i. $igreen_bg$mounted$nc"
+					eval mounts$i="$mounted"
+					i=$(( i + 1 ))
+				done
+				if [ "$i" = "1" ]; then
+					show_amtm " No compatible device available."
+				fi
+				# select device loop
+				select_device(){
+				[ "$i" = "2" ] && devNo=1 || devNo="1-$((i - 1))"
+					echo -en "\\n Select device [$devNo e=Exit] ";read -r device
+				if [ "$device" = "e" ] || [ "$device" = "E" ]; then
+					show_amtm menu
+				elif [ "$device" -gt "$((i - 1))" ] || [ "$device" = "0" ]; then
+					echo
+					echo " Invalid device number, try again"
+					select_device
+				elif [ "$device" -eq "$device" ]; then
+					echo
+				else
+					echo
+					echo " Not a number, try again"
+					select_device
+				fi
+				}
+				select_device
+
+				eval swapDevice="\$mounts$device"
+
+				echo -e " creating Swap file on: $igreen_bg$swapDevice$nc"
+				echo
+				while true;do
+					echo -en " Continue? [1=Yes e=Exit] ";read -r swaps
+					case "$swaps" in
+						1)	clear
+							print_dash_line
+							echo
+							echo " Select a Swap file size:"
+							echo
+							echo " 1. --> 256MB"
+							echo " 2. --> 512MB"
+							echo " 3. -->   1GB"
+							echo " 4. -->   2GB"
+							echo
+							while true; do
+								echo -en " Enter size [1-4 e=Exit] ";read -r size
+								case "$size" in
+									1)	swapsize=262144;break;;
+									2)	swapsize=524288;break;;
+									3)	swapsize=1048576;break;;
+									4)	swapsize=2097152;break;;
+								 [Ee])	show_amtm menu;break;;
+									*)	echo;echo " input is not an option";echo;;
+								esac
+							done
+							echo
+							if [ "$(df "$swapDevice" | xargs | awk '{print $11}')" -le "$swapsize" ]; then
+								echo " Not enough free space available on:"
+								echo " $swapDevice"
+								echo
+								printf " Hit [Enter] to select another device "
+								read -r;echo
+								clear
+								print_dash_line
+								manage_swap create
+							fi
+							echo " Creating the Swap file,"
+							echo " this will take some time..."
+							echo
+							dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swapsize"
+							mkswap "$swapDevice/myswap.swp"
+							swapon "$swapDevice/myswap.swp"
+							nvram set usb_idle_timeout=0
+							nvram commit
+							if [ ! -f "/jffs/scripts/post-mount" ]; then
+								echo "#!/bin/sh" > /jffs/scripts/post-mount
+							elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+								sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
+							fi
+							echo "swapon $swapDevice/myswap.swp # Swap file created by $thisScript" >> /jffs/scripts/post-mount
+							show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
+					[Ee])	show_amtm menu;break;;
+						*)  echo;echo " input is not an option";echo;;
+					esac
+				done;break;;
+		 [Ee])	show_amtm menu;break;;
+			*)	echo;echo " input is not an option";echo;;
+		esac
+	done
+elif [ "$1" = "delete" ]; then
+	swaplocation="$(grep -F "swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+	echo
+	echo " Swap file found at:"
+	echo " $swaplocation"
+	echo
+	while true;do
+		echo -en " Delete the Swap file? [1=Yes e=Exit] ";read -r continue
+		case "$continue" in
+			1)	if [ -f "$swaplocation" ]; then
+					swapoff "$swaplocation"
+					rm -rf "$swaplocation"
+					sed -i '\~swapon ~d' /jffs/scripts/post-mount
+					show_amtm " Swap file deleted:\\n $swaplocation"
+				else
+					show_amtm " No Swap file found at\\n $swaplocation"
+				fi
+				break;;
+		[Ee])	show_amtm menu;break;;
+			*)	echo;echo " input is not an option";echo;;
+		esac
+	done
+elif [ "$1" = "check" ]; then
+	swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
+	if [ "$swapFile" ]; then
+		echo
+		echo -e " Swap file found at:\\n $igreen_bg$swapFile$nc"
+		echo
+		printf " Hit [Enter] to fix the path "
+		read -r;echo
+		sed -i '\~swapon ~d' /jffs/scripts/post-mount
+		echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
+		swapon "$swapFile" 2> /dev/null
+		show_amtm " Swap file path changed to\\n $swapFile"
+	else
+		echo
+		echo " No Swap file found."
+		echo
+		printf " Hit [Enter] to remove reference "
+		read -r;echo
+		echo " in /jffs/scripts/post-mount now."
+		sed -i '\~swapon ~d' /jffs/scripts/post-mount
+		show_amtm " Incorrect Swap file reference removed"
+	fi
+fi
 }
 
 # standard red
@@ -232,10 +381,10 @@ theme_white_on_black(){
 
 # Use selected color theme when AB-Solution is installed
 check_AB_theme(){
-abcfg="find /mnt/*/adblocking/.config/ab-solution.cfg"
-[ "$($abcfg 2> /dev/null)" ] && appTheme=$(grep "appTheme=" "$($abcfg)" | sed -e 's/appTheme="//; s/"//')
-[ -z "$appTheme" ] && appTheme=white_on_black
-theme_$appTheme
+	abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
+	[ "$abcfg" ] && theme="$(grep "appTheme=" "$abcfg" | sed -e 's/appTheme="//; s/"//')"
+	[ -z "$theme" ] && theme=white_on_black
+	theme_$theme
 }
 
 show_amtm(){
@@ -243,19 +392,18 @@ show_amtm(){
 	check_AB_theme
 
 	# amtm header
-	echo
 	echo -e "$ired_bg $title $nc"
 	printf "\\n%-21s%s\\n" " $thisScript $version" "by thelonelycoder"
 	print_dash_line
 
 	# show router info, helpful when installing scripts
-	[ -z "$(nvram get odmpid)" ] && routerName=$(nvram get productid) || routerName=$(nvram get odmpid)
-	echo " $routerName $(uname -m) $(nvram get buildno) $(nvram get lan_ipaddr)"
+	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
+	echo " $model $(uname -m) $(nvram get buildno) $(nvram get lan_ipaddr)"
 	print_dash_line
 	echo
 	echo "    SNBForum scripts"
 
-	# Menu in alphabetical order
+	# Skript menu in alphabetical order follow
 
 	# 1 AB-Solution menu
 	if [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
@@ -423,6 +571,37 @@ show_amtm(){
 		}
 	fi
 
+	# System tools follow
+	# swp/swap Swap file
+	echo
+	swaplocation="$(grep -F "swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+	if [ -z "$swaplocation" ]; then
+		printf "${errBg}swp$nc %-9s%s\\n" "create" "Swap file"
+
+		case_swp(){
+			print_info_line
+			echo " This creates a Swap file."
+			echo " A Swap file is useful when the router"
+			echo " runs out of memory (RAM)."
+			echo " See router WebUI/Tools under Memory."
+			continue_dialog
+			manage_swap create
+		}
+
+	elif [ -f "$swaplocation" ]; then
+		printf "${igreen_bg}swp$nc %-9s%s ${igreen_bg}%s$nc\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
+
+		case_swp(){
+			manage_swap delete
+		}
+
+	elif [ ! -f "$swaplocation" ] && [ ! -z "$swaplocation" ]; then
+		printf "${errBg}swp$nc %-9s%s ${errBg}%s$nc\\n" "check" "Swap file" "${swaplocation#/tmp}"
+
+		case_swp(){
+			manage_swap check
+		}
+	fi
 
 	# amtm menu
 	echo
@@ -431,7 +610,7 @@ show_amtm(){
 	echo -e "$igreen_bg a $nc about"
 	echo -e "$igreen_bg e $nc exit"
 
-	# Output under amtm menu, the notification area. $1 can be passed as positional parameter
+	# Output under amtm menu, the notification area. $1 can be passed on as positional parameter
 	if [ "$1" = "menu" ]; then
 		print_end_line
 	else
@@ -446,24 +625,28 @@ show_amtm(){
 		# Input prompt
 		echo -en "$ired_bg What do you want to do? $nc ";read -r selection
 
-		case $selection in
+		case "$selection" in
 
 			# Scripts go here
-			1)		case_1;break;;
-			2)		case_2;break;;
-			3)		case_3;break;;
-			4)		case_4;break;;
-			5)		case_5;break;;
+			1)			case_1;break;;
+			2)			case_2;break;;
+			3)			case_3;break;;
+			4)			case_4;break;;
+			5)			case_5;break;;
 
-			# amtms own options
-			[Uu])	update_amtm;break;;
-			[Ii])	install_amtm;break;;
-			[Rr])	remove_amtm;break;;
-			[Aa])	about_amtm;break;;
-			[Ee])	echo;exit 0;break;;
-			11)		exec "$0";break;; # hidden dev option
-			1s)		$abs;show_amtm menu;break;; # hidden dev option
-			*)		echo;echo " input is not an option";echo;;
+			# System tools
+			swap|swp)	case_swp;break;;
+
+			# amtm options
+			[Uu])		update_amtm;break;;
+			[Ii])		install_amtm;break;;
+			[Rr])		remove_amtm;break;;
+			[Aa])		about_amtm;break;;
+			[Ee])		echo;echo " See you later"
+						echo;exit 0;break;;
+			11)			exec "$0";break;; # hidden dev option
+			1s)			$abs;show_amtm menu;break;; # hidden dev option
+			*)			echo;echo " input is not an option";echo;;
 
 		esac
 
