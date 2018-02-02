@@ -284,7 +284,7 @@ if [ "$1" = "create" ]; then
 		esac
 	done
 elif [ "$1" = "delete" ]; then
-	swaplocation="$(grep -F "swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+	swaplocation="$(grep -F "swapon " /jffs/scripts/post-mount 2>/dev/null | awk '{print $2}')"
 	echo
 	echo " Swap file found at:"
 	echo " $swaplocation"
