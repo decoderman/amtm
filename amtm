@@ -249,6 +249,7 @@ if [ "$1" = "create" ]; then
 									*)	echo;echo " input is not an option";echo;;
 								esac
 							done
+							if [ -f "$swapDevice/myswap.swp" ]; then swapoff "$swapDevice/myswap.swp" 2>/dev/null; rm -rf "$swapDevice/myswap.swp"; fi
 							echo
 							if [ "$(df "$swapDevice" | xargs | awk '{print $11}')" -le "$swapsize" ]; then
 								echo " Not enough free space available on:"
