@@ -12,7 +12,7 @@ Enter this into your favorite SSH terminal:
 
 Screenshot of v1.0, uses selected color theme when AB-Solution is installed:
 
-[![amtm v1.0](https://i.imgur.com/nhhqOLE.png "amtm v0.2")](https://i.imgur.com/nhhqOLE.png "amtm v1.0")
+[![amtm v1.1](https://i.imgur.com/HjGL2Rd.png "amtm v0.2")](https://i.imgur.com/HjGL2Rd.png "amtm v1.1")
 
 ### Currently supported scripts
 
