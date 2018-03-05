@@ -17,8 +17,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 # /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
 # Version, release date
-version=1.0
-release="December 19 2017"
+version=1.1
+release="March 05 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -26,61 +26,38 @@ thisScript=amtm
 about_amtm(){
 	echo
 	print_dash_line
-	echo
-	echo " About $thisScript, the $title"
-	echo " Version $version, released on $release"
-	echo
-	echo " A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware."
-	echo
-	echo " For updates and discussion visit this thread:"
-	echo " https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/"
-	echo
-	echo " Project is hosted on GitHub:"
-	echo " https://github.com/decoderman/amtm"
-	echo
-	echo " This tool was suggested by SNB Member @Raphie here:"
-	echo " https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/page-71#post-360428"
-	echo
-	echo " Author: thelonelycoder/decoderman"
-	echo " https://www.snbforums.com/members/thelonelycoder.25480/"
-	echo " https://github.com/decoderman"
-	echo
-	echo " Contributors: Adamm"
-	echo
-	echo " Legal Boilerplate:"
-	echo " $thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)"
-	echo " https://opensource.org/licenses/GPL-3.0"
-	echo
+	printf "\\n $thisScript, the $title\\n"
+	printf " Version $version, released on $release\\n"
+	printf "\\n amtm is a shortcut manager for popular scripts\\n for wireless routers running Asuswrt-Merlin firmware.\\n"
+	printf "\\n For updates and discussion visit this thread:\\n"
+	printf " https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/\\n"
+	printf "\\n Project is hosted on GitHub:\\n"
+	printf " https://github.com/decoderman/amtm\\n"
+	printf " Author: thelonelycoder/decoderman\\n"
+	printf " https://www.snbforums.com/members/thelonelycoder.25480/\\n"
+	printf " https://github.com/decoderman\\n"
+	printf "\\n Contributors: Adamm\\n"
+	printf "\\n Legal Boilerplate:\\n"
+	printf " $thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)\\n"
+	printf " https://opensource.org/licenses/GPL-3.0\\n\\n"
 	print_dash_line
-	echo
-	printf " Hit [Enter] to return to menu "
-	read -r;echo
+	press_enter_to "return to menu"
 	show_amtm menu
 }
 
-print_dash_line(){
-	echo "---------------------------------------"
-}
-
-print_info_line(){
-	echo
-	echo "---------------| INFO |----------------"
-	echo
-}
-
-print_end_line(){
-	echo -e "${redLineColor}_______________________________________$nc\\n"
-}
-
+print_dash_line(){ echo "---------------------------------------";}
+print_info_line(){ printf "\\n---------------| INFO |----------------\\n\\n";}
+print_end_line(){ printf "${redLineColor}_______________________________________$nc\\n\\n";}
+press_enter_to(){ printf "\\n${ATTN} Press [Enter] to $1 ";read -r;echo;}
 continue_dialog(){
 	echo
 	print_dash_line
 	while true;do
-		echo -en "\\n Continue? [1=Yes e=Exit] ";read -r continue
+		printf "\\n Continue? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)		echo;break;;
 			[Ee])	show_amtm menu;break;;
-			*)		echo;echo " input is not an option";echo;;
+			*)		printf "\\n input is not an option\\n";;
 		esac
 	done
 }
@@ -114,13 +91,10 @@ install_amtm(){
 		echo " successfully installed!"
 		echo
 		echo " You can start it with:"
-		echo -e " $message"
-		echo
+		printf " $message\\n"
 		echo " But first, a reboot of your router is"
 		echo " required to finish the install."
-		echo
-		printf " Hit [Enter] to confirm "
-		read -r;echo
+		press_enter_to "confirm"
 		[ "$0" != "/jffs/scripts/$thisScript" ] && rm -f "$0"
 		reboot
 		exit 0
@@ -148,7 +122,8 @@ remove_amtm(){
 }
 
 update_amtm(){
-	remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
+	#remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
+	remoteurl="http://ab-solution.test/releases/amtm"
 	curl -fsN --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
 	remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 
@@ -171,8 +146,8 @@ update_amtm(){
 	fi
 }
 
+# recheck when /opt/bin has become available
 recheck_opt(){
-	# recheck when /opt/bin has become available
 	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ] && [ "$0" = "/jffs/scripts/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
 		chmod 0755 /opt/bin/$thisScript
@@ -194,7 +169,7 @@ if [ "$1" = "create" ]; then
 				echo
 				i=1
 				for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4|tfat|exfat" | cut -d" " -f3); do
-					echo -e " $i. $igreen_bg$mounted$nc"
+					printf " $i. $igreen_bg$mounted$nc\\n"
 					eval mounts$i="$mounted"
 					i=$(( i + 1 ))
 				done
@@ -204,7 +179,7 @@ if [ "$1" = "create" ]; then
 				# select device loop
 				select_device(){
 				[ "$i" = "2" ] && devNo=1 || devNo="1-$((i - 1))"
-					echo -en "\\n Select device [$devNo e=Exit] ";read -r device
+					printf "\\n Select device [$devNo e=Exit] ";read -r device
 				if [ "$device" = "e" ] || [ "$device" = "E" ]; then
 					show_amtm menu
 				elif [ "$device" -gt "$((i - 1))" ] || [ "$device" = "0" ]; then
@@ -223,10 +198,9 @@ if [ "$1" = "create" ]; then
 
 				eval swapDevice="\$mounts$device"
 
-				echo -e " creating Swap file on: $igreen_bg$swapDevice$nc"
-				echo
+				printf " creating Swap file on: $igreen_bg$swapDevice$nc\\n"
 				while true;do
-					echo -en " Continue? [1=Yes e=Exit] ";read -r swaps
+					printf "\\n Continue? [1=Yes e=Exit] ";read -r swaps
 					case "$swaps" in
 						1)	clear
 							print_dash_line
@@ -237,25 +211,23 @@ if [ "$1" = "create" ]; then
 							echo " 2. --> 512MB"
 							echo " 3. -->   1GB"
 							echo " 4. -->   2GB"
-							echo
+
 							while true; do
-								echo -en " Enter size [1-4 e=Exit] ";read -r size
+								printf "\\n Enter size [1-4 e=Exit] ";read -r size
 								case "$size" in
 									1)	swapsize=262144;break;;
 									2)	swapsize=524288;break;;
 									3)	swapsize=1048576;break;;
 									4)	swapsize=2097152;break;;
 								 [Ee])	show_amtm menu;break;;
-									*)	echo;echo " input is not an option";echo;;
+									*)	printf "\\n input is not an option\\n";;
 								esac
 							done
-							if [ -f "$swapDevice/myswap.swp" ]; then swapoff "$swapDevice/myswap.swp" 2>/dev/null; rm -rf "$swapDevice/myswap.swp"; fi
 							echo
 							if [ "$(df "$swapDevice" | xargs | awk '{print $11}')" -le "$swapsize" ]; then
 								echo " Not enough free space available on:"
 								echo " $swapDevice"
-								echo
-								printf " Hit [Enter] to select another device "
+								press_enter_to "select another device"
 								read -r;echo
 								clear
 								print_dash_line
@@ -277,21 +249,22 @@ if [ "$1" = "create" ]; then
 							echo "swapon $swapDevice/myswap.swp # Swap file created by $thisScript" >> /jffs/scripts/post-mount
 							show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
 					[Ee])	show_amtm menu;break;;
-						*)  echo;echo " input is not an option";echo;;
+						*)  printf "\\n input is not an option\\n";;
 					esac
 				done;break;;
 		 [Ee])	show_amtm menu;break;;
-			*)	echo;echo " input is not an option";echo;;
+			*)	printf "\\n input is not an option\\n";;
 		esac
 	done
+
 elif [ "$1" = "delete" ]; then
 	swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount | awk '{print $2}')"
 	echo
 	echo " Swap file found at:"
 	echo " $swaplocation"
-	echo
+
 	while true;do
-		echo -en " Delete the Swap file? [1=Yes e=Exit] ";read -r continue
+		printf "\\n Delete the Swap file? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)	if [ -f "$swaplocation" ]; then
 					swapoff "$swaplocation"
@@ -303,17 +276,15 @@ elif [ "$1" = "delete" ]; then
 				fi
 				break;;
 		[Ee])	show_amtm menu;break;;
-			*)	echo;echo " input is not an option";echo;;
+			*)	printf "\\n input is not an option\\n";;
 		esac
 	done
+
 elif [ "$1" = "check" ]; then
 	swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
 	if [ "$swapFile" ]; then
-		echo
-		echo -e " Swap file found at:\\n $igreen_bg$swapFile$nc"
-		echo
-		printf " Hit [Enter] to fix the path "
-		read -r;echo
+		printf "\\n Swap file found at:\\n $igreen_bg$swapFile$nc\\n"
+		press_enter_to "to fix the path"
 		sed -i '\~swapon ~d' /jffs/scripts/post-mount
 		echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
 		swapon "$swapFile" 2> /dev/null
@@ -321,12 +292,77 @@ elif [ "$1" = "check" ]; then
 	else
 		echo
 		echo " No Swap file found."
-		echo
-		printf " Hit [Enter] to remove reference "
-		read -r;echo
+		press_enter_to "remove reference"
 		echo " in /jffs/scripts/post-mount now."
 		sed -i '\~swapon ~d' /jffs/scripts/post-mount
 		show_amtm " Incorrect Swap file reference removed"
+	fi
+fi
+}
+
+# dc) install or remove disk check at boot
+disk_check(){
+if [ -f /jffs/scripts/pre-mount ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
+	show_amtm " Unsupported pre-mount script found,\\n please remove file manually."
+else
+
+	if [ "$1" = "install" ]; then
+
+		cat <<-EOF > /jffs/scripts/disk-check
+		#!/bin/sh
+		# auto-check filesystems during boot
+		# generated by amtm $version
+
+		FSTYPE=\$(fdisk -l \${1:0:8} | grep \$1 | cut -c55-65)
+
+		case "\$FSTYPE" in
+		   Linux)
+			  CHKCMD="e2fsck -p";;
+		   Win95* | FAT*)
+			  CHKCMD="fatfsck -a";;
+		   HPFS/NTFS)
+			  CHKCMD="ntfsck -a";;
+		   *)
+			  logger -t amtm "Disk check: Unknown filesystem type \$FSTYPE on \$1 - skipping check."
+			  exit 1;;
+		esac
+
+		logger -t amtm "Running disk check '\$CHKCMD' on \$1"
+		printf "\nStarting '\$CHKCMD $1' at \$(date)\n" >> /jffs/amtm-disk-check.log
+		\$CHKCMD \$1 >> /jffs/amtm-disk-check.log 2>&1
+		logger -t amtm "Disk check done on \$1"
+
+		EOF
+
+		if [ ! -f /jffs/scripts/pre-mount ]; then
+			echo "#!/bin/sh" > /jffs/scripts/pre-mount
+		elif [ -f /jffs/scripts/pre-mount ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
+			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
+		fi
+		if ! grep -q ". /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
+			echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
+		fi
+		[ -f /jffs/scripts/pre-mount ] && chmod 0755 /jffs/scripts/pre-mount
+
+	elif [ "$1" = "remove" ]; then
+		sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
+		rm -f /jffs/scripts/disk-check
+		rm -f /jffs/amtm-disk-check.log
+
+	elif [ "$1" = "log" ]; then
+		if [ -f /jffs/amtm-disk-check.log ]; then
+			echo
+			echo " ---------------------------------------------------"
+			printf " /jffs/amtm-disk-check.log has this content:\\n\\n"
+			echo " START FILE, --- lines are not part of file"
+			echo " ---------------------------------------------------"
+			cat /jffs/amtm-disk-check.log | sed -e 's/^/ /'
+			echo " ---------------------------------------------------"
+			echo " END FILE"
+			press_enter_to "return to menu"
+		else
+			show_amtm " No disk check log found (yet)."
+		fi
 	fi
 fi
 }
@@ -393,7 +429,7 @@ show_amtm(){
 	check_AB_theme
 
 	# amtm header
-	echo -e "$ired_bg $title $nc"
+	printf "$ired_bg $title $nc\\n"
 	printf "\\n%-21s%s\\n" " $thisScript $version" "by thelonelycoder"
 	print_dash_line
 
@@ -572,6 +608,7 @@ show_amtm(){
 		}
 	fi
 
+
 	# System tools follow
 	# swp/swap Swap file
 	echo
@@ -604,19 +641,44 @@ show_amtm(){
 		}
 	fi
 
+	# Disk check
+	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
+		printf "${igreen_bg} dc$nc %-9s%s\\n" "remove" "Disk check script"
+
+		[ -f /jffs/amtm-disk-check.log ] && printf "${igreen_bg}dcl$nc %-9s%s\\n" "show" "Disk check log"
+
+		case_dc(){
+			disk_check remove
+			show_amtm menu
+		}
+	else
+		printf "${errBg} dc$nc %-9s%s\\n" "install" "Disk check script"
+
+		case_dc(){
+			print_info_line
+			echo " This installs a script that checks"
+			echo " your USB storage devices on boot."
+			echo " Author: latenitetech"
+			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
+			continue_dialog
+
+			disk_check install
+			show_amtm " Disk check script installed. It will\\n run on every boot of the router.\\n The check log can be viewed directly\\n in amtm with dcl."
+		}
+	fi
+
 	# amtm menu
-	echo
-	echo -e "$igreen_bg u $nc update"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && echo -e "$igreen_bg r $nc remove"  || echo -e "$igreen_bg i $nc install"
-	echo -e "$igreen_bg a $nc about"
-	echo -e "$igreen_bg e $nc exit"
+	printf "\\n$igreen_bg u $nc update\\n"
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && printf "$igreen_bg r $nc remove\\n"  || printf "$igreen_bg i $nc install\\n"
+	printf "$igreen_bg a $nc about\\n"
+	printf "$igreen_bg e $nc exit\\n"
 
 	# Output under amtm menu, the notification area. $1 can be passed on as positional parameter
 	if [ "$1" = "menu" ]; then
 		print_end_line
 	else
 		print_info_line
-		echo -e "$1"
+		printf "$1\\n"
 		print_end_line
 	fi
 
@@ -624,7 +686,7 @@ show_amtm(){
 	while true; do
 
 		# Input prompt
-		echo -en "$ired_bg What do you want to do? $nc ";read -r selection
+		printf "${ired_bg} What do you want to do? ${nc} ";read -r selection
 
 		case "$selection" in
 
@@ -637,17 +699,20 @@ show_amtm(){
 
 			# System tools
 			swap|swp)	case_swp;break;;
+			[Dd][Cc])	case_dc;break;;
+			dcl)		disk_check log
+						show_amtm menu;break;;
 
 			# amtm options
 			[Uu])		update_amtm;break;;
 			[Ii])		install_amtm;break;;
 			[Rr])		remove_amtm;break;;
 			[Aa])		about_amtm;break;;
-			[Ee])		echo;echo " See you later"
-						echo;exit 0;break;;
+			[Ee])		printf "\\n See you later\\n\\n"
+						exit 0;break;;
 			11)			exec "$0";break;; # hidden dev option
 			1s)			$abs;show_amtm menu;break;; # hidden dev option
-			*)			echo;echo " input is not an option";echo;;
+			*)			printf "\\n input is not an option\\n\\n";;
 
 		esac
 
