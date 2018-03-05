@@ -122,8 +122,7 @@ remove_amtm(){
 }
 
 update_amtm(){
-	#remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
-	remoteurl="http://ab-solution.test/releases/amtm"
+	remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
 	curl -fsN --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
 	remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 
