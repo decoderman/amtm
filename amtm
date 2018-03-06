@@ -18,7 +18,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 
 # Version, release date
 version=1.1
-release="March 05 2018"
+release="March 06 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -315,7 +315,7 @@ else
 		FSTYPE=\$(fdisk -l \${1:0:8} | grep \$1 | cut -c55-65)
 
 		case "\$FSTYPE" in
-		   Linux)
+		   Linux*)
 			  CHKCMD="e2fsck -p";;
 		   Win95* | FAT*)
 			  CHKCMD="fatfsck -a";;
@@ -323,11 +323,12 @@ else
 			  CHKCMD="ntfsck -a";;
 		   *)
 			  logger -t amtm "Disk check: Unknown filesystem type \$FSTYPE on \$1 - skipping check."
+			  printf "\n\$(date) Unknown filesystem type \$FSTYPE on \$1 - skipping check.\n" >> /jffs/amtm-disk-check.log
 			  exit 1;;
 		esac
 
 		logger -t amtm "Running disk check '\$CHKCMD' on \$1"
-		printf "\nStarting '\$CHKCMD $1' at \$(date)\n" >> /jffs/amtm-disk-check.log
+		printf "\n\$(date) Starting '\$CHKCMD $1'\n" >> /jffs/amtm-disk-check.log
 		\$CHKCMD \$1 >> /jffs/amtm-disk-check.log 2>&1
 		logger -t amtm "Disk check done on \$1"
 
