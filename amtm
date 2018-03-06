@@ -328,7 +328,7 @@ else
 		esac
 
 		logger -t amtm "Running disk check '\$CHKCMD' on \$1"
-		printf "\n\$(date) Starting '\$CHKCMD $1'\n" >> /jffs/amtm-disk-check.log
+		printf "\n\$(date) Starting '\$CHKCMD \$1'\n" >> /jffs/amtm-disk-check.log
 		\$CHKCMD \$1 >> /jffs/amtm-disk-check.log 2>&1
 		logger -t amtm "Disk check done on \$1"
 
