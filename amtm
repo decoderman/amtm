@@ -147,7 +147,7 @@ update_amtm(){
 
 # recheck when /opt/bin has become available
 recheck_opt(){
-	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ] && [ "$0" = "/jffs/scripts/$thisScript" ]; then
+	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
 		chmod 0755 /opt/bin/$thisScript
 		show_amtm " /opt/bin detected!\\n\\n You can now start $thisScript with:\\n /jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
