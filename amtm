@@ -323,12 +323,12 @@ else
 			  CHKCMD="ntfsck -a";;
 		   *)
 			  logger -t amtm "Disk check: Unknown filesystem type \$FSTYPE on \$1 - skipping check."
-			  printf "\n\$(date) Unknown filesystem type \$FSTYPE on \$1 - skipping check.\n" >> /jffs/amtm-disk-check.log
+			  printf "\\n\$(date) Unknown filesystem type \$FSTYPE on \$1 - skipping check.\\n" >> /jffs/amtm-disk-check.log
 			  exit 1;;
 		esac
 
 		logger -t amtm "Running disk check '\$CHKCMD' on \$1"
-		printf "\n\$(date) Starting '\$CHKCMD \$1'\n" >> /jffs/amtm-disk-check.log
+		printf "\\n\$(date) Starting '\$CHKCMD \$1'\\n" >> /jffs/amtm-disk-check.log
 		\$CHKCMD \$1 >> /jffs/amtm-disk-check.log 2>&1
 		logger -t amtm "Disk check done on \$1"
 
@@ -356,7 +356,7 @@ else
 			printf " /jffs/amtm-disk-check.log has this content:\\n\\n"
 			echo " START FILE, --- lines are not part of file"
 			echo " ---------------------------------------------------"
-			cat /jffs/amtm-disk-check.log | sed -e 's/^/ /'
+			sed -e 's/^/ /' /jffs/amtm-disk-check.log
 			echo " ---------------------------------------------------"
 			echo " END FILE"
 			press_enter_to "return to menu"
@@ -518,7 +518,7 @@ show_amtm(){
 
 
 	# 3 Entware menu
-	if [ "$(which opkg)" ]; then
+	if [ -f "/opt/bin/opkg" ]; then
 		printf "$igreen_bg 3 $nc %-9s%s\\n" "update" "Entware"
 
 		case_3(){
@@ -546,7 +546,7 @@ show_amtm(){
 
 
 	# 4 Pixelserv menu
-	if [ "$(which pixelserv-tls)" ]; then
+	if [ -f "/opt/bin/pixelserv-tls" ]; then
 		printf "$errBg 4 $nc %-9s%s\\n" "install" "pixelserv-tls beta version"
 
 		case_4(){
@@ -571,7 +571,7 @@ show_amtm(){
 			echo " Author: kvic"
 			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
 			continue_dialog
-			if [ "$(which opkg)" ]; then
+			if [ -f "/opt/bin/opkg" ]; then
 				opkg install pixelserv-tls
 				show_amtm " pixelserv-tls installed."
 			else
