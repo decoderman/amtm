@@ -525,7 +525,8 @@ show_amtm(){
 			print_info_line
 			echo " This updates and upgrades Entware packages"
 			continue_dialog
-			opkg update && opkg upgrade
+			opkg update
+			opkg upgrade
 			show_amtm " Entware packages updated and upgraded."
 		}
 	else
@@ -538,9 +539,11 @@ show_amtm(){
 			echo " Entware is best installed by it."
 			echo " Authors: ryzhov_al, zyxmon, others"
 			echo " GitHub: https://github.com/Entware-ng/Entware-ng"
-			continue_dialog
-			sh /usr/sbin/entware-setup.sh
-			show_amtm " Entware installed."
+			echo
+			echo " Note: The installation of Entware through amtm is"
+			echo " not currently available due to changes in the Entware repositories."
+			press_enter_to "return to menu"
+			show_amtm menu
 		}
 	fi
 
