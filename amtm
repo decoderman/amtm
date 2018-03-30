@@ -47,7 +47,7 @@ about_amtm(){
 
 print_dash_line(){ echo "---------------------------------------";}
 print_info_line(){ printf "\\n---------------| INFO |----------------\\n\\n";}
-print_end_line(){ printf "${redLineColor}_______________________________________$nc\\n\\n";}
+print_end_line(){ printf "${RED_LINE}_______________________________________$NC\\n\\n";}
 press_enter_to(){ printf "\\n${ATTN} Press [Enter] to $1 ";read -r;echo;}
 continue_dialog(){
 	echo
@@ -168,7 +168,7 @@ if [ "$1" = "create" ]; then
 				echo
 				i=1
 				for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4|tfat|exfat" | cut -d" " -f3); do
-					printf " $i. $igreen_bg$mounted$nc\\n"
+					printf " $i. $GREEN_BG$mounted$NC\\n"
 					eval mounts$i="$mounted"
 					i=$(( i + 1 ))
 				done
@@ -197,7 +197,7 @@ if [ "$1" = "create" ]; then
 
 				eval swapDevice="\$mounts$device"
 
-				printf " creating Swap file on: $igreen_bg$swapDevice$nc\\n"
+				printf " creating Swap file on: $GREEN_BG$swapDevice$NC\\n"
 				while true;do
 					printf "\\n Continue? [1=Yes e=Exit] ";read -r swaps
 					case "$swaps" in
@@ -282,7 +282,7 @@ elif [ "$1" = "delete" ]; then
 elif [ "$1" = "check" ]; then
 	swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
 	if [ "$swapFile" ]; then
-		printf "\\n Swap file found at:\\n $igreen_bg$swapFile$nc\\n"
+		printf "\\n Swap file found at:\\n $GREEN_BG$swapFile$NC\\n"
 		press_enter_to "to fix the path"
 		sed -i '\~swapon ~d' /jffs/scripts/post-mount
 		echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
@@ -367,61 +367,27 @@ else
 fi
 }
 
-# standard red
-theme_standard(){
-	redLineColor='\033[0;31m'
-	ired_bg='\e[41m'
-	errBg='\e[41m'
-	igreen_bg='\e[42m'
-	nc='\033[00m'
-}
-# green
-theme_green(){
-	redLineColor='\033[0;33m'
-	ired_bg='\e[42m'
-	errBg='\e[41m'
-	igreen_bg='\e[42m'
-	nc='\033[00m'
-}
-# blue
-theme_blue(){
-	redLineColor='\033[0;34m'
-	ired_bg='\033[44m'
-	errBg='\033[0;101m'
-	igreen_bg='\033[0;104m'
-	nc='\033[00m'
-}
-# blue on white
-theme_blue_on_white(){
-	redLineColor='\033[0;34m'
-	ired_bg='\033[0;104m'
-	errBg='\033[0;101m'
-	igreen_bg='\033[0;104m'
-	nc='\033[00m'
-}
-# high contrast
-theme_high_contrast(){
-	redLineColor='\033[0;91m'
-	ired_bg='\033[41m'
-	errBg='\033[41m'
-	igreen_bg='\033[42m'
-	nc='\033[00m'
-}
-# no colors
-theme_white_on_black(){
-	redLineColor=
-	ired_bg=
-	errBg=
-	igreen_bg=
-	nc=
-}
-
 # Use selected color theme when AB-Solution is installed
 check_AB_theme(){
-	abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
-	[ "$abcfg" ] && theme="$(grep "appTheme=" "$abcfg" | sed -e 's/appTheme="//; s/"//')"
-	[ -z "$theme" ] && theme=white_on_black
-	theme_$theme
+	ab4conf=/opt/share/absolution/.conf/absolution.conf
+	if [ -f "$ab4conf" ]; then
+		theme="$(grep "THEME=" "$ab4conf" | sed -e 's/THEME=//')"
+		. /opt/share/absolution/file/theme.ab
+		theme_$theme
+	else
+		abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
+		[ "$abcfg" ] && theme="$(grep "appTheme=" "$abcfg" | sed -e 's/appTheme="//; s/"//')"
+		[ -z "$theme" ] && theme=white_on_black
+
+		theme_standard(){ RED_LINE='[0;31m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';NC='[0m';}
+		theme_green(){ RED_LINE='[0;33m';RED_BG='[42m';ERR_BG='[41m';GREEN_BG='[42m';NC='[0m';}
+		theme_blue(){ RED_LINE='[0;34m';RED_BG='[44m';ERR_BG='[0;101m';GREEN_BG='[0;104m';NC='[0m';}
+		theme_blue_on_white(){ RED_LINE='[0;34m';RED_BG='[0;104m';ERR_BG='[0;101m';GREEN_BG='[0;104m';NC='[0m';}
+		theme_high_contrast(){ RED_LINE='[0;91m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';NC='[0m';}
+		theme_white_on_black(){ RED_LINE=;RED_BG=;ERR_BG=;GREEN_BG=;NC='[0m';}
+
+		theme_$theme
+	fi
 }
 
 show_amtm(){
@@ -429,7 +395,7 @@ show_amtm(){
 	check_AB_theme
 
 	# amtm header
-	printf "$ired_bg $title $nc\\n"
+	printf "$RED_BG $title $NC\\n"
 	printf "\\n%-21s%s\\n" " $thisScript $version" "by thelonelycoder"
 	print_dash_line
 
@@ -444,7 +410,7 @@ show_amtm(){
 
 	# 1 AB-Solution menu
 	if [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
-		printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
+		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "AB-Solution"
 
 		if [ -f /opt/bin/ab-solution ]; then
 
@@ -465,9 +431,9 @@ show_amtm(){
 		fi
 	elif [ "$(find /mnt/*/ab-solution.sh 2> /dev/null)" ]; then
 		# this is the worst case: device name changed or something bad happened
-		printf "$igreen_bg 1 $nc %-9s%s\\n" "open" "AB-Solution"
-		printf "%3s$errBg %-35s$nc\\n" "" "Warning AB-Solution in error state"
-		printf "%3s$errBg %-35s$nc\\n" "" "Open it now to correct errors"
+		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "AB-Solution"
+		printf "%3s$ERR_BG %-35s$NC\\n" "" "Warning AB-Solution in error state"
+		printf "%3s$ERR_BG %-35s$NC\\n" "" "Open it now to correct errors"
 
 		case_1(){
 			sh "$(find /mnt/*/ab-solution.sh)"
@@ -475,7 +441,7 @@ show_amtm(){
 		}
 		abs="sh $(find /mnt/*/ab-solution.sh) verbose"
 	else
-		printf "$errBg 1 $nc %-9s%s\\n" "install" "AB-Solution"
+		printf "$ERR_BG 1 $NC %-9s%s\\n" "install" "AB-Solution"
 
 		case_1(){
 			print_info_line
@@ -492,7 +458,7 @@ show_amtm(){
 
 	# 2 dnscrypt installer menu
 	if [ -d /jffs/dnscrypt ]; then
-		printf "$igreen_bg 2 $nc %-9s%s\\n" "update" "dnscrypt installer"
+		printf "$GREEN_BG 2 $NC %-9s%s\\n" "update" "dnscrypt installer"
 
 		case_2(){
 			print_info_line
@@ -502,7 +468,7 @@ show_amtm(){
 			show_amtm " dnscrypt installer updated."
 		}
 	else
-		printf "$errBg 2 $nc %-9s%s\\n" "install" "dnscrypt installer"
+		printf "$ERR_BG 2 $NC %-9s%s\\n" "install" "dnscrypt installer"
 
 		case_2(){
 
@@ -519,7 +485,7 @@ show_amtm(){
 
 	# 3 Entware menu
 	if [ -f "/opt/bin/opkg" ]; then
-		printf "$igreen_bg 3 $nc %-9s%s\\n" "update" "Entware"
+		printf "$GREEN_BG 3 $NC %-9s%s\\n" "update" "Entware"
 
 		case_3(){
 			print_info_line
@@ -530,18 +496,17 @@ show_amtm(){
 			show_amtm " Entware packages updated and upgraded."
 		}
 	else
-		printf "$errBg 3 $nc %-9s%s\\n" "install" "Entware"
+		printf "$ERR_BG 3 $NC %-9s%s\\n" "" "Menu not available"
 
 		case_3(){
 			print_info_line
-			echo " This installs Entware on your router."
-			echo " Note that if you plan to install AB-Solution,"
-			echo " Entware is best installed by it."
-			echo " Authors: ryzhov_al, zyxmon, others"
-			echo " GitHub: https://github.com/Entware-ng/Entware-ng"
+			echo " The Entware menu will be available"
+			echo " after installation through AB-Solution"
+			echo " or with another Entware install script."
 			echo
-			echo " Note: The installation of Entware through amtm is"
-			echo " not currently available due to changes in the Entware repositories."
+			echo " The installation of Entware through"
+			echo " amtm is not currently available due to"
+			echo " changes in the Entware repositories."
 			press_enter_to "return to menu"
 			show_amtm menu
 		}
@@ -550,7 +515,7 @@ show_amtm(){
 
 	# 4 Pixelserv menu
 	if [ -f "/opt/bin/pixelserv-tls" ]; then
-		printf "$errBg 4 $nc %-9s%s\\n" "install" "pixelserv-tls beta version"
+		printf "$ERR_BG 4 $NC %-9s%s\\n" "install" "pixelserv-tls beta version"
 
 		case_4(){
 			print_info_line
@@ -564,7 +529,7 @@ show_amtm(){
 			show_amtm " latest pixelserv-tls beta version\\n installed and restarted."
 		}
 	else
-		printf "$errBg 4 $nc %-9s%s\\n" "install" "pixelserv-tls with Entware"
+		printf "$ERR_BG 4 $NC %-9s%s\\n" "install" "pixelserv-tls with Entware"
 
 		case_4(){
 			print_info_line
@@ -586,14 +551,14 @@ show_amtm(){
 
 	# 5 Skynet menu
 	if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start; then
-		printf "$igreen_bg 5 $nc %-9s%s\\n" "open" "Skynet"
+		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet"
 
 		case_5(){
 			/jffs/scripts/firewall
 			show_amtm menu
 		}
 	else
-		printf "$errBg 5 $nc %-9s%s\\n" "install" "Skynet"
+		printf "$ERR_BG 5 $NC %-9s%s\\n" "install" "Skynet"
 
 		case_5(){
 			print_info_line
@@ -617,7 +582,7 @@ show_amtm(){
 	echo
 	swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount 2>/dev/null | awk '{print $2}')"
 	if [ -z "$swaplocation" ]; then
-		printf "${errBg}swp$nc %-9s%s\\n" "create" "Swap file"
+		printf "${ERR_BG}swp$NC %-9s%s\\n" "create" "Swap file"
 
 		case_swp(){
 			print_info_line
@@ -630,14 +595,14 @@ show_amtm(){
 		}
 
 	elif [ -f "$swaplocation" ]; then
-		printf "${igreen_bg}swp$nc %-9s%s ${igreen_bg}%s$nc\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
+		printf "${GREEN_BG}swp$NC %-9s%s ${GREEN_BG}%s$NC\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
 
 		case_swp(){
 			manage_swap delete
 		}
 
 	elif [ ! -f "$swaplocation" ] && [ ! -z "$swaplocation" ]; then
-		printf "${errBg}swp$nc %-9s%s ${errBg}%s$nc\\n" "check" "Swap file" "${swaplocation#/tmp}"
+		printf "${ERR_BG}swp$NC %-9s%s ${ERR_BG}%s$NC\\n" "check" "Swap file" "${swaplocation#/tmp}"
 
 		case_swp(){
 			manage_swap check
@@ -646,16 +611,16 @@ show_amtm(){
 
 	# Disk check
 	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
-		printf "${igreen_bg} dc$nc %-9s%s\\n" "remove" "Disk check script"
+		printf "${GREEN_BG} dc$NC %-9s%s\\n" "remove" "Disk check script"
 
-		[ -f /jffs/amtm-disk-check.log ] && printf "${igreen_bg}dcl$nc %-9s%s\\n" "show" "Disk check log"
+		[ -f /jffs/amtm-disk-check.log ] && printf "${GREEN_BG}dcl$NC %-9s%s\\n" "show" "Disk check log"
 
 		case_dc(){
 			disk_check remove
 			show_amtm menu
 		}
 	else
-		printf "${errBg} dc$nc %-9s%s\\n" "install" "Disk check script"
+		printf "${ERR_BG} dc$NC %-9s%s\\n" "install" "Disk check script"
 
 		case_dc(){
 			print_info_line
@@ -671,10 +636,10 @@ show_amtm(){
 	fi
 
 	# amtm menu
-	printf "\\n$igreen_bg u $nc update\\n"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && printf "$igreen_bg r $nc remove\\n"  || printf "$igreen_bg i $nc install\\n"
-	printf "$igreen_bg a $nc about\\n"
-	printf "$igreen_bg e $nc exit\\n"
+	printf "\\n$GREEN_BG u $NC update\\n"
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && printf "$GREEN_BG r $NC remove\\n"  || printf "$GREEN_BG i $NC install\\n"
+	printf "$GREEN_BG a $NC about\\n"
+	printf "$GREEN_BG e $NC exit\\n"
 
 	# Output under amtm menu, the notification area. $1 can be passed on as positional parameter
 	if [ "$1" = "menu" ]; then
@@ -689,7 +654,7 @@ show_amtm(){
 	while true; do
 
 		# Input prompt
-		printf "${ired_bg} What do you want to do? ${nc} ";read -r selection
+		printf "${RED_BG} What do you want to do? ${NC} ";read -r selection
 
 		case "$selection" in
 
