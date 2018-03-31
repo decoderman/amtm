@@ -17,8 +17,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 # /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
 # Version, release date
-version=1.1
-release="March 06 2018"
+version=1.2
+release="March 31 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -48,7 +48,7 @@ about_amtm(){
 print_dash_line(){ echo "---------------------------------------";}
 print_info_line(){ printf "\\n---------------| INFO |----------------\\n\\n";}
 print_end_line(){ printf "${RED_LINE}_______________________________________$NC\\n\\n";}
-press_enter_to(){ printf "\\n${ATTN} Press [Enter] to $1 ";read -r;echo;}
+press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
 continue_dialog(){
 	echo
 	print_dash_line
@@ -373,7 +373,6 @@ check_AB_theme(){
 	if [ -f "$ab4conf" ]; then
 		theme="$(grep "THEME=" "$ab4conf" | sed -e 's/THEME=//')"
 		. /opt/share/absolution/file/theme.ab
-		theme_$theme
 	else
 		abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
 		[ "$abcfg" ] && theme="$(grep "appTheme=" "$abcfg" | sed -e 's/appTheme="//; s/"//')"
@@ -385,9 +384,8 @@ check_AB_theme(){
 		theme_blue_on_white(){ RED_LINE='[0;34m';RED_BG='[0;104m';ERR_BG='[0;101m';GREEN_BG='[0;104m';NC='[0m';}
 		theme_high_contrast(){ RED_LINE='[0;91m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';NC='[0m';}
 		theme_white_on_black(){ RED_LINE=;RED_BG=;ERR_BG=;GREEN_BG=;NC='[0m';}
-
-		theme_$theme
 	fi
+	theme_$theme
 }
 
 show_amtm(){
@@ -458,14 +456,12 @@ show_amtm(){
 
 	# 2 dnscrypt installer menu
 	if [ -d /jffs/dnscrypt ]; then
-		printf "$GREEN_BG 2 $NC %-9s%s\\n" "update" "dnscrypt installer"
+		printf "$GREEN_BG 2 $NC %-9s%s\\n" "open" "dnscrypt installer"
 
 		case_2(){
-			print_info_line
-			echo " This updates dnscrypt installer"
-			continue_dialog
+			printf "\\n dnscrypt installer menu:\\n\\n"
 			curl -L -s -k -O https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer && sh installer ; rm installer
-			show_amtm " dnscrypt installer updated."
+			show_amtm menu
 		}
 	else
 		printf "$ERR_BG 2 $NC %-9s%s\\n" "install" "dnscrypt installer"
@@ -515,7 +511,11 @@ show_amtm(){
 
 	# 4 Pixelserv menu
 	if [ -f "/opt/bin/pixelserv-tls" ]; then
-		printf "$ERR_BG 4 $NC %-9s%s\\n" "install" "pixelserv-tls beta version"
+		if [ -L "/opt/bin/pixelserv-tls" ]; then
+			printf "$GREEN_BG 4 $NC %-9s%s\\n" "update" "pixelserv-tls beta version"
+		else
+			printf "$ERR_BG 4 $NC %-9s%s\\n" "install" "pixelserv-tls beta version"
+		fi
 
 		case_4(){
 			print_info_line
@@ -529,22 +529,10 @@ show_amtm(){
 			show_amtm " latest pixelserv-tls beta version\\n installed and restarted."
 		}
 	else
-		printf "$ERR_BG 4 $NC %-9s%s\\n" "install" "pixelserv-tls with Entware"
+		printf "$ERR_BG 4 $NC %-9s%s\\n" "" "Menu not available"
 
 		case_4(){
-			print_info_line
-			echo " This installs pixelserv-tls on your router."
-			echo " Note that if you plan to install AB-Solution,"
-			echo " pixelserv-tls is best installed by it."
-			echo " Author: kvic"
-			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
-			continue_dialog
-			if [ -f "/opt/bin/opkg" ]; then
-				opkg install pixelserv-tls
-				show_amtm " pixelserv-tls installed."
-			else
-				show_amtm " pixelserv-tls install failed,\\n install Entware first."
-			fi
+			show_amtm " pixelserv-tls beta menu not available,\\n pixelserv-tls is not installed."
 		}
 	fi
 
