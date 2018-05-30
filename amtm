@@ -16,9 +16,13 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
 # Enter this into your favorite SSH terminal, without the leading "#":
 # /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
+# amtm is free to use under the GNU General Public License, version 2.0 (GPL-2.0)
+# https://opensource.org/licenses/GPL-2.0
+#
+
 # Version, release date
 version=1.2
-release="March 31 2018"
+release="May 30 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -38,8 +42,8 @@ about_amtm(){
 	printf " https://github.com/decoderman\\n"
 	printf "\\n Contributors: Adamm\\n"
 	printf "\\n Legal Boilerplate:\\n"
-	printf " $thisScript is free to use under the GNU General Public License, version 3.0 (GPL-3.0)\\n"
-	printf " https://opensource.org/licenses/GPL-3.0\\n\\n"
+	printf " $thisScript is free to use under the GNU General Public License, version version 2.0 (GPL-2.0)\\n"
+	printf " https://opensource.org/licenses/GPL-2.0\\n\\n"
 	print_dash_line
 	press_enter_to "return to menu"
 	show_amtm menu
