@@ -6,7 +6,7 @@
 #set -v
 
 # Set environment PATH to system binaries
-export PATH=/sbin:/bin:/usr/sbin:/usr/bin$PATH
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 
 # Author: thelonelycoder / decoderman
 # https://www.snbforums.com/members/thelonelycoder.25480/
