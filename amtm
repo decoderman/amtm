@@ -21,8 +21,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 #
 
 # Version, release date
-version=1.2
-release="May 30 2018"
+version=1.3
+release="August 25 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -371,12 +371,12 @@ else
 fi
 }
 
-# Use selected color theme when AB-Solution is installed
+# Use selected color theme when Diversion/AB-Solution is installed
 check_AB_theme(){
-	ab4conf=/opt/share/absolution/.conf/absolution.conf
-	if [ -f "$ab4conf" ]; then
-		theme="$(grep "THEME=" "$ab4conf" | sed -e 's/THEME=//')"
-		. /opt/share/absolution/file/theme.ab
+	divconf=/opt/share/diversion/.conf/diversion.conf
+	if [ -f "$divconf" ]; then
+		theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
+		. /opt/share/diversion/file/theme.div
 	else
 		abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
 		[ "$abcfg" ] && theme="$(grep "appTheme=" "$abcfg" | sed -e 's/appTheme="//; s/"//')"
@@ -398,8 +398,7 @@ show_amtm(){
 
 	# amtm header
 	printf "$RED_BG $title $NC\\n"
-	printf "\\n%-21s%s\\n" " $thisScript $version" "by thelonelycoder"
-	print_dash_line
+	printf "\\n%-21s%s\\n\\n" " $thisScript $version" "by thelonelycoder"
 
 	# show router info, helpful when installing scripts
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
@@ -410,8 +409,18 @@ show_amtm(){
 
 	# Skript menu in alphabetical order follow
 
-	# 1 AB-Solution menu
-	if [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
+	# 1 Diversion/AB-Solution menu
+	if [ -f /opt/bin/diversion ]; then
+		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "Diversion"
+
+		case_1(){
+			clear
+			diversion
+			show_amtm menu
+		}
+		abs="diversion"
+
+	elif [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
 		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "AB-Solution"
 
 		if [ -f /opt/bin/ab-solution ]; then
@@ -443,17 +452,17 @@ show_amtm(){
 		}
 		abs="sh $(find /mnt/*/ab-solution.sh) verbose"
 	else
-		printf "$ERR_BG 1 $NC %-9s%s\\n" "install" "AB-Solution"
+		printf "$ERR_BG 1 $NC %-9s%s\\n" "install" "Diversion"
 
 		case_1(){
 			print_info_line
-			echo " This installs AB-Solution,"
-			echo " the Ad-Blocking Solution."
+			echo " This installs Diversion,"
+			echo " the Router Adblocker."
 			echo " Author: thelonelycoder"
 			echo " https://www.snbforums.com/threads/ab-solution-the-ad-blocking-solution-v3-10.37511/"
 			continue_dialog
-			curl -O ab-solution.info/releases/latest/ab-solution.sh && sh ab-solution.sh
-			show_amtm " AB-Solution installed."
+			curl -Os https://diversion.ch/install && sh install
+			show_amtm " Diversion installed."
 		}
 	fi
 
