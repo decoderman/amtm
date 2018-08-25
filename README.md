@@ -16,7 +16,7 @@ Screenshot of v1.0, uses selected color theme when AB-Solution is installed:
 
 ### Currently supported scripts
 
-[AB-Solution / Diversion - maintained by thelonelycoder](https://www.snbforums.com/threads/ab-solution-the-ad-blocking-solution-v3-11.37511/)
+[AB-Solution / Diversion - maintained by thelonelycoder](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/)
  
 [DNSCrypt - maintained by bigeyes0x0](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/)
  
