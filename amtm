@@ -459,7 +459,7 @@ show_amtm(){
 			echo " This installs Diversion,"
 			echo " the Router Adblocker."
 			echo " Author: thelonelycoder"
-			echo " https://www.snbforums.com/threads/ab-solution-the-ad-blocking-solution-v3-10.37511/"
+			echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
 			continue_dialog
 			curl -Os https://diversion.ch/install && sh install
 			show_amtm " Diversion installed."
