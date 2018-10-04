@@ -10,13 +10,13 @@ Enter this into your favorite SSH terminal:
 
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
-Screenshot of v1.0, uses selected color theme when AB-Solution is installed:
+Screenshot of v1.4, uses selected color theme when [Diversion](https://diversion.ch/) or its predecessor [AB-Solution](https://www.ab-solution.info/) is installed:
 
-[![amtm v1.1](https://i.imgur.com/HjGL2Rd.png "amtm v0.2")](https://i.imgur.com/HjGL2Rd.png "amtm v1.1")
+[![amtm v1.4](https://i.imgur.com/BmuPrDn.png "amtm v1.4")](https://i.imgur.com/BmuPrDn.png "amtm v1.4")
 
 ### Currently supported scripts
 
-[AB-Solution / Diversion - maintained by thelonelycoder](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/)
+[Diversion / AB-Solution - maintained by thelonelycoder](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/)
  
 [DNSCrypt - maintained by bigeyes0x0](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/)
  
