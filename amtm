@@ -8,7 +8,8 @@
 # Set environment PATH to system binaries
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 
-# Author: thelonelycoder / decoderman
+# Proudly coded by thelonelycoder/decoderman
+# Copyright (C) 2018 thelonelycoder - All Rights Reserved
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://github.com/decoderman
 
@@ -16,21 +17,20 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # Enter this into your favorite SSH terminal, without the leading "#":
 # /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 
-# amtm is free to use under the GNU General Public License, version 2.0 (GPL-2.0)
-# https://opensource.org/licenses/GPL-2.0
-#
+# amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
+# https://opensource.org/licenses/GPL-3.0
 
 # Version, release date
-version=1.3
-release="August 25 2018"
+version=1.4
+release="October 04 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
 # Functions follow
 about_amtm(){
 	echo
-	print_dash_line
-	printf "\\n $thisScript, the $title\\n"
+	print_end_line
+	printf " $thisScript, the $title\\n"
 	printf " Version $version, released on $release\\n"
 	printf "\\n amtm is a shortcut manager for popular scripts\\n for wireless routers running Asuswrt-Merlin firmware.\\n"
 	printf "\\n For updates and discussion visit this thread:\\n"
@@ -40,24 +40,23 @@ about_amtm(){
 	printf " Author: thelonelycoder/decoderman\\n"
 	printf " https://www.snbforums.com/members/thelonelycoder.25480/\\n"
 	printf " https://github.com/decoderman\\n"
-	printf "\\n Contributors: Adamm\\n"
+	printf "\\n Contributor: Adamm\\n https://www.snbforums.com/members/adamm.19554/\\n"
 	printf "\\n Legal Boilerplate:\\n"
-	printf " $thisScript is free to use under the GNU General Public License, version version 2.0 (GPL-2.0)\\n"
-	printf " https://opensource.org/licenses/GPL-2.0\\n\\n"
-	print_dash_line
+	printf " $thisScript is free to use under the GNU General Public License, version version 3 (GPL-3.0)\\n"
+	printf " https://opensource.org/licenses/GPL-3.0\\n"
+	print_end_line
 	press_enter_to "return to menu"
 	show_amtm menu
 }
 
-print_dash_line(){ echo "---------------------------------------";}
-print_info_line(){ printf "\\n---------------| INFO |----------------\\n\\n";}
-print_end_line(){ printf "${RED_LINE}_______________________________________$NC\\n\\n";}
+print_info_line(){ printf "\\n${RED_LINE}_________________| INFO |__________________$NC\\n\\n";}
+print_end_line(){ printf "${RED_LINE}___________________________________________$NC\\n\\n";}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
 continue_dialog(){
 	echo
-	print_dash_line
+	print_end_line
 	while true;do
-		printf "\\n Continue? [1=Yes e=Exit] ";read -r continue
+		printf " Continue? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)		echo;break;;
 			[Ee])	show_amtm menu;break;;
@@ -165,7 +164,7 @@ if [ "$1" = "create" ]; then
 	while true;do
 		case "$continue" in
 			1)	clear
-				print_dash_line
+				print_end_line
 				echo
 				echo " Listing compatible device(s) for"
 				echo " a Swap file:"
@@ -206,7 +205,7 @@ if [ "$1" = "create" ]; then
 					printf "\\n Continue? [1=Yes e=Exit] ";read -r swaps
 					case "$swaps" in
 						1)	clear
-							print_dash_line
+							print_end_line
 							echo
 							echo " Select a Swap file size:"
 							echo
@@ -233,7 +232,7 @@ if [ "$1" = "create" ]; then
 								press_enter_to "select another device"
 								read -r;echo
 								clear
-								print_dash_line
+								print_end_line
 								manage_swap create
 							fi
 							echo " Creating the Swap file,"
@@ -305,7 +304,7 @@ fi
 
 # dc) install or remove disk check at boot
 disk_check(){
-if [ -f /jffs/scripts/pre-mount ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
+if [ -f "/jffs/scripts/pre-mount" ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
 	show_amtm " Unsupported pre-mount script found,\\n please remove file manually."
 else
 
@@ -338,15 +337,15 @@ else
 
 		EOF
 
-		if [ ! -f /jffs/scripts/pre-mount ]; then
+		if [ ! -f "/jffs/scripts/pre-mount" ]; then
 			echo "#!/bin/sh" > /jffs/scripts/pre-mount
-		elif [ -f /jffs/scripts/pre-mount ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
+		elif [ -f "/jffs/scripts/pre-mount" ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
 		fi
 		if ! grep -q ". /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
 			echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
 		fi
-		[ -f /jffs/scripts/pre-mount ] && chmod 0755 /jffs/scripts/pre-mount
+		[ -f "/jffs/scripts/pre-mount" ] && chmod 0755 /jffs/scripts/pre-mount
 
 	elif [ "$1" = "remove" ]; then
 		sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
@@ -354,7 +353,7 @@ else
 		rm -f /jffs/amtm-disk-check.log
 
 	elif [ "$1" = "log" ]; then
-		if [ -f /jffs/amtm-disk-check.log ]; then
+		if [ -f "/jffs/amtm-disk-check.log" ]; then
 			echo
 			echo " ---------------------------------------------------"
 			printf " /jffs/amtm-disk-check.log has this content:\\n\\n"
@@ -376,6 +375,9 @@ check_AB_theme(){
 	divconf=/opt/share/diversion/.conf/diversion.conf
 	if [ -f "$divconf" ]; then
 		theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
+		divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
+		divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
+		[ "$divMver" ] && divver="v${divver}.$divMver" || divver=v$divver
 		. /opt/share/diversion/file/theme.div
 	else
 		abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
@@ -397,21 +399,20 @@ show_amtm(){
 	check_AB_theme
 
 	# amtm header
-	printf "$RED_BG $title $NC\\n"
-	printf "\\n%-21s%s\\n\\n" " $thisScript $version" "by thelonelycoder"
+	printf "$RED_BG%-25s%s\\n" " $thisScript $version" "by thelonelycoder $NC"
+	printf " The $title\\n\\n"
 
 	# show router info, helpful when installing scripts
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
-	echo " $model $(uname -m) $(nvram get buildno) $(nvram get lan_ipaddr)"
-	print_dash_line
-	echo
+	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+	print_end_line
 	echo "    SNBForum scripts"
 
 	# Skript menu in alphabetical order follow
 
 	# 1 Diversion/AB-Solution menu
-	if [ -f /opt/bin/diversion ]; then
-		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "Diversion"
+	if [ -f "/opt/bin/diversion" ]; then
+		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "Diversion $divver"
 
 		case_1(){
 			clear
@@ -420,10 +421,10 @@ show_amtm(){
 		}
 		abs="diversion"
 
-	elif [ -f "$HOME/ab-solution.sh" ] || [ -f /opt/bin/ab-solution ]; then
+	elif [ -f "$HOME/ab-solution.sh" ] || [ -f "/opt/bin/ab-solution" ]; then
 		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "AB-Solution"
 
-		if [ -f /opt/bin/ab-solution ]; then
+		if [ -f "/opt/bin/ab-solution" ]; then
 
 			case_1(){
 				clear
@@ -499,6 +500,13 @@ show_amtm(){
 		case_3(){
 			print_info_line
 			echo " This updates and upgrades Entware packages"
+			if [ -f "/opt/bin/diversion" ]; then
+				echo
+				echo " Note: Diversion is installed on this router."
+				echo " It's recommended to update Entware packages"
+				echo " in Diversion using the ${RED_BG} ep ${NC} option."
+				echo " Especially so when pixelserv-tls is installed."
+			fi
 			continue_dialog
 			opkg update
 			opkg upgrade
@@ -510,7 +518,7 @@ show_amtm(){
 		case_3(){
 			print_info_line
 			echo " The Entware menu will be available"
-			echo " after installation through AB-Solution"
+			echo " after installation through Diversion"
 			echo " or with another Entware install script."
 			echo
 			echo " The installation of Entware through"
@@ -525,7 +533,11 @@ show_amtm(){
 	# 4 Pixelserv menu
 	if [ -f "/opt/bin/pixelserv-tls" ]; then
 		if [ -L "/opt/bin/pixelserv-tls" ]; then
-			printf "$GREEN_BG 4 $NC %-9s%s\\n" "update" "pixelserv-tls beta version"
+			psVersion=$(echo $(pixelserv-tls -v | awk 'NR == 1 {print $2}'))
+			[ -z "$psVersion" ] && psVersion="likely v.Kk"
+			psVersion="v$psVersion"
+			[ -z "$(pidof pixelserv-tls)" ] && psVersion="v$psVersion ${ERR_BG}(not running)${NC}"
+			printf "$GREEN_BG 4 $NC %-9s%s\\n" "update" "pixelserv-tls beta $psVersion"
 		else
 			printf "$ERR_BG 4 $NC %-9s%s\\n" "install" "pixelserv-tls beta version"
 		fi
@@ -536,10 +548,26 @@ show_amtm(){
 			echo " Be aware this is for advanced users only."
 			echo " Author: kvic"
 			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
-			continue_dialog
-			sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/install-beta.sh)"
-			/opt/etc/init.d/S80pixelserv-tls restart
-			show_amtm " latest pixelserv-tls beta version\\n installed and restarted."
+			print_end_line
+			echo
+			echo " 1. Install dynamically linked beta version."
+			echo "    (Regular beta version)"
+			echo " 2. Install statically linked beta version."
+			echo "    (_binfavor=static, arm7 and armv8/aarch64"
+			echo "    based router models only)"
+			while true;do
+				printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+				case "$continue" in
+					1)		sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/install-beta.sh)"
+							/opt/etc/init.d/S80pixelserv-tls restart
+							show_amtm " latest pixelserv-tls beta version\\n installed and restarted.";break;;
+					2)		_binfavor=static sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/install-beta.sh)"
+							/opt/etc/init.d/S80pixelserv-tls restart
+							show_amtm " latest pixelserv-tls beta version\\n installed and restarted.";break;;
+					[Ee])	show_amtm menu;break;;
+					*)		printf "\\n input is not an option\\n";;
+				esac
+			done
 		}
 	else
 		printf "$ERR_BG 4 $NC %-9s%s\\n" "" "Menu not available"
@@ -551,8 +579,8 @@ show_amtm(){
 
 
 	# 5 Skynet menu
-	if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet"
+	if [ -f "/jffs/scripts/firewall" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
+		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet $(cat /jffs/scripts/firewall | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 
 		case_5(){
 			/jffs/scripts/firewall
@@ -611,10 +639,10 @@ show_amtm(){
 	fi
 
 	# Disk check
-	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
+	if [ -f "/jffs/scripts/disk-check" ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
 		printf "${GREEN_BG} dc$NC %-9s%s\\n" "remove" "Disk check script"
 
-		[ -f /jffs/amtm-disk-check.log ] && printf "${GREEN_BG}dcl$NC %-9s%s\\n" "show" "Disk check log"
+		[ -f "/jffs/amtm-disk-check.log" ] && printf "${GREEN_BG}dcl$NC %-9s%s\\n" "show" "Disk check log"
 
 		case_dc(){
 			disk_check remove
@@ -637,7 +665,9 @@ show_amtm(){
 	fi
 
 	# amtm menu
-	printf "\\n$GREEN_BG u $NC update\\n"
+	echo
+	echo "    amtm operations"
+	printf "$GREEN_BG u $NC update\\n"
 	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && printf "$GREEN_BG r $NC remove\\n"  || printf "$GREEN_BG i $NC install\\n"
 	printf "$GREEN_BG a $NC about\\n"
 	printf "$GREEN_BG e $NC exit\\n"
