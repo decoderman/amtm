@@ -580,7 +580,7 @@ show_amtm(){
 
 	# 5 Skynet menu
 	if [ -f "/jffs/scripts/firewall" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet $(cat /jffs/scripts/firewall | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet $(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' /jffs/scripts/firewall)"
 
 		case_5(){
 			/jffs/scripts/firewall
