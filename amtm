@@ -1,10 +1,6 @@
 #!/bin/sh
 #bof
 
-# Troubleshoot options
-#set -x
-#set -v
-
 # Set environment PATH to system binaries
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 
@@ -21,8 +17,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 # Version, release date
-version=1.4
-release="October 04 2018"
+version=1.5
+release="November 11 2018"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -30,20 +26,29 @@ thisScript=amtm
 about_amtm(){
 	echo
 	print_end_line
-	printf " $thisScript, the $title\\n"
-	printf " Version $version, released on $release\\n"
-	printf "\\n amtm is a shortcut manager for popular scripts\\n for wireless routers running Asuswrt-Merlin firmware.\\n"
-	printf "\\n For updates and discussion visit this thread:\\n"
-	printf " https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/\\n"
-	printf "\\n Project is hosted on GitHub:\\n"
-	printf " https://github.com/decoderman/amtm\\n"
-	printf " Author: thelonelycoder/decoderman\\n"
-	printf " https://www.snbforums.com/members/thelonelycoder.25480/\\n"
-	printf " https://github.com/decoderman\\n"
-	printf "\\n Contributor: Adamm\\n https://www.snbforums.com/members/adamm.19554/\\n"
-	printf "\\n Legal Boilerplate:\\n"
-	printf " $thisScript is free to use under the GNU General Public License, version version 3 (GPL-3.0)\\n"
-	printf " https://opensource.org/licenses/GPL-3.0\\n"
+	echo " $thisScript, the $title
+ Version $version, released on $release
+
+ amtm is a shortcut manager for popular scripts
+ for wireless routers running Asuswrt-Merlin firmware.
+
+ For updates and discussion visit this thread:
+ https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/
+
+ Author: thelonelycoder/decoderman
+ https://github.com/decoderman/amtm
+ https://www.snbforums.com/members/thelonelycoder.25480/
+ https://github.com/decoderman
+
+ Contributor: Adamm
+ https://www.snbforums.com/members/adamm.19554/
+
+ Legal Boilerplate:
+ $thisScript is free to use under the GNU General
+ Public License, version 3 (GPL-3.0).
+ https://opensource.org/licenses/GPL-3.0
+
+ Copyright (C) 2018 thelonelycoder - All Rights Reserved"
 	print_end_line
 	press_enter_to "return to menu"
 	show_amtm menu
@@ -157,7 +162,7 @@ recheck_opt(){
 	fi
 }
 
-# swap) create or delete Swap file
+# sw) create or delete Swap file
 manage_swap(){
 if [ "$1" = "create" ]; then
 	echo
@@ -419,7 +424,7 @@ show_amtm(){
 			diversion
 			show_amtm menu
 		}
-		abs="diversion"
+		divc="diversion"
 
 	elif [ -f "$HOME/ab-solution.sh" ] || [ -f "/opt/bin/ab-solution" ]; then
 		printf "$GREEN_BG 1 $NC %-9s%s\\n" "open" "AB-Solution"
@@ -431,7 +436,7 @@ show_amtm(){
 				ab-solution
 				show_amtm menu
 			}
-			abs="ab-solution skip"
+			divc="ab-solution skip"
 		else
 
 			case_1(){
@@ -439,7 +444,7 @@ show_amtm(){
 				sh "$HOME/ab-solution.sh"
 				show_amtm menu
 			}
-			abs="sh $HOME/ab-solution.sh skip"
+			divc="sh $HOME/ab-solution.sh skip"
 		fi
 	elif [ "$(find /mnt/*/ab-solution.sh 2> /dev/null)" ]; then
 		# this is the worst case: device name changed or something bad happened
@@ -451,7 +456,7 @@ show_amtm(){
 			sh "$(find /mnt/*/ab-solution.sh)"
 			show_amtm menu
 		}
-		abs="sh $(find /mnt/*/ab-solution.sh) verbose"
+		divc="sh $(find /mnt/*/ab-solution.sh) verbose"
 	else
 		printf "$ERR_BG 1 $NC %-9s%s\\n" "install" "Diversion"
 
@@ -518,12 +523,11 @@ show_amtm(){
 		case_3(){
 			print_info_line
 			echo " The Entware menu will be available"
-			echo " after installation through Diversion"
+			echo " after installation by Diversion"
 			echo " or with another Entware install script."
 			echo
 			echo " The installation of Entware through"
-			echo " amtm is not currently available due to"
-			echo " changes in the Entware repositories."
+			echo " amtm is not currently available."
 			press_enter_to "return to menu"
 			show_amtm menu
 		}
@@ -580,7 +584,7 @@ show_amtm(){
 
 	# 5 Skynet menu
 	if [ -f "/jffs/scripts/firewall" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet $(cat /jffs/scripts/firewall | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+		printf "$GREEN_BG 5 $NC %-9s%s\\n" "open" "Skynet $(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' /jffs/scripts/firewall)"
 
 		case_5(){
 			/jffs/scripts/firewall
@@ -607,35 +611,49 @@ show_amtm(){
 
 
 	# System tools follow
-	# swp/swap Swap file
+	# sw/swp/swap Swap file
 	echo
 	swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount 2>/dev/null | awk '{print $2}')"
 	if [ -z "$swaplocation" ]; then
-		printf "${ERR_BG}swp$NC %-9s%s\\n" "create" "Swap file"
+		if [ "$(find /mnt/*/myswap.swp 2> /dev/null)" ]; then
+			printf "${ERR_BG} sw$NC %-9s%s ${ERR_BG}%s$NC\\n" "check" "Swap file" "$(find /mnt/*/myswap.swp 2> /dev/null)"
 
-		case_swp(){
-			print_info_line
-			echo " This creates a Swap file."
-			echo " A Swap file is useful when the router"
-			echo " runs out of memory (RAM)."
-			echo " See router WebUI/Tools under Memory."
-			continue_dialog
-			manage_swap create
-		}
+			case_swp(){
+				manage_swap check
+			}
+
+		else
+			printf "${ERR_BG} sw$NC %-9s%s\\n" "create" "Swap file"
+
+			case_swp(){
+				print_info_line
+				echo " This creates a Swap file."
+				echo " A Swap file is useful when the router"
+				echo " runs out of memory (RAM)."
+				echo " See router WebUI/Tools under Memory."
+				continue_dialog
+				manage_swap create
+			}
+		fi
 
 	elif [ -f "$swaplocation" ]; then
-		printf "${GREEN_BG}swp$NC %-9s%s ${GREEN_BG}%s$NC\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
+		if [ ! "$(cat /proc/swaps | grep myswap.swp 2> /dev/null)" ]; then
+			swapon "$swaplocation" 2> /dev/null
+		fi
+
+		printf "${GREEN_BG} sw$NC %-9s%s ${GREEN_BG}%s$NC\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
 
 		case_swp(){
 			manage_swap delete
 		}
 
 	elif [ ! -f "$swaplocation" ] && [ ! -z "$swaplocation" ]; then
-		printf "${ERR_BG}swp$NC %-9s%s ${ERR_BG}%s$NC\\n" "check" "Swap file" "${swaplocation#/tmp}"
+		printf "${ERR_BG} sw$NC %-9s%s ${ERR_BG}%s$NC\\n" "check" "Swap file" "${swaplocation#/tmp}"
 
 		case_swp(){
 			manage_swap check
 		}
+
 	fi
 
 	# Disk check
@@ -697,7 +715,7 @@ show_amtm(){
 			5)			case_5;break;;
 
 			# System tools
-			swap|swp)	case_swp;break;;
+			swap|swp|sw)case_swp;break;;
 			[Dd][Cc])	case_dc;break;;
 			dcl)		disk_check log
 						show_amtm menu;break;;
@@ -710,7 +728,7 @@ show_amtm(){
 			[Ee])		printf "\\n See you later\\n\\n"
 						exit 0;break;;
 			11)			exec "$0";break;; # hidden dev option
-			1s)			$abs;show_amtm menu;break;; # hidden dev option
+			1s)			$divc;show_amtm menu;break;; # hidden dev option
 			*)			printf "\\n input is not an option\\n\\n";;
 
 		esac
