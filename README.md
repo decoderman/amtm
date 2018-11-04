@@ -10,9 +10,9 @@ Enter this into your favorite SSH terminal:
 
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
-Screenshot of v1.4, uses selected color theme when [Diversion](https://diversion.ch/) or its predecessor [AB-Solution](https://www.ab-solution.info/) is installed:
+Screenshot of v1.5, uses selected color theme when [Diversion](https://diversion.ch/) or its predecessor [AB-Solution](https://www.ab-solution.info/) is installed:
 
-[![amtm v1.4](https://i.imgur.com/BmuPrDn.png "amtm v1.4")](https://i.imgur.com/BmuPrDn.png "amtm v1.4")
+[![amtm v1.5](https://i.imgur.com/tzxSlso.png "amtm v1.5")](https://i.imgur.com/tzxSlso.png "amtm v1.5")
 
 ### Currently supported scripts
 
@@ -20,7 +20,7 @@ Screenshot of v1.4, uses selected color theme when [Diversion](https://diversion
  
 [DNSCrypt - maintained by bigeyes0x0](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/)
  
-[Entware-ng - maintained by zyxmon & ryzhovau](https://github.com/Entware-ng/Entware-ng)
+[Entware - maintained by zyxmon & ryzhovau](https://github.com/Entware/entware)
  
 [Pixelserv-tls - maintained by kvic](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/)
  
