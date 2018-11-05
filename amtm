@@ -600,7 +600,7 @@ show_amtm(){
 			echo " https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/"
 			continue_dialog
 
-			if [ "$(ipset -v | grep -Fo v6)" != "v6" ]; then
+			if ! ipset -v | grep -qF "v6"; then
 				show_amtm " Skynet install failed,\\n IPSet version on router not supported:\\n\\n$(ipset -v | sed -e 's/^/ /')"
 			fi
 
@@ -637,7 +637,7 @@ show_amtm(){
 		fi
 
 	elif [ -f "$swaplocation" ]; then
-		if [ ! "$(cat /proc/swaps | grep myswap.swp 2> /dev/null)" ]; then
+		if ! grep -qF "myswap.swp" /proc/swaps; then
 			swapon "$swaplocation" 2> /dev/null
 		fi
 
