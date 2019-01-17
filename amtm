@@ -205,7 +205,7 @@ if [ "$1" = "create" ]; then
 
 				eval swapDevice="\$mounts$device"
 
-				printf " creating Swap file on: $GREEN_BG$swapDevice$NC\\n"
+				printf " creating Swap file on: $GREEN_BG${swapDevice:?}$NC\\n"
 				while true;do
 					printf "\\n Continue? [1=Yes e=Exit] ";read -r swaps
 					case "$swaps" in
