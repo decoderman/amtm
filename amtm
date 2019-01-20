@@ -537,7 +537,7 @@ show_amtm(){
 	# 4 Pixelserv menu
 	if [ -f "/opt/bin/pixelserv-tls" ]; then
 		if [ -L "/opt/bin/pixelserv-tls" ]; then
-			psVersion="$(echo "$(pixelserv-tls -v | awk 'NR == 1 {print $2}')")"
+			psVersion="$(pixelserv-tls -v | awk 'NR == 1 {print $2}')"
 			[ -z "$psVersion" ] && psVersion="likely v.Kk"
 			psVersion="v$psVersion"
 			[ -z "$(pidof pixelserv-tls)" ] && psVersion="v$psVersion ${ERR_BG}(not running)${NC}"
