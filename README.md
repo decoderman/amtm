@@ -10,9 +10,9 @@ Enter this into your favorite SSH terminal:
 
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
-Screenshot of v1.6, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+Screenshot of v1.5, uses selected color theme when [Diversion](https://diversion.ch/) or its predecessor [AB-Solution](https://www.ab-solution.info/) is installed:
 
-[![amtm v1.6](https://i.imgur.com/6PgdNoD.png "amtm v1.6")](https://i.imgur.com/6PgdNoD.png "amtm v1.6")
+[![amtm v1.5](https://i.imgur.com/tzxSlso.png "amtm v1.5")](https://i.imgur.com/tzxSlso.png "amtm v1.5")
 
 ### Currently supported scripts
 
@@ -26,6 +26,4 @@ Screenshot of v1.6, uses selected color theme when [Diversion](https://diversion
  
 [Skynet - maintained by Adamm](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/)
 
-[USB Disk Check at Boot - maintained by latenitetech, thelonelycoder](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot)
-
-[Format Disk - maintained by thelonelycoder](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/)
+[USB Disk Check at Boot - maintained by latenitetech](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot)
