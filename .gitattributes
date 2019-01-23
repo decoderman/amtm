@@ -1,2 +1,7 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Ensure all YML/SH/MD/TXT files use LF.
+*.yml	eol=lf
+*.sh	eol=lf
+*.md	eol=lf
+*.txt	eol=lf
+*.list	eol=lf
+amtm eol=lf
