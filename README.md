@@ -10,9 +10,9 @@ Enter this into your favorite SSH terminal:
 
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
-Screenshot of v1.6, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+Screenshot of v1.7, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
-[![amtm v1.6](https://i.imgur.com/6PgdNoD.png "amtm v1.6")](https://i.imgur.com/6PgdNoD.png "amtm v1.6")
+[![amtm v1.7](https://i.imgur.com/r78Jzxl.png "amtm v1.7")](https://i.imgur.com/r78Jzxl.png "amtm v1.7")
 
 ### Currently supported scripts
 
@@ -29,3 +29,5 @@ Screenshot of v1.6, uses selected color theme when [Diversion](https://diversion
 [USB Disk Check at Boot - maintained by latenitetech, thelonelycoder](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot)
 
 [Format Disk - maintained by thelonelycoder](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/)
+
+[Stubby-Installer - maintained by Xentrk](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/)
