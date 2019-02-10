@@ -11,7 +11,7 @@ Enter this into your favorite SSH terminal:
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
 <br/>
-Screenshot of amtm 1.7, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+Screenshot of amtm 1.7, uses selected color theme when [Diversion](https://diversion.ch/) is installed:<br/>
 
 [![amtm v1.7](https://i.imgur.com/r78Jzxl.png "amtm v1.7")](https://i.imgur.com/r78Jzxl.png "amtm v1.7")
 
@@ -33,6 +33,6 @@ Enter this into your SSH terminal:
 `/jffs/scripts/amtm`
 
 If Entware is installed on the router, start amtm with this command.<br/>
-[Diversion](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) installs Entware by default, amtm has an option to do so.
+[Diversion](https://diversion.ch/) installs Entware by default, amtm has an option to do so.
 
 `amtm`
