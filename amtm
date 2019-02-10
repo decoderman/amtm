@@ -17,8 +17,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 # Version, release date
-version=1.7
-release="January 27 2019"
+version=1.8
+release="February 10 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -63,13 +63,13 @@ about_amtm(){
 	show_amtm menu
 }
 
-print_info_line(){ echo;echo "${RED_LINE}_________________| INFO |__________________${NC}";echo;}
-print_end_line(){ echo "${RED_LINE}___________________________________________${NC}";echo;}
+print_info_line(){ echo;echo "${RED_LINE}__________________| INFO |___________________${NC}";echo;}
+print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
 continue_dialog(){
 	echo
 	print_end_line
-	while true;do
+	while true; do
 		printf " Continue? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)		echo;break;;
@@ -80,32 +80,45 @@ continue_dialog(){
 }
 
 install_amtm(){
-	mkdir -p "/jffs/scripts"
+	ascii_logo
+	echo " Do you want to install $thisScript"
+	echo " the $title?"
+	echo
+	print_end_line
+	while true; do
+		printf " Continue? [1=Yes e=Exit] ";read -r continue
+		case "$continue" in
+			1)		mkdir -p "/jffs/scripts"
 
-	if [ "$(nvram get jffs2_scripts)" != "1" ]; then
-		nvram set jffs2_scripts=1
-		nvram commit
-	fi
+					if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+						nvram set jffs2_scripts=1
+						nvram commit
+					fi
 
-	# install to /jffs/scripts/$thisScript
-	[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
-	chmod 0755 /jffs/scripts/$thisScript
-	message="/jffs/scripts/$thisScript"
+					# install to /jffs/scripts/$thisScript
+					[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
+					chmod 0755 /jffs/scripts/$thisScript
+					message="/jffs/scripts/$thisScript"
 
-	# add link to /opt/bin whenever found, will be re-checked at every start further down
-	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
-		ln -s /jffs/scripts/$thisScript /opt/bin
-		chmod 0755 /opt/bin/$thisScript
-		message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
-	fi
+					# add link to /opt/bin whenever found, will be re-checked at every start further down
+					if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
+						ln -s /jffs/scripts/$thisScript /opt/bin
+						chmod 0755 /opt/bin/$thisScript
+						message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
+					fi
 
-	if [ "$0" = "/jffs/scripts/$thisScript" ]; then
-		subshell=
-	else
-		subshell="exec"
-		rm -f "$0"
-	fi
-	"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can start $thisScript with:\\n $message"
+					if [ "$0" = "/jffs/scripts/$thisScript" ]; then
+						subshell=
+					else
+						subshell="exec"
+						rm -f "$0"
+					fi
+					"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can start $thisScript with:\\n $message"
+					break;;
+			[Ee])	rm -f "$0";echo;exit 0;break;;
+			*)		printf "\\n input is not an option\\n\\n";;
+		esac
+	done
 }
 
 remove_amtm(){
@@ -116,14 +129,19 @@ remove_amtm(){
 	echo " uninstall any installed SNBForum scripts."
 	echo
 	echo " It will, however, remove the Disk check"
-	echo " script/log, along with the Format disk log."
+	echo " script and log, the Format disk log and the"
+	echo " reboot scheduler when found."
 	continue_dialog
 	if [ -f /jffs/scripts/disk-check ]; then
 		sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
 		rm -f /jffs/scripts/disk-check
 		rm -f /jffs/amtm-disk-check.log
 	fi
-	[ -f "/jffs/amtm-format-disk.log" ] && rm -f /jffs/amtm-format-disk.log
+	[ -f "/jffs/amtm-format-disk.log" ] && rm /jffs/amtm-format-disk.log
+	if [ -f "/jffs/scripts/init-start" ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
+		cru d amtm_RebootScheduler
+	fi
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
@@ -136,23 +154,29 @@ update_amtm(){
 	remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
 	curl -fsN --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
 	remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
+	localmd5="$(md5sum "$0" | awk '{print $1}')"
+	remotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
 
-	if [ "$version" = "$remotever" ]; then
-		print_info_line
-		echo " No new version is available,"
-		echo " do you want to update anyway?"
-		continue_dialog
-		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to v$remotever"
-	fi
+	print_info_line
 
 	if [ "$version" != "$remotever" ]; then
-		print_info_line
-		echo " An update is available:"
-		echo " From v$version to v$remotever"
+		echo " $thisScript $remotever is now available!"
 		echo
 		echo " Do you want to update now?"
 		continue_dialog
-		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from v$version to v$remotever"
+		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from $version to $remotever"
+	elif [ "$localmd5" != "$remotemd5" ]; then
+		echo " A minor $thisScript update is available, no version"
+		echo " change."
+		echo
+		echo " Do you want to update now?"
+		continue_dialog
+		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n minor $thisScript version update applied"
+	else
+		echo " No new version or minor update is available,"
+		echo " do you want to force update $thisScript?"
+		continue_dialog
+		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to $remotever"
 	fi
 }
 
@@ -167,215 +191,215 @@ recheck_opt(){
 
 # sw) create or delete Swap file
 manage_swap(){
-if [ "$1" = "create" ]; then
-	echo
-	while true;do
-		case "$continue" in
-			1)	clear
-				print_end_line
-				echo
-				echo " Listing compatible device(s) for"
-				echo " a Swap file:"
-				echo
-				i=1;noad=
-				for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4|tfat|exfat" | cut -d" " -f3); do
-					echo " $i. ${GREEN_BG}$mounted${NC}"
-					eval mounts$i=\"$mounted\"
-					noad="${noad}${i} "
-					i=$(( i + 1 ))
-				done
+	if [ "$1" = "create" ]; then
+		echo
+		while true; do
+			case "$continue" in
+				1)	clear
+					print_end_line
+					echo
+					echo " Listing compatible device(s) for"
+					echo " a Swap file:"
+					echo
+					i=1;noad=
+					for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4|tfat|exfat" | cut -d" " -f3); do
+						echo " $i. ${GREEN_BG}$mounted${NC}"
+						eval mounts$i=\"$mounted\"
+						noad="${noad}${i} "
+						i=$(( i + 1 ))
+					done
 
-				if [ "$i" = "1" ]; then
-					show_amtm " No compatible device available."
-				fi
-
-				[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
-				while true;do
-					printf "\\n Select device [$devNo e=Exit] ";read -r device
-					case "$device" in
-						[$noad])	break;;
-						[Ee])		show_amtm " Exited Swap file function";break;;
-						*)			printf "\\n input is not an option\\n";;
-					esac
-				done
-
-				eval swapDevice="\$mounts$device"
-
-				echo " creating Swap file on: ${GREEN_BG}${swapDevice:?}${NC}"
-				while true;do
-					printf "\\n Continue? [1=Yes e=Exit] ";read -r swaps
-					case "$swaps" in
-						1)	clear
-							print_end_line
-							echo
-							echo " Select a Swap file size:"
-							echo
-							echo " 1. --> 256MB"
-							echo " 2. --> 512MB"
-							echo " 3. -->   1GB"
-							echo " 4. -->   2GB"
-
-							while true; do
-								printf "\\n Enter size [1-4 e=Exit] ";read -r size
-								case "$size" in
-									1)	swapsize=262144;break;;
-									2)	swapsize=524288;break;;
-									3)	swapsize=1048576;break;;
-									4)	swapsize=2097152;break;;
-								 [Ee])	show_amtm menu;break;;
-									*)	printf "\\n input is not an option\\n";;
-								esac
-							done
-							echo
-							if [ "$(df "$swapDevice" | xargs | awk '{print $11}')" -le "$swapsize" ]; then
-								echo " Not enough free space available on:"
-								echo " $swapDevice"
-								press_enter_to "select another device"
-								read -r;echo
-								clear
-								print_end_line
-								manage_swap create
-							fi
-							echo " Creating the Swap file,"
-							echo " this will take some time..."
-							echo
-							dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swapsize"
-							mkswap "$swapDevice/myswap.swp"
-							swapon "$swapDevice/myswap.swp"
-							nvram set usb_idle_timeout=0
-							nvram commit
-							if [ ! -f "/jffs/scripts/post-mount" ]; then
-								echo "#!/bin/sh" > /jffs/scripts/post-mount
-							elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
-								sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
-							fi
-							echo "swapon $swapDevice/myswap.swp # Swap file created by $thisScript" >> /jffs/scripts/post-mount
-							show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
-					[Ee])	show_amtm menu;break;;
-						*)  printf "\\n input is not an option\\n";;
-					esac
-				done;break;;
-		 [Ee])	show_amtm menu;break;;
-			*)	printf "\\n input is not an option\\n";;
-		esac
-	done
-
-elif [ "$1" = "delete" ]; then
-	swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount | awk '{print $2}')"
-	echo
-	echo " Swap file found at:"
-	echo " $swaplocation"
-
-	while true;do
-		printf "\\n Delete the Swap file? [1=Yes e=Exit] ";read -r continue
-		case "$continue" in
-			1)		if [ -f "$swaplocation" ]; then
-						swapoff "$swaplocation"
-						rm -rf "$swaplocation"
-						sed -i '\~swapon ~d' /jffs/scripts/post-mount
-						show_amtm " Swap file deleted:\\n $swaplocation"
-					else
-						show_amtm " No Swap file found at\\n $swaplocation"
+					if [ "$i" = "1" ]; then
+						show_amtm " No compatible device available."
 					fi
-					break;;
-			[Ee])	show_amtm menu;break;;
-			*)		printf "\\n input is not an option\\n";;
-		esac
-	done
 
-elif [ "$1" = "check" ]; then
-	swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
-	if [ "$swapFile" ]; then
+					[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
+					while true; do
+						printf "\\n Select device [$devNo e=Exit] ";read -r device
+						case "$device" in
+							[$noad])	break;;
+							[Ee])		show_amtm " Exited Swap file function";break;;
+							*)			printf "\\n input is not an option\\n";;
+						esac
+					done
+
+					eval swapDevice="\$mounts$device"
+
+					echo " creating Swap file on: ${GREEN_BG}${swapDevice:?}${NC}"
+					while true; do
+						printf "\\n Continue? [1=Yes e=Exit] ";read -r swaps
+						case "$swaps" in
+							1)	clear
+								print_end_line
+								echo
+								echo " Select a Swap file size:"
+								echo
+								echo " 1. --> 256MB"
+								echo " 2. --> 512MB"
+								echo " 3. -->   1GB"
+								echo " 4. -->   2GB"
+
+								while true; do
+									printf "\\n Enter size [1-4 e=Exit] ";read -r size
+									case "$size" in
+										1)	swapsize=262144;break;;
+										2)	swapsize=524288;break;;
+										3)	swapsize=1048576;break;;
+										4)	swapsize=2097152;break;;
+									 [Ee])	show_amtm menu;break;;
+										*)	printf "\\n input is not an option\\n";;
+									esac
+								done
+								echo
+								if [ "$(df "$swapDevice" | xargs | awk '{print $11}')" -le "$swapsize" ]; then
+									echo " Not enough free space available on:"
+									echo " $swapDevice"
+									press_enter_to "select another device"
+									read -r;echo
+									clear
+									print_end_line
+									manage_swap create
+								fi
+								echo " Creating the Swap file,"
+								echo " this will take some time..."
+								echo
+								dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swapsize"
+								mkswap "$swapDevice/myswap.swp"
+								swapon "$swapDevice/myswap.swp"
+								nvram set usb_idle_timeout=0
+								nvram commit
+								if [ ! -f "/jffs/scripts/post-mount" ]; then
+									echo "#!/bin/sh" > /jffs/scripts/post-mount
+								elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+									sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
+								fi
+								echo "swapon $swapDevice/myswap.swp # Swap file created by $thisScript" >> /jffs/scripts/post-mount
+								show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
+						[Ee])	show_amtm menu;break;;
+							*)  printf "\\n input is not an option\\n";;
+						esac
+					done;break;;
+			 [Ee])	show_amtm menu;break;;
+				*)	printf "\\n input is not an option\\n";;
+			esac
+		done
+
+	elif [ "$1" = "delete" ]; then
+		swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount | awk '{print $2}')"
 		echo
 		echo " Swap file found at:"
-		echo " ${GREEN_BG}$swapFile${NC}"
-		press_enter_to "to fix the path"
-		sed -i '\~swapon ~d' /jffs/scripts/post-mount
-		echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
-		swapon "$swapFile" 2> /dev/null
-		show_amtm " Swap file path changed to\\n $swapFile"
-	else
-		echo
-		echo " No Swap file found."
-		press_enter_to "remove reference"
-		echo " in /jffs/scripts/post-mount now."
-		sed -i '\~swapon ~d' /jffs/scripts/post-mount
-		show_amtm " Incorrect Swap file reference removed"
+		echo " $swaplocation"
+
+		while true; do
+			printf "\\n Delete the Swap file? [1=Yes e=Exit] ";read -r continue
+			case "$continue" in
+				1)		if [ -f "$swaplocation" ]; then
+							swapoff "$swaplocation"
+							rm -rf "$swaplocation"
+							sed -i '\~swapon ~d' /jffs/scripts/post-mount
+							show_amtm " Swap file deleted:\\n $swaplocation"
+						else
+							show_amtm " No Swap file found at\\n $swaplocation"
+						fi
+						break;;
+				[Ee])	show_amtm menu;break;;
+				*)		printf "\\n input is not an option\\n";;
+			esac
+		done
+
+	elif [ "$1" = "check" ]; then
+		swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
+		if [ "$swapFile" ]; then
+			echo
+			echo " Swap file found at:"
+			echo " ${GREEN_BG}$swapFile${NC}"
+			press_enter_to "to fix the path"
+			sed -i '\~swapon ~d' /jffs/scripts/post-mount
+			echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
+			swapon "$swapFile" 2> /dev/null
+			show_amtm " Swap file path changed to\\n $swapFile"
+		else
+			echo
+			echo " No Swap file found."
+			press_enter_to "remove reference"
+			echo " in /jffs/scripts/post-mount now."
+			sed -i '\~swapon ~d' /jffs/scripts/post-mount
+			show_amtm " Incorrect Swap file reference removed"
+		fi
 	fi
-fi
 }
 
 # dc) install or remove disk check at boot
 disk_check(){
-if [ -f "/jffs/scripts/pre-mount" ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
-	show_amtm " Unsupported pre-mount script found,\\n please remove file manually."
-else
+	if [ -f "/jffs/scripts/pre-mount" ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
+		show_amtm " Unsupported pre-mount script found,\\n please remove file manually."
+	else
 
-	if [ "$1" = "install" ]; then
+		if [ "$1" = "install" ]; then
 
-		cat <<-EOF > /jffs/scripts/disk-check
-		#!/bin/sh
-		# auto-check filesystems during boot
-		# generated by amtm $version
+			cat <<-EOF > /jffs/scripts/disk-check
+			#!/bin/sh
+			# auto-check filesystem before partition is mounted
+			# generated by amtm $version
 
-		if [ -f "/jffs/amtm-disk-check.log" ] && [ "\$(wc -c < /jffs/amtm-disk-check.log)" -gt "1000000" ]; then
-		   sed -i '1,1000d' "/jffs/amtm-disk-check.log"
-		   sed -i "1s/^/Truncated log file, size over 1MB, on \$(date)\n\n/" "/jffs/amtm-disk-check.log"
-		   logger -t amtm "Truncated /jffs/amtm-disk-check.log, size over 1MB"
-		fi
+			if [ -f "/jffs/amtm-disk-check.log" ] && [ "\$(wc -c < /jffs/amtm-disk-check.log)" -gt "1000000" ]; then
+			   sed -i '1,1000d' "/jffs/amtm-disk-check.log"
+			   sed -i "1s/^/Truncated log file, size over 1MB, on \$(date)\n\n/" "/jffs/amtm-disk-check.log"
+			   logger -t amtm "Truncated /jffs/amtm-disk-check.log, size over 1MB"
+			fi
 
-		FSTYPE=\$(fdisk -l \${1:0:8} | grep \$1 | cut -c55-65)
+			FSTYPE=\$(fdisk -l \${1:0:8} | grep \$1 | cut -c55-65)
 
-		case "\$FSTYPE" in
-		   Linux*) CHKCMD="e2fsck -p";;
-		   Win95* | FAT*) CHKCMD="fatfsck -a";;
-		   HPFS/NTFS) CHKCMD="ntfsck -a";;
-		   *) logger -t amtm "Disk check: Unknown filesystem type \$FSTYPE on \$1 - skipping check."
-		      printf "\\n\$(date) Unknown filesystem type \$FSTYPE on \$1 - skipping check.\\n" >> /jffs/amtm-disk-check.log
-		      exit 1;;
-		esac
+			case "\$FSTYPE" in
+			   Linux*) CHKCMD="e2fsck -p";;
+			   Win95* | FAT*) CHKCMD="fatfsck -a";;
+			   HPFS/NTFS) CHKCMD="ntfsck -a";;
+			   *) logger -t amtm "Disk check: Unknown filesystem type \$FSTYPE on \$1 - skipping check."
+				  printf "\\n\$(date) Unknown filesystem type \$FSTYPE on \$1 - skipping check.\\n" >> /jffs/amtm-disk-check.log
+				  exit 1;;
+			esac
 
-		logger -t amtm "Running disk check '\$CHKCMD' on \$1"
-		printf "\\n\$(date) Starting '\$CHKCMD \$1'\\n" >> /jffs/amtm-disk-check.log
-		\$CHKCMD \$1 >> /jffs/amtm-disk-check.log 2>&1
-		logger -t amtm "Disk check done on \$1"
+			logger -t amtm "Running disk check '\$CHKCMD' on \$1"
+			printf "\\n\$(date) Starting '\$CHKCMD \$1'\\n" >> /jffs/amtm-disk-check.log
+			\$CHKCMD \$1 >> /jffs/amtm-disk-check.log 2>&1
+			logger -t amtm "Disk check done on \$1"
 
-		EOF
+			EOF
 
-		if [ ! -f "/jffs/scripts/pre-mount" ]; then
-			echo "#!/bin/sh" > /jffs/scripts/pre-mount
-		elif [ -f "/jffs/scripts/pre-mount" ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
-		fi
-		if ! grep -q ". /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
-			echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
-		fi
-		chmod 0755 /jffs/scripts/pre-mount /jffs/scripts/disk-check
+			if [ ! -f "/jffs/scripts/pre-mount" ]; then
+				echo "#!/bin/sh" > /jffs/scripts/pre-mount
+			elif [ -f "/jffs/scripts/pre-mount" ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
+				sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
+			fi
+			if ! grep -q ". /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
+				echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
+			fi
+			chmod 0755 /jffs/scripts/pre-mount /jffs/scripts/disk-check
 
-	elif [ "$1" = "remove" ]; then
-		print_info_line
-		printf " This removes the Disk check script and\\n its log file.\\n"
-		continue_dialog
-		sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
-		rm -f /jffs/scripts/disk-check
-		rm -f /jffs/amtm-disk-check.log
+		elif [ "$1" = "remove" ]; then
+			print_info_line
+			printf " This removes the Disk check script and\\n its log file.\\n"
+			continue_dialog
+			sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
+			rm -f /jffs/scripts/disk-check
+			rm -f /jffs/amtm-disk-check.log
 
-	elif [ "$1" = "log" ]; then
-		if [ -f "/jffs/amtm-disk-check.log" ]; then
-			echo
-			echo " ---------------------------------------------------"
-			printf " /jffs/amtm-disk-check.log has this content:\\n\\n"
-			echo " START FILE, --- lines are not part of file"
-			echo " ---------------------------------------------------"
-			sed -e 's/^/ /' /jffs/amtm-disk-check.log
-			echo " ---------------------------------------------------"
-			echo " END FILE"
-			press_enter_to "return to menu"
-		else
-			show_amtm " No disk check log found (yet)."
+		elif [ "$1" = "log" ]; then
+			if [ -f "/jffs/amtm-disk-check.log" ]; then
+				echo
+				echo " ---------------------------------------------------"
+				printf " /jffs/amtm-disk-check.log has this content:\\n\\n"
+				echo " START FILE, --- lines are not part of file"
+				echo " ---------------------------------------------------"
+				sed -e 's/^/ /' /jffs/amtm-disk-check.log
+				echo " ---------------------------------------------------"
+				echo " END FILE"
+				press_enter_to "return to menu"
+			else
+				show_amtm " No disk check log found (yet)."
+			fi
 		fi
 	fi
-fi
 }
 
 # fd) Format disk
@@ -409,7 +433,7 @@ format_disk(){
 		fi
 
 		[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
-		while true;do
+		while true; do
 			printf "\\n Select device [$devNo e=Exit] ";read -r device
 			case "$device" in
 				[$noad])	break;;
@@ -438,7 +462,7 @@ format_disk(){
 		echo
 
 		printf " 1. Continue\\n 2. Return to device selection\\n"
-		while true;do
+		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		break;;
@@ -454,7 +478,7 @@ format_disk(){
 	printf " Select new filesystem\\n\\n"
 	printf " 2. ext2\\n 3. ext3\\n"
 	[ "$pto" = "4" ] && printf " 4. ext4\\n"
-	while true;do
+	while true; do
 		printf "\\n Set filesystem [2-$pto] ";read -r continue
 		case "$continue" in
 			2)		nfs=ext2;break;;
@@ -468,7 +492,7 @@ format_disk(){
 		print_end_line
 		printf " Do you want to enable journalling?\\n\\n"
 		printf " 1. No journalling\\n 2. Enable journalling\\n"
-		while true;do
+		while true; do
 			printf "\\n Enter selection [1-2] ";read -r continue
 			case "$continue" in
 				1)	journalling=off;break;;
@@ -482,7 +506,7 @@ format_disk(){
 		print_end_line
 		printf " Do you want to set a device label?\\n\\n"
 		printf " 1. No label\\n 2. Set label\\n"
-		while true;do
+		while true; do
 			printf "\\n Enter selection [1-2] ";read -r continue
 			case "$continue" in
 				1)	label=;break;;
@@ -493,7 +517,7 @@ format_disk(){
 					echo " Is this correct?"
 					echo
 					printf " 1. Yes, continue\\n 2. No, back to label selection\\n"
-					while true;do
+					while true; do
 						printf "\\n Enter selection [1-2] ";read -r continue
 						case "$continue" in
 							1)	break;;
@@ -578,10 +602,42 @@ format_disk(){
 		echo
 		echo " ${ERR_BG} Filesystem(s) did not unmount ${NC}"
 		echo " ${ERR_BG} See error above for reason ${NC}"
+
+		if [ -f "/opt/bin/opkg" ]; then
+			open_procs(){
+				echo
+				echo " These processes or files are in use:"
+				echo
+				for mounted in $(/bin/mount | grep "^${devtf:0:8}" | cut -d" " -f3); do
+					lsof | grep $mounted | grep -v 'grep\|lsof'
+					echo
+				done
+			}
+
+			if [ "$(which lsof)" ]; then
+				open_procs
+			else
+				print_end_line
+				printf " Do you want to install Entware package lsof\\n"
+				printf " to see what processes or files are in use?\\n\\n"
+				printf " 1. Install lsof\\n 2. No thanks\\n"
+				while true; do
+					printf "\\n Enter selection [1-2] ";read -r continue
+					case "$continue" in
+						1)	echo "${GRAY}"
+							opkg install lsof
+							echo "${NC}"
+							open_procs;break;;
+						2)	echo;break;;
+						*)	printf "\\n input is not an option\\n";;
+					esac
+				done
+			fi
+		fi
+
 		press_enter_to "return to menu"
 		show_amtm " Formatting failed:\\n Filesystem(s) did not unmount."
 	fi
-
 }
 
 format_disk_log(){
@@ -597,6 +653,123 @@ format_disk_log(){
 		press_enter_to "return to menu"
 	else
 		show_amtm " No format disk log found (yet)."
+	fi
+}
+
+# rs) Reboot scheduler
+reboot_scheduler(){
+	if [ "$1" = "install" ]; then
+		if [ "$(nvram get reboot_schedule_enable)" = "1" ]; then
+			print_end_line
+			echo " Reboot scheduler is enabled in the WebUI."
+			echo " This needs to be disabled first."
+			echo
+			while true; do
+				printf " Disable scheduler now? [1=Yes e=Exit] ";read -r continue
+				case "$continue" in
+					1)		nvram set reboot_schedule=00000000000
+							nvram set reboot_schedule_enable=0
+							nvram commit
+							echo
+							echo " WebUI Reboot scheduler disabled.";break;;
+					[Ee])	show_amtm " Exited reboot scheduler function";break;;
+					*)		printf "\\n input is not an option\\n\\n";;
+				esac
+			done
+		fi
+
+		if [ -f "/jffs/scripts/init-start" ] && grep -qE "ScheduledReboot" /jffs/scripts/init-start; then
+			echo " Removing third party reboot scheduler"
+			echo " in /jffs/scripts/init-start."
+			cru d ScheduledReboot
+			sed -i '\~/jffs/scripts/ScheduledReboot~d' /jffs/scripts/init-start
+		fi
+
+		print_end_line
+		rsdow=
+		echo " Set day(s) of the week to reboot the router"
+		printf "\\n Examples:\\n 1 would reboot on Monday\\n 15 would reboot on Monday and Friday\\n"
+		printf " 1234567 would reboot every day\\n"
+		printf "\\n 1. Monday\\n 2. Tuesday\\n 3. Wednesday\\n 4. Thursday\\n 5. Friday\\n 6. Saturday\\n 7. Sunday\\n\\n"
+		while true; do
+			printf " Enter day(s) of week [1-7 e=Exit] ";read -r rsd
+			case "$rsd" in
+				[Ee])			show_amtm " Exited reboot scheduler function";break;;
+				''|*[!1-7]*) 	printf "\\n input is not an option\\n\\n";;
+				*) 				for day in $(echo "$rsd" | grep -o .); do
+									case "$day" in
+										1)		rsdow="$rsdow,Mon";;
+										2)		rsdow="$rsdow,Tue";;
+										3)		rsdow="$rsdow,Wed";;
+										4)		rsdow="$rsdow,Thu";;
+										5)		rsdow="$rsdow,Fri";;
+										6)		rsdow="$rsdow,Sat";;
+										7)		rsdow="$rsdow,Sun";;
+									esac
+								done
+								rsdow=$(echo $rsdow | sed -e 's/^,//');break;;
+			esac
+		done
+
+		print_end_line
+		echo " Set the hour to reboot on $rsdow"
+		echo
+		while true; do
+			printf " Enter hour [0-23] ";read -r rsh
+			case "$rsh" in
+				[0-9]|[1][0-9]|[2][0-3]) break;;
+				*)		printf "\\n input is not an option\\n\\n";;
+			esac
+		done
+
+		print_end_line
+		echo " Set the minute to reboot"
+		echo
+		while true; do
+			printf " Enter minute [0-59] ";read -r rsm
+			case "$rsm" in
+				[0-9]|[1-5][0-9]) break;;
+				*)		printf "\\n input is not an option\\n\\n";;
+			esac
+		done
+
+		print_end_line
+		echo " Your router will reboot every:"
+		echo
+		[ "$(echo $rsm | wc -m)" -lt "3" ] && rsmc=$(echo $rsm | sed -e 's/^/0/') || rsmc=$rsm
+		echo " $rsdow @ ${rsh}:${rsmc}"
+		echo
+		while true; do
+			printf " Is this correct? [1=Yes 2=No] ";read -r continue
+			case "$continue" in
+				1)		break;;
+				2)		echo
+						echo " Starting over with reboot scheduler..."
+						reboot_scheduler install;break;;
+				*)		printf "\\n input is not an option\\n\\n";;
+			esac
+		done
+
+		if [ ! -f "/jffs/scripts/init-start" ]; then
+			echo "#!/bin/sh" > /jffs/scripts/init-start
+		elif [ -f "/jffs/scripts/init-start" ] && ! head -1 /jffs/scripts/init-start | grep -qE "^#!/bin/sh"; then
+			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/init-start
+		fi
+		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
+			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow /sbin/reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
+		fi
+		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow /sbin/reboot"
+		chmod 0755 /jffs/scripts/init-start
+
+		show_amtm " Reboot scheduler enabled."
+
+	elif [ "$1" = "remove" ]; then
+		print_info_line
+		printf " This removes the reboot scheduler.\\n"
+		continue_dialog
+		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
+		cru d amtm_RebootScheduler
+		show_amtm " Reboot scheduler removed."
 	fi
 }
 
@@ -761,7 +934,7 @@ install_Entware(){
 	fi
 
 	[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
-	while true;do
+	while true; do
 		printf "\\n Select device [$devNo e=Exit] ";read -r device
 		case "$device" in
 			[$noad])	break;;
@@ -787,7 +960,7 @@ install_Entware(){
 		printf " 64-bit version is recommended.\\n\\n"
 		printf " 1. 64-bit Entware\\n"
 		printf " 2. 32-bit Entware\\n"
-		while true;do
+		while true; do
 			printf "\\n Enter your selection [1-2] ";read -r eversion
 			case "$eversion" in
 				1)	INST_URL='http://bin.entware.net/aarch64-k3.10/installer/generic.sh'
@@ -805,7 +978,7 @@ install_Entware(){
 	echo " ${GREEN_BG} $entDev ${NC}"
 	echo
 	printf " 1. Continue\\n 2. Return to device selection\\n"
-	while true;do
+	while true; do
 		printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 		case "$continue" in
 			1)		break;;
@@ -876,14 +1049,15 @@ show_amtm(){
 	check_AB_theme
 
 	# amtm header
-	printf "${RED_BG}%-25s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
-	echo " The $title"
+	printf "${RED_BG}%-27s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
 	echo
 
 	# show router info, helpful when installing scripts
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
-	print_end_line
+	echo
+	echo "${RED_BG}  The ${title}  ${NC}"
+	echo
 	echo "    SNBForum scripts"
 
 	# Skript menu in alphabetical order follow
@@ -1011,7 +1185,6 @@ show_amtm(){
 			echo " it includes the installation of Entware."
 			echo
 			echo " Author: thelonelycoder"
-			echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
 			continue_dialog
 			install_Entware
 			sleep 2
@@ -1046,7 +1219,7 @@ show_amtm(){
 			echo " 2. Install statically linked beta version."
 			echo "    (_binfavor=static, arm7 and armv8/aarch64"
 			echo "    based router models only)"
-			while true;do
+			while true; do
 				printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 				case "$continue" in
 					1)		sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/install-beta.sh)"
@@ -1068,6 +1241,7 @@ show_amtm(){
 		}
 	fi
 
+	echo
 
 	# 5 Skynet menu
 	if [ -f "/jffs/scripts/firewall" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
@@ -1131,11 +1305,112 @@ show_amtm(){
 		}
 	fi
 
+	# 7 YazFi menu
+	if [ -f "/jffs/scripts/YazFi" ] && [ -f "/jffs/configs/YazFi/YazFi.config" ]; then
+		printf "${GREEN_BG} 7 ${NC} %-9s%s\\n" "open" "YazFi $(grep "YAZFI_VERSION=" /jffs/scripts/YazFi | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+
+		case_7(){
+			/jffs/scripts/YazFi
+			sleep 2
+			show_amtm menu
+		}
+	else
+		printf "${ERR_BG} 7 ${NC} %-9s%s\\n" "install" "YazFi enhanced guest WiFi"
+
+		case_7(){
+			print_info_line
+			echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/"
+			continue_dialog
+
+			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
+			sleep 2
+			show_amtm " YazFi installed."
+		}
+	fi
+
 
 	# System tools follow
-	# sw/swp/swap Swap file
 	echo
 	echo "    amtm system tools"
+
+	# Disk check
+	if [ -f "/jffs/scripts/disk-check" ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
+		[ -f "/jffs/amtm-disk-check.log" ] && dcltext="${GREEN_BG}dcl${NC} show log"
+		printf "${GREEN_BG} dc${NC} %-9s%s\\n" "remove" "Disk check script   $dcltext"
+
+		case_dc(){
+			disk_check remove
+			show_amtm menu
+		}
+	else
+		printf "${ERR_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
+
+		case_dc(){
+			print_info_line
+			echo " This installs /jffs/scripts/disk-check."
+			echo " It runs a filesystem check on compatible"
+			echo " USB storage devices before they are mounted."
+			echo
+			echo " Authors: latenitetech, thelonelycoder"
+			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
+			continue_dialog
+			disk_check install
+			show_amtm " Disk check script installed.\\n The check log can be viewed directly\\n in amtm with dcl."
+		}
+	fi
+
+	# Format disk
+	[ -f "/jffs/amtm-format-disk.log" ] && fdltext="${GREEN_BG}fdl${NC} show log"
+	printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         $fdltext"
+
+	case_fd(){
+		print_info_line
+		echo " This (re)formats your plugged in USB storage"
+		echo " device to ext* filesystem.  The process"
+		echo " erases all data and partitions on the device."
+		echo " After formatting, the router will reboot."
+		echo
+		echo " To be on the safe side, remove all other"
+		echo " attached USB devices before continuing."
+		echo
+		echo " Authors: Zonkd, ColinTaylor, thelonelycoder"
+		echo " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
+		echo " https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723"
+		continue_dialog
+		format_disk
+	}
+
+	# rs Reboot scheduler
+	if [ -f "/jffs/scripts/init-start" ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+		rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//')
+		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
+		printf "${GREEN_BG} rs${NC} %-9s%s\\n" "remove" "Reboot scheduler ${GREEN_BG}${rstext}${NC}"
+
+		case_rs(){
+			reboot_scheduler remove
+		}
+	else
+		printf "${ERR_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
+
+		case_rs(){
+			print_info_line
+			echo " This enables the reboot scheduler for your"
+			echo " router."
+			echo " The scheduler is set with a cron job via"
+			echo " init-start, as opposed to the WebUI setting"
+			echo " which uses an internal mechanism to reboot."
+			echo
+			echo " Author: thelonelycoder"
+			continue_dialog
+			reboot_scheduler install
+		}
+	fi
+
+	# sw/swp/swap Swap file
 	swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount 2>/dev/null | awk '{print $2}')"
 	if [ -z "$swaplocation" ]; then
 		if [ "$(find /mnt/*/myswap.swp 2> /dev/null)" ]; then
@@ -1179,64 +1454,14 @@ show_amtm(){
 
 	fi
 
-	# Disk check
-	if [ -f "/jffs/scripts/disk-check" ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
-		printf "${GREEN_BG} dc${NC} %-9s%s\\n" "remove" "Disk check script"
-
-		[ -f "/jffs/amtm-disk-check.log" ] && printf "${GREEN_BG}dcl${NC} %-9s%s\\n" "show" "Disk check log"
-
-		case_dc(){
-			disk_check remove
-			show_amtm menu
-		}
-	else
-		printf "${ERR_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
-
-		case_dc(){
-			print_info_line
-			echo " This installs /jffs/scripts/disk-check."
-			echo " It runs a filesystem check on compatible"
-			echo " USB storage devices before they are mounted."
-			echo
-			echo " Authors: latenitetech, thelonelycoder"
-			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
-			continue_dialog
-
-			disk_check install
-			show_amtm " Disk check script installed.\\n The check log can be viewed directly\\n in amtm with dcl."
-		}
-	fi
-
-	# Format disk
-	printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
-	[ -f "/jffs/amtm-format-disk.log" ] && printf "${GREEN_BG}fdl${NC} %-9s%s\\n" "show" "Format disk log"
-
-	case_fd(){
-		print_info_line
-		echo " This (re)formats your plugged in USB storage"
-		echo " device to ext* filesystem.  The process"
-		echo " erases all data and partitions on the device."
-		echo " After formatting, the router will reboot."
-		echo
-		echo " To be on the safe side, remove all other"
-		echo " attached USB devices before continuing."
-		echo
-		echo " Authors: Zonkd, ColinTaylor, thelonelycoder"
-		echo " https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723"
-		continue_dialog
-
-		format_disk
-	}
 
 	# amtm menu
 	echo
 	echo "    amtm options"
-	echo "${GREEN_BG} u ${NC} update"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && echo "${GREEN_BG} r ${NC} remove"  || echo "${GREEN_BG} i ${NC} install"
-	echo "${GREEN_BG} a ${NC} about"
-	echo "${GREEN_BG} e ${NC} exit"
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG} r ${NC} remove"  || thisopt="${GREEN_BG} i ${NC} install"
+	echo "${GREEN_BG} e ${NC} exit   ${GREEN_BG} u ${NC} update   $thisopt  ${GREEN_BG} a ${NC} about"
 
-	# Output under amtm menu, the notification area. $1 can be passed on as positional parameter
+	# The notification area. $1 can be passed on as positional parameter
 	if [ "$1" = "menu" ]; then
 		print_end_line
 	else
@@ -1246,7 +1471,7 @@ show_amtm(){
 	fi
 
 	while true; do
-		printf "${RED_BG} What do you want to do? ${NC} ";read -r selection
+		printf "${RED_BG} Enter option ${NC} ";read -r selection
 		case "$selection" in
 
 			# Scripts go here
@@ -1256,15 +1481,17 @@ show_amtm(){
 			4)			case_4;break;;
 			5)			case_5;break;;
 			6)			case_6;break;;
+			7)			case_7;break;;
 
 			# System tools
-			swap|swp|sw)case_swp;break;;
 			[Dd][Cc])	case_dc;break;;
 			dcl)		disk_check log
 						show_amtm menu;break;;
 			[Ff][Dd])	case_fd;break;;
 			fdl)		format_disk_log
 						show_amtm menu;break;;
+			rs)			case_rs;break;;
+			swap|swp|sw)case_swp;break;;
 
 			# amtm options
 			[Uu])		update_amtm;break;;
@@ -1276,26 +1503,14 @@ show_amtm(){
 						printf "   Goodbye\\n\\n"
 						exit 0;break;;
 			11)			exec "$0";break;; # hidden dev option
-			*)			printf "\\n input is not an option\\n\\n";;
+			*)			printf "\\n               input is not an option\\n\\n";;
 		esac
 	done
 }
 
 # asks to install, show menu, pass along positional parameter
 if [ ! -f "/jffs/scripts/$thisScript" ]; then
-	ascii_logo
-	echo " Do you want to install $thisScript, the"
-	echo " $title?"
-	echo
-	print_end_line
-	while true;do
-		printf " Continue? [1=Yes e=Exit] ";read -r continue
-		case "$continue" in
-			1)		install_amtm;break;;
-			[Ee])	rm -f "$0";echo;exit 0;break;;
-			*)		printf "\\n input is not an option\\n\\n";;
-		esac
-	done
+	install_amtm
 elif [ -z "$1" ]; then
 	recheck_opt
 	show_amtm menu
