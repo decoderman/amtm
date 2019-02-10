@@ -10,24 +10,36 @@ Enter this into your favorite SSH terminal:
 
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
+
 Screenshot of v1.7, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
 [![amtm v1.7](https://i.imgur.com/r78Jzxl.png "amtm v1.7")](https://i.imgur.com/r78Jzxl.png "amtm v1.7")
 
 ### Currently supported scripts
 
-[Diversion / AB-Solution - maintained by thelonelycoder](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/)
+[Diversion / AB-Solution](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) - maintained by thelonelycoder
  
-[DNSCrypt - maintained by bigeyes0x0](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/)
+[DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0
  
-[Entware - maintained by zyxmon & ryzhovau](https://github.com/Entware/entware)
+[Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau
  
-[Pixelserv-tls - maintained by kvic](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/)
+[Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic
  
-[Skynet - maintained by Adamm](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/)
+[Skynet](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/) - maintained by Adamm
 
-[USB Disk Check at Boot - maintained by latenitetech, thelonelycoder](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot)
+[USB Disk Check at Boot](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot) - maintained by latenitetech, thelonelycoder
 
-[Format Disk - maintained by thelonelycoder](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/)
+[Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder
 
-[Stubby-Installer - maintained by Xentrk](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/)
+[Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk
+
+
+### How to start amtm after installation
+Enter this into your SSH terminal:
+
+`/jffs/scripts/amtm`
+
+If Entware is installed on the router, start amtm with this command.
+[Diversion / AB-Solution](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) installs Entware by default, amtm has an option to do so.
+
+`amtm`
