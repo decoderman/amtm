@@ -21,7 +21,7 @@ Screenshot of amtm 1.8, uses selected color theme when [Diversion](https://diver
 [DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0<br/>
 [Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau<br/>
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic<br/>
-[Skynet](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/) - maintained by Adamm<br/>
+[Skynet](https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/) - maintained by Adamm<br/>
 [USB Disk Check at Boot](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot) - maintained by latenitetech, thelonelycoder<br/>
 [Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder<br/>
 [Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk<br/>

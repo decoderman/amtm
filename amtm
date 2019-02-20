@@ -1260,7 +1260,7 @@ show_amtm(){
 			echo " This installs Skynet on your router."
 			echo
 			echo " Author: Adamm"
-			echo " https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/"
+			echo " https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/"
 			continue_dialog
 
 			if ! ipset -v | grep -qF "v6"; then
