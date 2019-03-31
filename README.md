@@ -17,7 +17,7 @@ Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diver
 
 ### Currently supported scripts
 
-[Diversion / AB-Solution](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) - maintained by thelonelycoder<br/>
+[Diversion](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) - maintained by thelonelycoder<br/>
 [DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0<br/>
 [Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau<br/>
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic<br/>
