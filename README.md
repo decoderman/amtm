@@ -11,9 +11,9 @@ Enter this into your favorite SSH terminal:
 `/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
 
 
-Screenshot of amtm 1.8, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
-[![amtm v1.7](https://i.imgur.com/GRMHK07.png "amtm v1.8")](https://i.imgur.com/GRMHK07.png "amtm v1.8")
+[![amtm v1.7](https://i.imgur.com/32S8wD0.png "amtm v1.9")](https://i.imgur.com/32S8wD0.png "amtm v1.9")
 
 ### Currently supported scripts
 
@@ -26,6 +26,7 @@ Screenshot of amtm 1.8, uses selected color theme when [Diversion](https://diver
 [Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder<br/>
 [Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk<br/>
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
+[ntpMerlin](https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/) - maintained by Jack Yaz<br/>
 
 
 ### How to start amtm after installation
