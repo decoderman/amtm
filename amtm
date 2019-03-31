@@ -17,8 +17,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 # Version, release date
-version=1.8
-release="February 10 2019"
+version=1.9
+release="March 31 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 
@@ -756,9 +756,9 @@ reboot_scheduler(){
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/init-start
 		fi
 		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
-			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow /sbin/reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
+			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow service reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
 		fi
-		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow /sbin/reboot"
+		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow service reboot"
 		chmod 0755 /jffs/scripts/init-start
 
 		show_amtm " Reboot scheduler enabled."
@@ -1020,37 +1020,28 @@ install_Entware(){
 	fi
 }
 
-# Use selected color theme when Diversion/AB-Solution is installed
-check_AB_theme(){
+# Use selected color theme when Diversion is installed
+check_Diversion_theme(){
 	divconf=/opt/share/diversion/.conf/diversion.conf
 	if [ -f "$divconf" ]; then
 		theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
 		divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
 		divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
-		[ "$divMver" ] && divver="v${divver}.$divMver" || divver=v$divver
+		[ "$divMver" ] && divver="${divver}.$divMver" || divver=$divver
 		. /opt/share/diversion/file/theme.div
 	else
-		abcfg="$(find /mnt/*/adblocking/.config/ab-solution.cfg 2> /dev/null)"
-		[ "$abcfg" ] && theme="$(grep "appTheme=" "$abcfg" | sed -e 's/appTheme="//; s/"//')"
-		[ -z "$theme" ] && theme=standard
-
+		theme=standard
 		theme_standard(){ RED_LINE='[0;31m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';}
-		theme_green(){ RED_LINE='[0;33m';RED_BG='[42m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';}
-		theme_blue(){ RED_LINE='[0;34m';RED_BG='[44m';ERR_BG='[0;101m';GREEN_BG='[0;104m';GRAY='[90m';NC='[0m';}
-		theme_blue_on_white(){ RED_LINE='[0;34m';RED_BG='[0;104m';ERR_BG='[0;101m';GREEN_BG='[0;104m';GRAY='[90m';NC='[0m';}
-		theme_high_contrast(){ RED_LINE='[0;91m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';}
-		theme_white_on_black(){ RED_LINE=;RED_BG=;ERR_BG=;GREEN_BG=;GRAY=;NC='[0m';}
 	fi
 	theme_$theme
 }
 
 show_amtm(){
 	clear
-	check_AB_theme
+	check_Diversion_theme
 
 	# amtm header
 	printf "${RED_BG}%-27s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
-	echo
 
 	# show router info, helpful when installing scripts
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
@@ -1060,47 +1051,36 @@ show_amtm(){
 	echo
 	echo "    SNBForum scripts"
 
-	# Skript menu in alphabetical order follow
 
-	# 1 Diversion/AB-Solution menu
+	# SNBForum scripts follow
+
+
+	# 1 Diversion menu
 	if [ -f "/opt/bin/diversion" ]; then
-		printf "${GREEN_BG} 1 ${NC} %-9s%s\\n" "open" "Diversion $divver"
+		upd="${NC}v$divver${NC} "
+		divverm=
+		if [ "$su" = "1" ]; then
+			remoteurl="https://diversion.ch/diversion/diversion.info"
+			if curl -fsN --retry 3 "$remoteurl" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
+				remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
+				S_VERSION=$(echo $remotever | awk '{print $1}')
+				S_M_VERSION=$(echo $remotever | awk '{print $2}')
+				[ "$S_M_VERSION" ] && F_VERSION="${S_VERSION}.$S_M_VERSION" || F_VERSION=$S_VERSION
+				upd="${ERR_BG}no upd${NC}"
+				if [ "$divver" != "$F_VERSION" ]; then
+					upd="${GREEN_BG}-> $F_VERSION${NC}"
+					suUpd=1
+				fi
+			else
+				upd=" ${ERR_BG}upd err${NC}"
+			fi
+			divverm="v$divver"
+		fi
+		printf "${GREEN_BG} 1 ${NC} %-9s%-20s%21s\\n" "open" "Diversion $divverm" " $upd"
 
 		case_1(){
 			clear
 			diversion
-			sleep 2
-			show_amtm menu
-		}
-
-	elif [ -f "$HOME/ab-solution.sh" ] || [ -f "/opt/bin/ab-solution" ]; then
-		printf "${GREEN_BG} 1 ${NC} %-9s%s\\n" "open" "AB-Solution"
-
-		if [ -f "/opt/bin/ab-solution" ]; then
-
-			case_1(){
-				clear
-				ab-solution
-				sleep 2
-				show_amtm menu
-			}
-		else
-
-			case_1(){
-				clear
-				sh "$HOME/ab-solution.sh"
-				sleep 2
-				show_amtm menu
-			}
-		fi
-	elif [ "$(find /mnt/*/ab-solution.sh 2> /dev/null)" ]; then
-		# this is the worst case: device name changed or something bad happened
-		printf "${GREEN_BG} 1 ${NC} %-9s%s\\n" "open" "AB-Solution"
-		printf "%3s${ERR_BG} %-35s${NC}\\n" "" "Warning AB-Solution in error state"
-		printf "%3s${ERR_BG} %-35s${NC}\\n" "" "Open it now to correct errors"
-
-		case_1(){
-			sh "$(find /mnt/*/ab-solution.sh)"
 			sleep 2
 			show_amtm menu
 		}
@@ -1168,6 +1148,14 @@ show_amtm(){
 				echo " in Diversion using the ${RED_BG} ep ${NC} option."
 				echo " Especially so when pixelserv-tls is installed."
 			fi
+			if [ -f "/jffs/scripts/install_stubby.sh" ] && [ -f "/opt/etc/stubby/stubby.yml" ]; then
+				echo
+				echo " Note: Stubby DNS Privacy Daemon is installed"
+				echo " on this router."
+				echo " It's recommended to update Entware packages"
+				echo " selectively through the Stubby DNS menu to"
+				echo " prevent overwriting configuration files."
+			fi
 			continue_dialog
 			opkg update
 			opkg upgrade
@@ -1193,14 +1181,38 @@ show_amtm(){
 	fi
 
 
-	# 4 Pixelserv menu
+	# 4 pixelserv-tls menu
 	if [ -f "/opt/bin/pixelserv-tls" ]; then
 		if [ -L "/opt/bin/pixelserv-tls" ]; then
+			beta=" beta"
+			psVersionm=
 			psVersion="$(pixelserv-tls -v | awk 'NR == 1 {print $2}')"
 			[ -z "$psVersion" ] && psVersion="likely v.Kk"
-			psVersion="v$psVersion"
-			[ -z "$(pidof pixelserv-tls)" ] && psVersion="v$psVersion ${ERR_BG}(not running)${NC}"
-			printf "${GREEN_BG} 4 ${NC} %-9s%s\\n" "update" "pixelserv-tls beta $psVersion"
+			case $psVersion in
+			  v*|*v.K*) ;;
+			  * ) psVersion="v$psVersion" ;;
+			esac
+			upd="${NC}$psVersion${NC} "
+			if [ -z "$(pidof pixelserv-tls)" ]; then
+				upd=
+				psVersionm="$psVersion ${ERR_BG}(not running)${NC}"
+			elif [ "$su" = "1" ]; then
+				beta=
+				remoteurl="https://kazoo.ga/pixelserv-tls/install-beta.sh"
+				if curl -fsN --retry 3 "$remoteurl" | grep -q "^_beta="; then
+					psremotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^_beta=" | sed -e 's/_beta=//')"
+					[ "$(echo "$psremotever" | grep "\-1$")" ] && psremotever="$(echo "$psremotever" | sed -e 's/-1//')"
+					upd="${ERR_BG}no upd${NC}"
+					if [ "$psremotever" != "$(echo "$psVersion" | sed -e 's/v//')" ]; then
+						upd="${GREEN_BG}-> $psremotever${NC}"
+						suUpd=1
+					fi
+				else
+					upd=" ${ERR_BG}upd err${NC}"
+				fi
+				psVersionm=$psVersion
+			fi
+			printf "${GREEN_BG} 4 ${NC} %-9s%-20s%21s\\n" "update" "pixelserv-tls$beta $psVersionm" " $upd"
 		else
 			printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "pixelserv-tls beta version"
 		fi
@@ -1243,9 +1255,34 @@ show_amtm(){
 
 	echo
 
+
 	# 5 Skynet menu
 	if [ -f "/jffs/scripts/firewall" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		printf "${GREEN_BG} 5 ${NC} %-9s%s\\n" "open" "Skynet $(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' /jffs/scripts/firewall)"
+		skynetver=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' /jffs/scripts/firewall)
+		upd="${NC}$skynetver${NC} "
+		skynetverm=
+		if [ "$su" = "1" ]; then
+			remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
+			if curl -fsL --retry 3 "$remoteurl" | grep -qF "Adamm"; then
+				skynetremotever="$(curl -fsL --retry 3 "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+				upd="${ERR_BG}no upd${NC}"
+				if [ "$skynetver" != "$skynetremotever" ]; then
+					upd="${GREEN_BG}-> $skynetremotever${NC}"
+					suUpd=1
+				else
+					skynetlocalmd5="$(md5sum "/jffs/scripts/firewall" | awk '{print $1}')"
+					skynetremotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+					if [ "$skynetlocalmd5" != "$skynetremotemd5" ]; then
+						upd="${GREEN_BG}-> min upd${NC}"
+						suUpd=1
+					fi
+				fi
+			else
+				upd=" ${ERR_BG}upd err${NC}"
+			fi
+			skynetverm=$skynetver
+		fi
+		printf "${GREEN_BG} 5 ${NC} %-9s%-20s%21s\\n" "open" "Skynet $skynetverm" " $upd"
 
 		case_5(){
 			/jffs/scripts/firewall
@@ -1276,7 +1313,31 @@ show_amtm(){
 
 	# 6 Stubby-Installer-Asuswrt-Merlin menu
 	if [ -f "/jffs/scripts/install_stubby.sh" ] && [ -f "/opt/etc/stubby/stubby.yml" ]; then
-		printf "${GREEN_BG} 6 ${NC} %-9s%s\\n" "open" "Stubby DNS v$(grep "VERSION=" /jffs/scripts/install_stubby.sh | sed -e 's/VERSION=//;s/"//g')"
+		stubbyver=$(grep "VERSION=" /jffs/scripts/install_stubby.sh | sed -e 's/VERSION=//;s/"//g')
+		upd="${NC}v$stubbyver${NC} "
+		stubbyverm=
+		if [ "$su" = "1" ]; then
+			remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
+			if curl -fsL --retry 3 "$remoteurl" | grep -qF "Xentrk"; then
+				stubbyremotever="$(curl -fsL --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
+				upd="${ERR_BG}no upd${NC}"
+				if [ "$stubbyver" != "$stubbyremotever" ]; then
+					upd="${GREEN_BG}-> $stubbyremotever${NC}"
+					suUpd=1
+				else
+					stubbylocalmd5="$(md5sum "/jffs/scripts/install_stubby.sh" | awk '{print $1}')"
+					stubbyremotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+					if [ "$stubbylocalmd5" != "$stubbyremotemd5" ]; then
+						upd="${GREEN_BG}-> min upd${NC}"
+						suUpd=1
+					fi
+				fi
+			else
+				upd=" ${ERR_BG}upd err${NC}"
+			fi
+			stubbyverm=v$stubbyver
+		fi
+		printf "${GREEN_BG} 6 ${NC} %-9s%-20s%21s\\n" "open" "Stubby DNS $stubbyverm" " $upd"
 
 		case_6(){
 			/jffs/scripts/install_stubby.sh
@@ -1299,7 +1360,7 @@ show_amtm(){
 				show_amtm " Stubby DNS install failed. It is not\\n compatible with dnscrypt installer which\\n is installed on this router."
 			fi
 
-			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
+			curl --retry 3 "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
 			sleep 2
 			show_amtm " Stubby DNS installed."
 		}
@@ -1307,7 +1368,31 @@ show_amtm(){
 
 	# 7 YazFi menu
 	if [ -f "/jffs/scripts/YazFi" ] && [ -f "/jffs/configs/YazFi/YazFi.config" ]; then
-		printf "${GREEN_BG} 7 ${NC} %-9s%s\\n" "open" "YazFi $(grep "YAZFI_VERSION=" /jffs/scripts/YazFi | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+		yazfiver=$(grep "YAZFI_VERSION=" /jffs/scripts/YazFi | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+		upd="${NC}$yazfiver${NC} "
+		yazfiverm=
+		if [ "$su" = "1" ]; then
+			remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
+			if curl -fsL --retry 3 "$remoteurl" | grep -qF "jackyaz"; then
+				yazfiremotever="$(curl -fsL --retry 3 "$remoteurl" | grep "YAZFI_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+				upd="${ERR_BG}no upd${NC}"
+				if [ "$yazfiver" != "$yazfiremotever" ]; then
+					upd="${GREEN_BG}-> $yazfiremotever${NC}"
+					suUpd=1
+				else
+					yazfilocalmd5="$(md5sum "/jffs/scripts/YazFi" | awk '{print $1}')"
+					yazfiremotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+					if [ "$yazfilocalmd5" != "$yazfiremotemd5" ]; then
+						upd="${GREEN_BG}-> min upd${NC}"
+						suUpd=1
+					fi
+				fi
+			else
+				upd=" ${ERR_BG}upd err${NC}"
+			fi
+			yazfiverm=$yazfiver
+		fi
+		printf "${GREEN_BG} 7 ${NC} %-9s%-20s%21s\\n" "open" "YazFi $yazfiverm" " $upd"
 
 		case_7(){
 			/jffs/scripts/YazFi
@@ -1326,11 +1411,66 @@ show_amtm(){
 			echo " https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/"
 			continue_dialog
 
-			/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
 			sleep 2
 			show_amtm " YazFi installed."
 		}
 	fi
+
+
+	# 8 ntpMerlin menu
+	if [ -f "/jffs/scripts/ntpmerlin" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start; then
+		ntpdver=$(grep "NTPD_VERSION=" /jffs/scripts/ntpmerlin | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+		upd="${NC}$ntpdver${NC} "
+		ntpdverm=
+		if [ "$su" = "1" ]; then
+			remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
+			if curl -fsL --retry 3 "$remoteurl" | grep -qF "jackyaz"; then
+				ntpdremotever="$(curl -fsL --retry 3 "$remoteurl" | grep "NTPD_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+				upd="${ERR_BG}no upd${NC}"
+				if [ "$ntpdver" != "$ntpdremotever" ]; then
+					upd="${GREEN_BG}-> $ntpdremotever${NC}"
+					suUpd=1
+				else
+					ntpdlocalmd5="$(md5sum "/jffs/scripts/ntpmerlin" | awk '{print $1}')"
+					ntpdremotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+					if [ "$ntpdlocalmd5" != "$ntpdremotemd5" ]; then
+						upd="${GREEN_BG}-> min upd${NC}"
+						suUpd=1
+					fi
+				fi
+			else
+				upd=" ${ERR_BG}upd err${NC}"
+			fi
+			ntpdverm=$ntpdver
+		fi
+		printf "${GREEN_BG} 8 ${NC} %-9s%-20s%21s\\n" "open" "ntpMerlin $ntpdverm" " $upd"
+
+		case_8(){
+			/jffs/scripts/ntpmerlin
+			sleep 2
+			show_amtm menu
+		}
+	else
+		printf "${ERR_BG} 8 ${NC} %-9s%s\\n" "install" "ntpMerlin NTP Daemon"
+
+		case_8(){
+			print_info_line
+			echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh" -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
+			sleep 2
+			show_amtm " ntpMerlin installed."
+		}
+	fi
+
+	echo
+	printf "${GREEN_BG} su${NC} %-9s%s\\n" "check" "for SNBForum script updates"
 
 
 	# System tools follow
@@ -1462,6 +1602,10 @@ show_amtm(){
 	echo "${GREEN_BG} e ${NC} exit   ${GREEN_BG} u ${NC} update   $thisopt  ${GREEN_BG} a ${NC} about"
 
 	# The notification area. $1 can be passed on as positional parameter
+	if [ "$su" = "1" ]; then
+		su=
+		[ "$suUpd" = "1" ] && set -- " Script update(s) are available!" || set -- " No script update(s) available"
+	fi
 	if [ "$1" = "menu" ]; then
 		print_end_line
 	else
@@ -1482,6 +1626,8 @@ show_amtm(){
 			5)			case_5;break;;
 			6)			case_6;break;;
 			7)			case_7;break;;
+			8)			case_8;break;;
+			[Ss][Uu])	su=1;suUpd=0;show_amtm menu;break;;
 
 			# System tools
 			[Dd][Cc])	case_dc;break;;
