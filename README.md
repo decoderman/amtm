@@ -13,7 +13,7 @@ Enter this into your favorite SSH terminal:
 
 Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
-[![amtm v1.7](https://i.imgur.com/32S8wD0.png "amtm v1.9")](https://i.imgur.com/32S8wD0.png "amtm v1.9")
+[![amtm v1.9](https://i.imgur.com/32S8wD0.png "amtm v1.9")](https://i.imgur.com/32S8wD0.png "amtm v1.9")
 
 ### Currently supported scripts
 
