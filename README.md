@@ -24,7 +24,7 @@ Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diver
 [Skynet](https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/) - maintained by Adamm<br/>
 [USB Disk Check at Boot](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot) - maintained by latenitetech, thelonelycoder<br/>
 [Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder<br/>
-[Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk<br/>
+[Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk and Adamm<br/>
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
 [ntpMerlin](https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/) - maintained by Jack Yaz<br/>
 
