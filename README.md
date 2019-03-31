@@ -1,15 +1,15 @@
-# amtm - the SNBForum Asuswrt-Merlin Terminal Menu
+## amtm - the SNBForum Asuswrt-Merlin Terminal Menu
 
 A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware.
 
 Discuss and read more on the SmallNetBuilders Forum: [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/)
 
-
 ### How to install on Asuswrt-Merlin
 Enter this into your favorite SSH terminal:
 
-`/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm`
-
+```Shell
+/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
+```
 
 Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
@@ -28,13 +28,16 @@ Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diver
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
 [ntpMerlin](https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/) - maintained by Jack Yaz<br/>
 
-
 ### How to start amtm after installation
 Enter this into your SSH terminal:
 
-`/jffs/scripts/amtm`
+```Shell
+/jffs/scripts/amtm
+```
 
 If Entware is installed on the router, start amtm with this command.<br/>
 [Diversion](https://diversion.ch/) installs Entware by default, amtm has an option to do so.
 
-`amtm`
+```Shell
+amtm
+```
