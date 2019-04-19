@@ -11,9 +11,9 @@ Enter this into your favorite SSH terminal:
 /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 ```
 
-Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+Screenshot of amtm 2.0, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
-[![amtm v1.9](https://i.imgur.com/32S8wD0.png "amtm v1.9")](https://i.imgur.com/32S8wD0.png "amtm v1.9")
+[![amtm v2.0](https://i.imgur.com/EDTQ2R5.png "amtm v2.0")](https://i.imgur.com/EDTQ2R5.png "amtm v2.0")
 
 ### Currently supported scripts
 
@@ -22,7 +22,7 @@ Screenshot of amtm 1.9, uses selected color theme when [Diversion](https://diver
 [Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau<br/>
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic<br/>
 [Skynet](https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/) - maintained by Adamm<br/>
-[USB Disk Check at Boot](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot) - maintained by latenitetech, thelonelycoder<br/>
+[USB Disk Check at Boot or Hot Plug (improved version)](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)) - maintained by ColinTaylor, latenitetech, thelonelycoder<br/>
 [Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder<br/>
 [Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk and Adamm<br/>
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
