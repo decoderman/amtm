@@ -21,7 +21,7 @@ version=2.0
 release="April 19 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
-dc_version=2.1
+dc_version=2.2
 
 ascii_logo(){
 	echo "              _"
@@ -474,8 +474,8 @@ write_dc_file(){
 	fi
 
 	if [ "\$CHKCMD" ]; then
-	    logger -t "\$TAG" "Running disk check (v\$dc_version) '\$CHKCMD' on \$1"
-	    printf "\$(date) Running disk check (v\$dc_version) '\$CHKCMD' on \$1\n" >> \$CHKLOG
+	    logger -t "\$TAG" "Running disk check (v\$VERSION) '\$CHKCMD' on \$1"
+	    printf "\$(date) Running disk check (v\$VERSION) '\$CHKCMD' on \$1\n" >> \$CHKLOG
 	    \$CHKCMD "\$1" >> \$CHKLOG 2>&1
 	    logger -t "\$TAG" "Disk check done on \$1"
 	fi
