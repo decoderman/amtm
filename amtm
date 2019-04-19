@@ -21,7 +21,7 @@ version=2.0
 release="April 19 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
-dc_version=2.0
+dc_version=2.1
 
 ascii_logo(){
 	echo "              _"
@@ -426,7 +426,7 @@ write_dc_file(){
 	CHKLOG="/jffs/amtm-disk-check.log"
 	CHKCMD=
 
-	if [ -f "\$CHKLOG" ] && [ "$(wc -c < \$CHKLOG)" -gt "500000" ]; then
+	if [ -f "\$CHKLOG" ] && [ "\$(wc -c < \$CHKLOG)" -gt "500000" ]; then
 	    sed -i '1,500d' "\$CHKLOG"
 	    sed -i "1s/^/Truncated log file, size over 500KB, on \$(date)\n\n/" "\$CHKLOG"
 	    logger -t "\$TAG" "Truncated \$CHKLOG, size over 500KB"
