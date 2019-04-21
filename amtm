@@ -16,9 +16,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-# Versions, release date
 version=2.0
-release="April 19 2019"
+release="April 21 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.2
@@ -32,7 +31,6 @@ ascii_logo(){
 	echo
 }
 
-# Functions follow
 about_amtm(){
 	echo
 	print_end_line
@@ -96,13 +94,14 @@ install_amtm(){
 						nvram commit
 					fi
 
-					# install to /jffs/scripts/$thisScript
 					[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
 					chmod 0755 /jffs/scripts/$thisScript
 					message="/jffs/scripts/$thisScript"
 
-					# add link to /opt/bin whenever found, will be re-checked at every start further down
-					if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ]; then
+					if [ -L "/opt/bin/$thisScript" ]; then
+						rm -f "/opt/bin/$thisScript"
+					fi
+					if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ]; then
 						ln -s /jffs/scripts/$thisScript /opt/bin
 						chmod 0755 /opt/bin/$thisScript
 						message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
@@ -181,16 +180,6 @@ update_amtm(){
 	fi
 }
 
-# recheck when /opt/bin has become available
-recheck_opt(){
-	if [ -d "/opt/bin" ] && [ ! -f "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
-		ln -s /jffs/scripts/$thisScript /opt/bin
-		chmod 0755 /opt/bin/$thisScript
-		show_amtm " /opt/bin detected!\\n\\n You can now start $thisScript with:\\n /jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
-	fi
-}
-
-# sw) create or delete Swap file
 manage_swap(){
 	if [ "$1" = "create" ]; then
 		echo
@@ -307,37 +296,14 @@ manage_swap(){
 				*)		printf "\\n input is not an option\\n";;
 			esac
 		done
-
-	elif [ "$1" = "check" ]; then
-		swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
-		if [ "$swapFile" ]; then
-			echo
-			echo " Swap file found at:"
-			echo " ${GREEN_BG}$swapFile${NC}"
-			press_enter_to "to fix the path"
-			sed -i '\~swapon ~d' /jffs/scripts/post-mount
-			echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
-			swapon "$swapFile" 2> /dev/null
-			show_amtm " Swap file path changed to\\n $swapFile"
-		else
-			echo
-			echo " No Swap file found."
-			press_enter_to "remove reference"
-			echo " in /jffs/scripts/post-mount now."
-			sed -i '\~swapon ~d' /jffs/scripts/post-mount
-			show_amtm " Incorrect Swap file reference removed"
-		fi
 	fi
 }
 
-# dc) install or remove disk check at boot
 disk_check(){
 	if [ -f "/jffs/scripts/pre-mount" ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
 		show_amtm " Unsupported pre-mount script found,\\n please remove file manually."
 	else
-
 		if [ "$1" = "install" ]; then
-
 			write_dc_file
 
 			if [ ! -f "/jffs/scripts/pre-mount" ]; then
@@ -350,31 +316,14 @@ disk_check(){
 			fi
 			chmod 0755 /jffs/scripts/pre-mount /jffs/scripts/disk-check
 
-		elif [ "$1" = "open" ]; then
+		elif [ "$1" = "remove" ]; then
 			print_info_line
-
-			echo " Disk check options"
-			echo
-			echo " 1. Update disk check script"
-			echo " 2. Remove disk check script"
-			while true; do
-				printf "\\n Enter selection [1-2 e=Exit] ";read -r dcoption
-				case "$dcoption" in
-					1)		write_dc_file
-							show_amtm " Disk check script updated"
-							break;;
-					2)		print_info_line
-							printf " This removes the Disk check script and its\\n log file.\\n"
-							continue_dialog
-							sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
-							rm -f /jffs/scripts/disk-check
-							rm -f /jffs/amtm-disk-check.log
-							show_amtm " Disk check and log removed"
-							break;;
-					[Ee])	show_amtm " Exited Disk check options";break;;
-					*)			printf "\\n input is not an option\\n";;
-				esac
-			done
+			printf " This removes the Disk check script and its\\n log file.\\n"
+			continue_dialog
+			sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
+			rm -f /jffs/scripts/disk-check
+			rm -f /jffs/amtm-disk-check.log
+			show_amtm " Disk check and log removed"
 
 		elif [ "$1" = "log" ]; then
 			if [ -f "/jffs/amtm-disk-check.log" ]; then
@@ -483,8 +432,8 @@ write_dc_file(){
 	EOF
 }
 
-# fd) Format disk
 format_disk(){
+
 	select_device(){
 		print_end_line
 		echo " Select your device to format"
@@ -677,7 +626,8 @@ format_disk(){
 		printf "\\n Your router will now reboot for\\n"
 		printf " the changes to take effect\\n"
 		press_enter_to continue
-		service reboot
+		sleep 1
+		service reboot >/dev/null 2>&1 &
 		exit 0
 	else
 		echo
@@ -748,7 +698,6 @@ format_disk_log(){
 	fi
 }
 
-# rs) Reboot scheduler
 reboot_scheduler(){
 	if [ "$1" = "install" ]; then
 		if [ "$(nvram get reboot_schedule_enable)" = "1" ]; then
@@ -865,7 +814,6 @@ reboot_scheduler(){
 	fi
 }
 
-# 3) Install Entware
 install_Entware(){
 	NAME="$thisScript Entware installer"
 	check_entware_folder(){
@@ -930,6 +878,7 @@ install_Entware(){
 	}
 
 	check_device(){
+
 		check_device_nok(){
 		rm -rf "$1/rw_test"
 		show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable."
@@ -1112,8 +1061,9 @@ install_Entware(){
 	fi
 }
 
-# Use selected color theme when Diversion is installed
-check_Diversion_theme(){
+show_amtm(){
+	clear
+
 	divconf=/opt/share/diversion/.conf/diversion.conf
 	if [ -f "$divconf" ]; then
 		theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
@@ -1126,22 +1076,25 @@ check_Diversion_theme(){
 		theme_standard(){ RED_LINE='[0;31m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';}
 	fi
 	theme_$theme
-}
 
-show_amtm(){
-	clear
-	check_Diversion_theme
+	if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
+		ln -s /jffs/scripts/$thisScript /opt/bin
+		chmod 0755 /opt/bin/$thisScript
+		rcotext=" /opt/bin detected!\\n You can now start $thisScript with:\\n $thisScript"
+		if [ -z "$1" ] || [ "$1" = "menu" ]; then
+			set -- "$rcotext"
+		else
+			set -- "$1\\n\\n$rcotext"
+		fi
+	fi
 
-	# amtm header
 	printf "${RED_BG}%-27s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
 
-	# show router info, helpful when installing scripts
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
 
 	echo "${RED_BG} The ${title}   ${NC}"
 	echo
-
 
 	# SNBForum scripts follow
 
@@ -1175,7 +1128,6 @@ show_amtm(){
 			divverm="v$divver"
 		fi
 		printf "${GREEN_BG} 1 ${NC} %-9s%-20s%21s\\n" "open" "Diversion $divverm" " $upd"
-
 		case_1(){
 			clear
 			diversion
@@ -1184,7 +1136,6 @@ show_amtm(){
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} 1 ${NC} %-9s%s\\n" "install" "Diversion"
-
 		case_1(){
 			print_info_line
 			echo " This installs Diversion,"
@@ -1227,7 +1178,6 @@ show_amtm(){
 			skynetverm=$skynetver
 		fi
 		printf "${GREEN_BG} 2 ${NC} %-9s%-20s%21s\\n" "open" "Skynet $skynetverm" " $upd"
-
 		case_2(){
 			/jffs/scripts/firewall
 			sleep 2
@@ -1235,7 +1185,6 @@ show_amtm(){
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} 2 ${NC} %-9s%s\\n" "install" "Skynet"
-
 		case_2(){
 			print_info_line
 			echo " This installs Skynet on your router."
@@ -1282,7 +1231,6 @@ show_amtm(){
 			stubbyverm=v$stubbyver
 		fi
 		printf "${GREEN_BG} 3 ${NC} %-9s%-20s%21s\\n" "open" "Stubby DNS $stubbyverm" " $upd"
-
 		case_3(){
 			/jffs/scripts/install_stubby.sh
 			sleep 2
@@ -1290,7 +1238,6 @@ show_amtm(){
 		}
 	elif [ -z "$(nvram get rc_support | tr ' ' '\n' | grep dnspriv)" ] && [ -z "$(nvram get rc_support | tr ' ' '\n' | grep stubby)" ]; then
 		[ "$ss" ] && printf "${ERR_BG} 3 ${NC} %-9s%s\\n" "install" "Stubby DNS"
-
 		case_3(){
 			print_info_line
 			echo " This installs Stubby DNS Privacy Daemon"
@@ -1345,7 +1292,6 @@ show_amtm(){
 			yazfiverm=$yazfiver
 		fi
 		printf "${GREEN_BG} 4 ${NC} %-9s%-20s%21s\\n" "open" "YazFi $yazfiverm" " $upd"
-
 		case_4(){
 			/jffs/scripts/YazFi
 			sleep 2
@@ -1353,7 +1299,6 @@ show_amtm(){
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "YazFi enhanced guest WiFi"
-
 		case_4(){
 			print_info_line
 			echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
@@ -1400,7 +1345,6 @@ show_amtm(){
 			ntpdverm=$ntpdver
 		fi
 		printf "${GREEN_BG} 6 ${NC} %-9s%-20s%21s\\n" "open" "ntpMerlin $ntpdverm" " $upd"
-
 		case_6(){
 			/jffs/scripts/ntpmerlin
 			sleep 2
@@ -1408,7 +1352,6 @@ show_amtm(){
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} 6 ${NC} %-9s%s\\n" "install" "ntpMerlin NTP Daemon"
-
 		case_6(){
 			print_info_line
 			echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
@@ -1424,7 +1367,6 @@ show_amtm(){
 		}
 	fi
 
-
 	[ "$upd" ] || [ "$ss" ] && echo
 	upd=
 
@@ -1433,7 +1375,6 @@ show_amtm(){
 		ii=1
 		upd=" "
 		printf "${GREEN_BG} di${NC} %-9s%s\\n" "open" "dnscrypt installer"
-
 		case_di(){
 			printf "\\n dnscrypt installer menu:\\n\\n"
 			curl -L -s -k -O https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer && sh installer ; rm installer
@@ -1450,7 +1391,6 @@ show_amtm(){
 		ii=1
 		upd=" "
 		printf "${GREEN_BG} ew${NC} %-9s%s\\n" "update" "Entware"
-
 		case_ew(){
 			print_info_line
 			echo " This updates and upgrades Entware packages"
@@ -1476,7 +1416,6 @@ show_amtm(){
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} ew${NC} %-9s%s\\n" "install" "Entware"
-
 		case_ew(){
 			print_info_line
 			echo " This installs Entware on this router."
@@ -1529,7 +1468,6 @@ show_amtm(){
 		else
 			[ "$ss" ] && printf "${ERR_BG} ps${NC} %-9s%s\\n" "install" "pixelserv-tls beta version"
 		fi
-
 		case_ps(){
 			print_info_line
 			echo " This installs the latest pixelserv-tls beta version."
@@ -1560,7 +1498,6 @@ show_amtm(){
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} ps${NC} %-9s%s\\n" "" "Menu not available"
-
 		case_ps(){
 			show_amtm " pixelserv-tls beta menu not available,\\n pixelserv-tls is not installed."
 		}
@@ -1574,25 +1511,23 @@ show_amtm(){
 	if [ -f "/jffs/scripts/disk-check" ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
 		ii=1
 		case_dc(){
-			disk_check open
+			disk_check remove
 			show_amtm menu
 		}
-		if [ "$su" = "1" ]; then
-			if ! grep -qE "VERSION=$dc_version" /jffs/scripts/disk-check; then
-				upd="${GREEN_BG}-> $dc_version${NC}"
-				suUpd=1
+		if ! grep -qE "VERSION=$dc_version" /jffs/scripts/disk-check; then
+			write_dc_file
+			dctext=" Disk check script auto-updated to v$dc_version"
+			if [ -z "$1" ] || [ "$1" = "menu" ]; then
+				set -- "$dctext"
 			else
-				upd="${ERR_BG}no upd${NC}"
+				set -- "$1\\n\\n$dctext"
 			fi
-			printf "${GREEN_BG} dc${NC} %-9s%-20s%21s\\n" "open" "Disk check options" " $upd"
-		else
-			[ -f "/jffs/amtm-disk-check.log" ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
-			printf "${GREEN_BG} dc${NC} %-9s%-19s%21s\\n" "open" "Disk check options" " $dcltext"
 		fi
+		[ -f "/jffs/amtm-disk-check.log" ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
+		printf "${GREEN_BG} dc${NC} %-9s%-19s%21s\\n" "remove" "Disk check script" " $dcltext"
 
 	else
 		[ "$ss" ] && printf "${ERR_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
-
 		case_dc(){
 			print_info_line
 			echo " This installs /jffs/scripts/disk-check."
@@ -1661,48 +1596,50 @@ show_amtm(){
 	fi
 
 	# sw/swp/swap Swap file
-	swaplocation="$(grep -o "swapon .*" /jffs/scripts/post-mount 2>/dev/null | awk '{print $2}')"
-	if [ -z "$swaplocation" ]; then
-		if [ "$(find /mnt/*/myswap.swp 2> /dev/null)" ]; then
-			printf "${ERR_BG} sw${NC} %-9s%s ${ERR_BG}%s${NC}\\n" "check" "Swap file" "$(find /mnt/*/myswap.swp 2> /dev/null)"
+	swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+	swapFile="$(find /mnt/*/myswap.swp 2> /dev/null)"
+	swtext=
+	if [ -z "$swaplocation" ] && [ -f "$swapFile" ]; then
+		sed -i '\~swapon ~d' /jffs/scripts/post-mount
+		echo "swapon $swapFile # Swap file created by $thisScript" >> /jffs/scripts/post-mount
+		swapon "$swapFile" 2> /dev/null
+		swtext=" Swap file path corrected to\\n $swapFile"
+		swaplocation="$swapFile"
+	elif [ -f "$swaplocation" ] && [ -z "$swapFile" ]; then
+		sed -i '\~swapon ~d' /jffs/scripts/post-mount
+		swtext=" No swap file found, reference removed\\n in /jffs/scripts/post-mount"
+		swaplocation=
+	fi
 
-			case_swp(){
-				manage_swap check
-			}
-
+	if [ "$swtext" ]; then
+		if [ -z "$1" ] || [ "$1" = "menu" ]; then
+			set -- "$swtext"
 		else
-			[ "$ss" ] && printf "${ERR_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
-
-			case_swp(){
-				print_info_line
-				echo " This creates a Swap file."
-				echo " A Swap file is useful when the router"
-				echo " runs out of memory (RAM)."
-				echo " See router WebUI/Tools under Memory."
-				continue_dialog
-				manage_swap create
-			}
+			set -- "$1\\n\\n$swtext"
 		fi
+	fi
 
-	elif [ -f "$swaplocation" ]; then
+	if [ -f "$swaplocation" ]; then
 		ii=1
 		if ! grep -qF "myswap.swp" /proc/swaps; then
 			swapon "$swaplocation" 2> /dev/null
 		fi
 
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
-
 		case_swp(){
 			manage_swap delete
 		}
-
-	elif [ ! -f "$swaplocation" ] && [ ! -z "$swaplocation" ]; then
-		printf "${ERR_BG} sw${NC} %-9s%s ${ERR_BG}%s${NC}\\n" "check" "Swap file" "${swaplocation#/tmp}"
-
+	else
+		[ "$ss" ] && printf "${ERR_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
 		case_swp(){
-			manage_swap check
+			print_info_line
+			echo " This creates a Swap file."
+			echo " A Swap file is useful when the router"
+			echo " runs out of memory (RAM)."
+			echo " See router WebUI/Tools under Memory."
+			continue_dialog
+			manage_swap create
 		}
-
 	fi
 
 	[ "$ii" ] || [ "$ss" ] && echo
@@ -1741,22 +1678,17 @@ show_amtm(){
 	while true; do
 		printf "${RED_BG} Enter option ${NC} ";read -r selection
 		case "$selection" in
-
-			# Scripts go here
 			1)			case_1;break;;
 			2)			case_2;break;;
 			3)			case_3;break;;
 			4)			case_4;break;;
 			6)			case_6;break;;
-
 			[Ii])		[ "$ssi" ] && ss= || ss=1
 						show_amtm menu;break;;
 			di)			case_di;break;;
 			ew)			case_ew;break;;
 			ps)			case_ps;break;;
 			[Ss][Uu])	su=1;suUpd=0;show_amtm menu;break;;
-
-			# System tools
 			[Dd][Cc])	case_dc;break;;
 			dcl)		disk_check log
 						show_amtm menu;break;;
@@ -1764,8 +1696,6 @@ show_amtm(){
 			fdl)		format_disk_log;break;;
 			rs)			case_rs;break;;
 			swap|swp|sw)case_swp;break;;
-
-			# amtm options
 			[Uu])		update_amtm;break;;
 			[Rr])		remove_amtm;break;;
 			[Aa])		about_amtm;break;;
@@ -1780,21 +1710,32 @@ show_amtm(){
 						clear
 						ascii_logo
 						printf " $thisScript reboots this router now\\n\\n"
-						sleep 5
-						service reboot
-						exit 0;break;;
+						sleep 1
+						service reboot >/dev/null 2>&1 &
+						exit 0
+						break;;
 			*)			printf "\\n               input is not an option\\n\\n";;
 		esac
 	done
 }
 
-# asks to install, show menu, pass along positional parameter
+# asks to install, auto-update, show menu or pass along positional parameter
 if [ ! -f "/jffs/scripts/$thisScript" ]; then
 	install_amtm
+elif ! cmp -s "$0" "/jffs/scripts/$thisScript"; then
+	cp -f "$0" /jffs/scripts/$thisScript
+	chmod 0755 /jffs/scripts/$thisScript
+	if [ "$0" = "/jffs/scripts/$thisScript" ]; then
+		subshell=
+	else
+		subshell="exec"
+		rm -f "$0"
+	fi
+	"$subshell" /jffs/scripts/$thisScript " $thisScript auto-update applied (v$version)"
 elif [ -z "$1" ]; then
-	recheck_opt
 	show_amtm menu
 else
 	show_amtm "$1"
 fi
+
 #eof
