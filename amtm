@@ -17,7 +17,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 version=2.0
-release="April 21 2019"
+release="April 22 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.2
@@ -1594,43 +1594,72 @@ show_amtm(){
 	fi
 
 	# sw/swp/swap Swap file
-	swapjffs="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
-	swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
+	writeswaploc(){
+		sed -i '\~swapon ~d' /jffs/scripts/post-mount
+		sed -i "2i swapon $swaplocation # Swap file created by $NAME" /jffs/scripts/post-mount
+		swapon "$swaplocation" 2> /dev/null
+	}
+	swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	swtext=
 	if [ -f "$swaplocation" ]; then
-
-		if [ ! -f "/jffs/scripts/post-mount" ]; then
-			echo "#!/bin/sh" > /jffs/scripts/post-mount
-		elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
+		if ! grep -qF "$swaplocation" /proc/swaps; then
+			swapon "$swaplocation" 2> /dev/null
+			swtext=" Swap file re-enabled"
 		fi
-
-		if [ -z "$swapjffs" ]; then
-			sed -i '\~swapon ~d' /jffs/scripts/post-mount
-			sed -i "2i swapon $swaplocation # Swap file created by $thisScript" /jffs/scripts/post-mount
-			swapon "$swaplocation" 2> /dev/null
-			swtext=" Missing swap file path added to\\n /jffs/scripts/post-mount"
-		elif [ "$swapjffs" != "$swaplocation" ]; then
-			sed -i '\~swapon ~d' /jffs/scripts/post-mount
-			sed -i "2i swapon $swaplocation # Swap file created by $thisScript" /jffs/scripts/post-mount
-			swapon "$swaplocation" 2> /dev/null
+	elif [ "$swaplocation" ]; then
+		swaplocation="$(find /tmp/mnt/*/$(basename $swaplocation) 2> /dev/null)"
+		if [ -f "$swaplocation" ]; then
+			writeswaploc
 			swtext=" Swap file path corrected in\\n /jffs/scripts/post-mount"
+		else
+			swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
+			if [ -f "$swaplocation" ]; then
+				writeswaploc
+				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+			elif [ "$(wc -l < /proc/swaps)" -ge "2" ]; then
+				swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
+				if [ -f "$swaplocation" ]; then
+					writeswaploc
+					swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+				else
+					sed -i '\~swapon ~d' /jffs/scripts/post-mount
+					swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
+				fi
+			else
+				sed -i '\~swapon ~d' /jffs/scripts/post-mount
+				swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
+			fi
 		fi
-		if ! grep -qF "myswap.swp" /proc/swaps; then
-			swapon "$swaplocation" 2> /dev/null
-			swtext=" Swap file enabled"
+	else
+		swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
+		if [ -f "$swaplocation" ]; then
+			writeswaploc
+			swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+		elif [ "$(wc -l < /proc/swaps)" -ge "2" ]; then
+			swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
+			if [ -f "$swaplocation" ]; then
+				writeswaploc
+				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+			else
+				sed -i '\~swapon ~d' /jffs/scripts/post-mount
+				swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
+			fi
 		fi
-
+	fi
+	if [ "$swtext" ]; then
+		if [ -z "$1" ] || [ "$1" = "menu" ]; then
+			set -- "$swtext"
+		else
+			set -- "$1\\n\\n$swtext"
+		fi
+	fi
+	if [ -f "$swaplocation" ]; then
 		ii=1
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
 		case_swp(){
 			manage_swap delete
 		}
 	else
-		if [ "$swapjffs" ]; then
-			sed -i '\~swapon ~d' /jffs/scripts/post-mount
-			swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
-		fi
 		[ "$ss" ] && printf "${ERR_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
 		case_swp(){
 			print_info_line
@@ -1641,14 +1670,6 @@ show_amtm(){
 			continue_dialog
 			manage_swap create
 		}
-	fi
-
-	if [ "$swtext" ]; then
-		if [ -z "$1" ] || [ "$1" = "menu" ]; then
-			set -- "$swtext"
-		else
-			set -- "$1\\n\\n$swtext"
-		fi
 	fi
 
 	[ "$ii" ] || [ "$ss" ] && echo
