@@ -17,7 +17,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 version=2.0
-release="April 22 2019"
+release="April 23 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.2
@@ -182,6 +182,13 @@ update_amtm(){
 
 manage_swap(){
 	if [ "$1" = "create" ]; then
+		print_info_line
+		echo " This creates a Swap file."
+		echo " A Swap file is useful when the router"
+		echo " runs out of memory (RAM)."
+		echo " See router WebUI/Tools under Memory."
+		continue_dialog
+
 		while true; do
 			case "$continue" in
 				1)	print_end_line
@@ -272,7 +279,6 @@ manage_swap(){
 		done
 
 	elif [ "$1" = "delete" ]; then
-		swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
 		print_end_line
 		echo " Swap file found at:"
 		echo " $swaplocation"
@@ -282,7 +288,7 @@ manage_swap(){
 			case "$continue" in
 				1)		if [ -f "$swaplocation" ]; then
 							swapoff "$swaplocation"
-							rm -rf "$swaplocation"
+							rm "$swaplocation"
 							sed -i '\~swapon ~d' /jffs/scripts/post-mount
 							show_amtm " Swap file deleted:\\n $swaplocation"
 						else
@@ -292,6 +298,35 @@ manage_swap(){
 						break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;
+			esac
+		done
+
+	elif [ "$1" = "multidelete" ]; then
+		print_end_line
+		echo " Multiple swap files found, only one file is"
+		echo " supported."
+		echo
+		echo " These swap files were found:"
+		echo
+
+		i=1
+		for swapfile in $(find /tmp/mnt/*/*.swp 2> /dev/null); do
+			echo " $i. ${GREEN}$swapfile${NC} $(du -h "$swapfile" | awk '{print $1}')"
+			eval swapfile$i="$swapfile"
+			noad="${noad}${i} "
+			i=$((i+1))
+		done
+
+		while true; do
+			printf "\\n Enter swap file to delete [1-$((i-1)) e=Exit] ";read -r continue
+			case "$continue" in
+				[$noad]) 	swapoff -a
+							eval rmswap="\$swapfile$continue"
+							rm "$rmswap"
+							show_amtm menu
+							break;;
+				[Ee])		show_amtm menu;break;;
+				*)			printf "\\n input is not an option\\n";;
 			esac
 		done
 	fi
@@ -1644,6 +1679,8 @@ show_amtm(){
 				sed -i '\~swapon ~d' /jffs/scripts/post-mount
 				swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
 			fi
+		elif [ "$swaplocation" ]; then
+			swtext=" Multiple swap files found, only one file is\\n supported. Run ${GREEN_BG}sw${NC} to delete."
 		fi
 	fi
 	if [ "$swtext" ]; then
@@ -1659,15 +1696,15 @@ show_amtm(){
 		case_swp(){
 			manage_swap delete
 		}
+	elif [ "$swaplocation" ]; then
+		ii=1
+		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap files"
+		case_swp(){
+			manage_swap multidelete
+		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
 		case_swp(){
-			print_info_line
-			echo " This creates a Swap file."
-			echo " A Swap file is useful when the router"
-			echo " runs out of memory (RAM)."
-			echo " See router WebUI/Tools under Memory."
-			continue_dialog
 			manage_swap create
 		}
 	fi
