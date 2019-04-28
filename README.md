@@ -11,9 +11,9 @@ Enter this into your favorite SSH terminal:
 /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 ```
 
-Screenshot of amtm 2.0, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+Screenshot of amtm 2.1, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
 
-[![amtm v2.0](https://i.imgur.com/EDTQ2R5.png "amtm v2.0")](https://i.imgur.com/EDTQ2R5.png "amtm v2.0")
+[![amtm v2.1](https://i.imgur.com/GDyvbdr.png "amtm v2.1")](https://i.imgur.com/GDyvbdr.png "amtm v2.1")
 
 ### Currently supported scripts
 
