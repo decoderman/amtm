@@ -4,8 +4,8 @@
 # Set environment PATH to system binaries
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 
-# Proudly coded by thelonelycoder/decoderman
-# Copyright (C) 2016-2019 thelonelycoder - All Rights Reserved
+# Proudly coded by thelonelycoder (aka decoderman@github)
+# Copyright (c) 2016-2019 thelonelycoder - All Rights Reserved
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://github.com/decoderman
 
@@ -16,8 +16,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-version=2.1
-release="April 28 2019"
+version=2.2
+release="May 14 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.2
@@ -62,28 +62,16 @@ about_amtm(){
 	show_amtm menu
 }
 
-theme_standard(){ RED_LINE='[0;31m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';}
-print_info_line(){ echo;echo "${RED_LINE}__________________| INFO |___________________${NC}";echo;}
+theme_standard(){ RED_LINE='[31m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';ACORR=20;}
 print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
-continue_dialog(){
-	echo
-	print_end_line
-	while true; do
-		printf " Continue? [1=Yes e=Exit] ";read -r continue
-		case "$continue" in
-			1)		echo;break;;
-			[Ee])	show_amtm menu;break;;
-			*)		printf "\\n input is not an option\\n\\n";;
-		esac
-	done
-}
+continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 
 install_amtm(){
+	clear
 	ascii_logo
-	echo " Do you want to install $thisScript"
+	echo " Do you want to install $thisScript,"
 	echo " the $title?"
-	echo
 	print_end_line
 	while true; do
 		printf " Continue? [1=Yes e=Exit] ";read -r continue
@@ -132,7 +120,7 @@ install_amtm(){
 }
 
 remove_amtm(){
-	print_info_line
+	print_end_line
 	echo " Do you want to remove $thisScript now?"
 	echo
 	echo " Note that removing $thisScript will not remove or"
@@ -155,7 +143,7 @@ remove_amtm(){
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
-	echo " Removed all traces of $thisScript"
+	echo " $thisScript completely removed"
 	echo
 	exit 0
 }
@@ -168,37 +156,48 @@ update_amtm(){
 				fi;;
 		*) 		remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
 	esac
-	curl -fsN --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
-	remotever="$(curl -fsN --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
+	curl -fsNL --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
+	remotever="$(curl -fsNL --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 	localmd5="$(md5sum "$0" | awk '{print $1}')"
-	remotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+	remotemd5="$(curl -fsNL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
 
-	print_info_line
+	if [ "$su" = "1" ]; then
+		if [ "$version" != "$remotever" ]; then
+			thisrem="${GREEN_BG}-> v$remotever${NC}"
+			suUpd=1
+		elif [ "$localmd5" != "$remotemd5" ]; then
+			thisrem="${GREEN_BG}-> min upd${NC}"
+			suUpd=1
+		else
+			thisrem="${ERR_BG}no upd${NC}"
+		fi
 
-	if [ "$version" != "$remotever" ]; then
-		echo " $thisScript $remotever is now available!"
-		echo
-		echo " Do you want to update now?"
-		continue_dialog
-		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from $version to $remotever"
-	elif [ "$localmd5" != "$remotemd5" ]; then
-		echo " A minor $thisScript update is available, no version"
-		echo " change."
-		echo
-		echo " Do you want to update now?"
-		continue_dialog
-		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n minor $thisScript version update applied"
 	else
-		echo " No new version or minor update is available,"
-		echo " do you want to force update $thisScript?"
-		continue_dialog
-		curl -fs --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to $remotever"
+		print_end_line
+		if [ "$version" != "$remotever" ]; then
+			echo " $thisScript $remotever is now available!"
+			echo
+			echo " Do you want to update now?"
+			continue_dialog
+			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from $version to $remotever"
+		elif [ "$localmd5" != "$remotemd5" ]; then
+			echo " A minor $thisScript update is available."
+			echo
+			echo " Do you want to update now?"
+			continue_dialog
+			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n minor $thisScript version update applied"
+		else
+			echo " No new version or minor update is available,"
+			echo " do you want to force update $thisScript?"
+			continue_dialog
+			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to $remotever"
+		fi
 	fi
 }
 
 manage_swap(){
 	if [ "$1" = "create" ]; then
-		print_info_line
+		print_end_line
 		echo " This creates a Swap file."
 		echo " A Swap file is useful when the router"
 		echo " runs out of memory (RAM)."
@@ -284,6 +283,7 @@ manage_swap(){
 									sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
 								fi
 								sed -i "2i swapon $swapDevice/myswap.swp # Swap file created by $thisScript" /jffs/scripts/post-mount
+								[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
 								show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
 						[Ee])	show_amtm menu;break;;
 							*)  printf "\\n input is not an option\\n";;
@@ -366,7 +366,7 @@ disk_check(){
 			chmod 0755 /jffs/scripts/pre-mount /jffs/scripts/disk-check
 
 		elif [ "$1" = "remove" ]; then
-			print_info_line
+			print_end_line
 			printf " This removes the Disk check script and its\\n log file.\\n"
 			continue_dialog
 			sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
@@ -870,12 +870,12 @@ reboot_scheduler(){
 			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow service reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
 		fi
 		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow service reboot"
-		chmod 0755 /jffs/scripts/init-start
+		[ ! -x "/jffs/scripts/init-start" ] && chmod 0755 /jffs/scripts/init-start
 
 		show_amtm " Reboot scheduler enabled."
 
 	elif [ "$1" = "remove" ]; then
-		print_info_line
+		print_end_line
 		printf " This removes the reboot scheduler.\\n"
 		continue_dialog
 		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
@@ -1133,18 +1133,18 @@ install_Entware(){
 
 script_check(){
 	ii=1
-	[ "$localVother" ] && localver=$localVother || localver=$(grep "$scriptgrep" "$scriptloc"  | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
-	upd="${NC}$localver${NC} "
+	[ "$localVother" ] && localver=$localVother || localver=$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+	upd="${ERR_BG}${NC}$localver"
 	if [ "$su" = "1" ]; then
-		if curl -fsL --retry 3 "$remoteurl" | grep -qF "$grepcheck"; then
-			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(curl -fsL --retry 3 "$remoteurl" | grep "$scriptgrep" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+		if curl -fsLN --retry 3 "$remoteurl" | grep -qF "$grepcheck"; then
+			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 			upd="${ERR_BG}no upd${NC}"
 			if [ "$localver" != "$remotever" ]; then
 				upd="${GREEN_BG}-> $remotever${NC}"
 				suUpd=1
 			else
 				localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
-				remotemd5="$(curl -fsL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+				remotemd5="$(curl -fsLN --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
 					upd="${GREEN_BG}-> min upd${NC}"
 					suUpd=1
@@ -1163,11 +1163,14 @@ show_amtm(){
 	divconf=/opt/share/diversion/.conf/diversion.conf
 	if [ -f "$divconf" ]; then
 		theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
-		[ -z "$theme" ] && theme=standard
+		if [ -z "$theme" ] || ! grep -qm1 "^theme_reduced" /opt/share/diversion/file/theme.div; then
+			theme=standard
+		else
+			. /opt/share/diversion/file/theme.div
+		fi
 		divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
 		divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
 		[ "$divMver" ] && divver="${divver}.$divMver" || divver=$divver
-		. /opt/share/diversion/file/theme.div
 	else
 		theme=standard
 	fi
@@ -1206,10 +1209,10 @@ show_amtm(){
 		esac
 		ii=1
 		localver="v$divver"
-		upd="${NC}$localver${NC} "
+		upd="${ERR_BG}${NC}$localver"
 		if [ "$su" = "1" ]; then
-			if curl -fsN --retry 3 "$remoteurl/diversion.info" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
-				remotever="$(curl -fsN --retry 3 "$remoteurl/diversion.info" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
+			if curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
+				remotever="$(curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
 				S_VERSION=$(echo $remotever | awk '{print $1}')
 				S_M_VERSION=$(echo $remotever | awk '{print $2}')
 				[ "$S_M_VERSION" ] && remotever="v${S_VERSION}.$S_M_VERSION" || remotever="v$S_VERSION"
@@ -1219,7 +1222,7 @@ show_amtm(){
 					suUpd=1
 				else
 					localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
-					remotemd5="$(curl -fsL --retry 3 "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
+					remotemd5="$(curl -fsLN --retry 3 "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
 					if [ "$localmd5" != "$remotemd5" ]; then
 						upd="${GREEN_BG}-> min upd${NC}"
 						suUpd=1
@@ -1231,7 +1234,7 @@ show_amtm(){
 		else
 			localver=
 		fi
-		printf "${GREEN_BG} 1 ${NC} %-9s%-20s%21s\\n" "open" "Diversion $localver" " $upd"
+		printf "${GREEN_BG} 1 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Diversion     $localver" " $upd"
 		case_1(){
 			/opt/bin/diversion
 			sleep 2
@@ -1240,9 +1243,8 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} 1 ${NC} %-9s%s\\n" "install" "Diversion"
 		case_1(){
-			print_info_line
-			echo " This installs Diversion,"
-			echo " the Router Adblocker."
+			print_end_line
+			echo " This installs Diversion, the Router Adblocker."
 			echo
 			echo " Author: thelonelycoder"
 			echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
@@ -1264,10 +1266,13 @@ show_amtm(){
 	scriptloc="/jffs/scripts/firewall"
 	if [ -f "$scriptloc" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
-		scriptgrep='.*'
+		localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
+		remoteVother="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 		grepcheck=Adamm
 		script_check
-		printf "${GREEN_BG} 2 ${NC} %-9s%-20s%21s\\n" "open" "Skynet $localver" " $upd"
+		localVother=
+		remoteVother=
+		printf "${GREEN_BG} 2 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Skynet        $localver" " $upd"
 		case_2(){
 			/jffs/scripts/firewall
 			sleep 2
@@ -1276,7 +1281,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} 2 ${NC} %-9s%s\\n" "install" "Skynet"
 		case_2(){
-			print_info_line
+			print_end_line
 			echo " This installs Skynet on your router."
 			echo
 			echo " Author: Adamm"
@@ -1298,12 +1303,12 @@ show_amtm(){
 	if [ -f "$scriptloc" ] && [ -f "/opt/etc/stubby/stubby.yml" ]; then
 		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
-		remoteVother="v$(curl -fsL --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
+		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
 		grepcheck=Xentrk
 		script_check
 		localVother=
 		remoteVother=
-		printf "${GREEN_BG} 3 ${NC} %-9s%-20s%21s\\n" "open" "Stubby DNS $localver" " $upd"
+		printf "${GREEN_BG} 3 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Stubby DNS    $localver" " $upd"
 		case_3(){
 			/jffs/scripts/install_stubby.sh
 			sleep 2
@@ -1312,7 +1317,7 @@ show_amtm(){
 	elif [ -z "$(nvram get rc_support | tr ' ' '\n' | grep dnspriv)" ] && [ -z "$(nvram get rc_support | tr ' ' '\n' | grep stubby)" ]; then
 		[ "$ss" ] && printf "${ERR_BG} 3 ${NC} %-9s%s\\n" "install" "Stubby DNS"
 		case_3(){
-			print_info_line
+			print_end_line
 			echo " This installs Stubby DNS Privacy Daemon"
 			echo " on your router."
 			echo
@@ -1341,10 +1346,10 @@ show_amtm(){
 	scriptloc="/jffs/scripts/YazFi"
 	if [ -f "$scriptloc" ] && [ -f "/jffs/configs/YazFi/YazFi.config" ]; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
-		scriptgrep='YAZFI_VERSION='
+		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
 		grepcheck=jackyaz
 		script_check
-		printf "${GREEN_BG} 4 ${NC} %-9s%-20s%21s\\n" "open" "YazFi $localver" " $upd"
+		printf "${GREEN_BG} 4 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "YazFi         $localver" " $upd"
 		case_4(){
 			/jffs/scripts/YazFi
 			sleep 2
@@ -1353,7 +1358,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "YazFi enhanced guest WiFi"
 		case_4(){
-			print_info_line
+			print_end_line
 			echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
 			echo " on your router."
 			echo
@@ -1371,12 +1376,12 @@ show_amtm(){
 
 	# j1 connmon menu
 	scriptloc="/jffs/scripts/connmon"
-	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start; then
+	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
-		scriptgrep='CONNMON_VERSION='
+		scriptgrep='SCRIPT_VERSION=\|CONNMON_VERSION='
 		grepcheck=jackyaz
 		script_check
-		printf "${GREEN_BG} j1${NC} %-9s%-20s%21s\\n" "open" "connmon $localver" " $upd"
+		printf "${GREEN_BG} j1${NC} %-9s%-21s%${ACORR}s\\n" "open" "connmon       $localver" " $upd"
 		case_j1(){
 			/jffs/scripts/connmon
 			sleep 2
@@ -1385,7 +1390,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} j1${NC} %-9s%s\\n" "install" "connmon Internet uptime monitor"
 		case_j1(){
-			print_info_line
+			print_end_line
 			echo " This installs connmon- Internet connection monitoring"
 			echo " on your router."
 			echo
@@ -1401,12 +1406,12 @@ show_amtm(){
 
 	# j2 ntpMerlin menu
 	scriptloc="/jffs/scripts/ntpmerlin"
-	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start; then
+	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
-		scriptgrep='NTPD_VERSION='
+		scriptgrep='SCRIPT_VERSION=\|NTPD_VERSION='
 		grepcheck=jackyaz
 		script_check
-		printf "${GREEN_BG} j2${NC} %-9s%-20s%21s\\n" "open" "ntpMerlin $localver" " $upd"
+		printf "${GREEN_BG} j2${NC} %-9s%-21s%${ACORR}s\\n" "open" "ntpMerlin     $localver" " $upd"
 		case_j2(){
 			/jffs/scripts/ntpmerlin
 			sleep 2
@@ -1415,7 +1420,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} j2${NC} %-9s%s\\n" "install" "ntpMerlin NTP Daemon"
 		case_j2(){
-			print_info_line
+			print_end_line
 			echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
 			echo " on your router."
 			echo
@@ -1433,10 +1438,10 @@ show_amtm(){
 	scriptloc="/jffs/scripts/scmerlin"
 	if [ -f "$scriptloc" ]; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/scMerlin/master/scmerlin.sh"
-		scriptgrep='SCM_VERSION='
+		scriptgrep='SCRIPT_VERSION=\|SCM_VERSION='
 		grepcheck=jackyaz
 		script_check
-		printf "${GREEN_BG} j3${NC} %-9s%-20s%21s\\n" "open" "scMerlin $localver" " $upd"
+		printf "${GREEN_BG} j3${NC} %-9s%-21s%${ACORR}s\\n" "open" "scMerlin      $localver" " $upd"
 		case_j3(){
 			/jffs/scripts/scmerlin
 			sleep 2
@@ -1445,7 +1450,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} j3${NC} %-9s%s\\n" "install" "scMerlin Quick access control"
 		case_j3(){
-			print_info_line
+			print_end_line
 			echo " This installs scMerlin - service and script control menu for AsusWRT-Merlin"
 			echo " on your router."
 			echo
@@ -1461,12 +1466,12 @@ show_amtm(){
 
 	# j4 spdMerlin menu
 	scriptloc="/jffs/scripts/spdmerlin"
-	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start; then
+	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
-		scriptgrep='SPD_VERSION='
+		scriptgrep='SCRIPT_VERSION=\|SPD_VERSION='
 		grepcheck=jackyaz
 		script_check
-		printf "${GREEN_BG} j4${NC} %-9s%-20s%21s\\n" "open" "spdMerlin $localver" " $upd"
+		printf "${GREEN_BG} j4${NC} %-9s%-21s%${ACORR}s\\n" "open" "spdMerlin     $localver" " $upd"
 		case_j4(){
 			/jffs/scripts/spdmerlin
 			sleep 2
@@ -1475,7 +1480,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} j4${NC} %-9s%s\\n" "install" "spdMerlin Automatic speedtest"
 		case_j4(){
-			print_info_line
+			print_end_line
 			echo " This installs spdMerlin - Automatic speedtest for AsusWRT Merlin - with graphs"
 			echo " on your router."
 			echo
@@ -1486,6 +1491,36 @@ show_amtm(){
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh" -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
 			sleep 2
 			show_amtm " spdMerlin installed."
+		}
+	fi
+
+	# j5 uiDivStats menu
+	scriptloc="/jffs/scripts/uiDivStats"
+	if [ -f "$scriptloc" ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
+		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
+		scriptgrep='SCRIPT_VERSION=\|SCRIPT_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j5${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiDivStats    $localver" " $upd"
+		case_j5(){
+			/jffs/scripts/uiDivStats
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j5${NC} %-9s%s\\n" "install" "uiDivStats Diversion statistics"
+		case_j5(){
+			print_end_line
+			echo " This installs uiDivStats - WebUI for Diversion statistics"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/beta-uidivstats-webui-for-diversion-statistics.56393/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
+			sleep 2
+			show_amtm " uiDivStats installed."
 		}
 	fi
 
@@ -1514,7 +1549,7 @@ show_amtm(){
 		upd=" "
 		printf "${GREEN_BG} ew${NC} %-9s%s\\n" "update" "Entware"
 		case_ew(){
-			print_info_line
+			print_end_line
 			echo " This updates and upgrades Entware packages"
 			if [ -f "/opt/bin/diversion" ]; then
 				echo
@@ -1539,7 +1574,7 @@ show_amtm(){
 	else
 		[ "$ss" ] && printf "${ERR_BG} ew${NC} %-9s%s\\n" "install" "Entware"
 		case_ew(){
-			print_info_line
+			print_end_line
 			echo " This installs Entware on this router."
 			echo
 			echo " Note: If you plan to install Diversion on"
@@ -1565,14 +1600,14 @@ show_amtm(){
 		  v*|*v.K*) ;;
 		  * ) psVersion="v$psVersion" ;;
 		esac
-		upd="${NC}$psVersion${NC} "
+		upd="${ERR_BG}${NC}$psVersion"
 		if [ -z "$(pidof pixelserv-tls)" ]; then
 			upd=
 			psVersionm="$psVersion ${ERR_BG}(not running)${NC}"
 		fi
-		printf "${GREEN_BG} ps${NC} %-9s%-20s%21s\\n" "remove" "pixelserv-tls$beta $psVersionm" " $upd"
+		printf "${GREEN_BG} ps${NC} %-9s%-21s%${ACORR}s\\n" "remove" "pixelserv-tls$beta $psVersionm" " $upd"
 		case_ps(){
-			print_info_line
+			print_end_line
 			echo " This removes the pixelserv-tls beta and"
 			echo " installs the latest release version"
 			echo " available trough Entware."
@@ -1626,12 +1661,12 @@ show_amtm(){
 			fi
 		fi
 		[ -f "/jffs/amtm-disk-check.log" ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
-		printf "${GREEN_BG} dc${NC} %-9s%-19s%21s\\n" "remove" "Disk check script" " $dcltext"
+		printf "${GREEN_BG} dc${NC} %-9s%-19s%${ACORR}s\\n" "remove" "Disk check script" " $dcltext"
 
 	else
 		[ "$ss" ] && printf "${ERR_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
 		case_dc(){
-			print_info_line
+			print_end_line
 			echo " This installs /jffs/scripts/disk-check."
 			echo " It runs a filesystem check on compatible"
 			echo " USB storage devices before they are mounted."
@@ -1654,7 +1689,7 @@ show_amtm(){
 	fi
 
 	case_fd(){
-		print_info_line
+		print_end_line
 		echo " This (re)formats your plugged in USB storage"
 		echo " device to ext* filesystem.  The process"
 		echo " erases all data and partitions on the device."
@@ -1684,7 +1719,7 @@ show_amtm(){
 		[ "$ss" ] && printf "${ERR_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
 
 		case_rs(){
-			print_info_line
+			print_end_line
 			echo " This enables the reboot scheduler for your"
 			echo " router."
 			echo " The scheduler is set with a cron job via"
@@ -1699,11 +1734,19 @@ show_amtm(){
 
 	# sw/swp/swap Swap file
 	writeswaploc(){
+		if [ ! -f "/jffs/scripts/post-mount" ]; then
+			echo "#!/bin/sh" >/jffs/scripts/post-mount
+		elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
+		fi
 		sed -i '\~swapon ~d' /jffs/scripts/post-mount
-		sed -i "2i swapon $swaplocation # Swap file created by $NAME" /jffs/scripts/post-mount
+		[ "$(cat /jffs/scripts/post-mount | wc -l)" -le "2" ] && echo >>/jffs/scripts/post-mount
+		sed -i "2i swapon $swaplocation # Swap file created by $thisScript" /jffs/scripts/post-mount
 		swapon "$swaplocation" 2> /dev/null
+		[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
 	}
-	swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+
+	[ -f "/jffs/scripts/post-mount" ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	swtext=
 	if [ -f "$swaplocation" ]; then
 		if ! grep -qF "$swaplocation" /proc/swaps; then
@@ -1760,13 +1803,13 @@ show_amtm(){
 		fi
 	fi
 	if [ -f "$swaplocation" ]; then
-		ii=1
+		swii=1
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
 		case_swp(){
 			manage_swap delete
 		}
 	elif [ "$swaplocation" ]; then
-		ii=1
+		swii=1
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap files"
 		case_swp(){
 			manage_swap multidelete
@@ -1778,7 +1821,7 @@ show_amtm(){
 		}
 	fi
 
-	[ "$ii" ] || [ "$ss" ] && echo
+	[ "$ii" ] || [ "$ss" ] || [ "$swii" ] && echo
 
 	# su check for script updates
 	[ "$ii" ] && printf "${GREEN_BG} su${NC} %-9s%s\\n" "check" "for script updates"
@@ -1794,7 +1837,12 @@ show_amtm(){
 	echo
 	echo "    amtm options"
 	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG} r ${NC} remove"  || thisopt="${GREEN_BG} i ${NC} install"
-	echo "${GREEN_BG} e ${NC} exit   ${GREEN_BG} u ${NC} update   $thisopt  ${GREEN_BG} a ${NC} about"
+	if [ "$su" = "1" ]; then
+		update_amtm
+		printf "${GREEN_BG} e ${NC} exit     ${GREEN_BG} u ${NC} update $thisScript v$version %${ACORR}s\\n" " $thisrem"
+	else
+		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG} u ${NC} update  $thisopt ${GREEN_BG} a ${NC} about"
+	fi
 
 	# The notification area. $1 can be passed on as positional parameter
 	[ "$ss" ] && ssi=1 || ssi=
@@ -1806,7 +1854,7 @@ show_amtm(){
 	if [ "$1" = "menu" ]; then
 		print_end_line
 	else
-		print_info_line
+		print_end_line
 		printf "$1\\n"
 		print_end_line
 	fi
@@ -1822,6 +1870,7 @@ show_amtm(){
 			j2)			case_j2;break;;
 			j3)			case_j3;break;;
 			j4)			case_j4;break;;
+			j5)			case_j5;break;;
 			[Ii])		[ "$ssi" ] && ss= || ss=1
 						show_amtm menu;break;;
 			di)			case_di;break;;
@@ -1843,7 +1892,7 @@ show_amtm(){
 						printf "   Goodbye\\n\\n"
 						exit 0;break;;
 			11)			exec "$0";break;; # hidden dev option
-			reboot)		print_info_line # hidden, reboot router
+			reboot)		print_end_line # hidden, reboot router
 						echo " OK then, rebooting this router, are you sure?"
 						continue_dialog
 						clear
