@@ -30,6 +30,7 @@ Screenshot of amtm 2.1, uses selected color theme when [Diversion](https://diver
 [connmon](https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/) - maintained by Jack Yaz<br/>
 [scMerlin](https://www.snbforums.com/threads/scmerlin-service-and-script-control-menu-for-asuswrt-merlin.56277/) - maintained by Jack Yaz<br/>
 [spdMerlin](https://www.snbforums.com/threads/spdmerlin-automated-speedtests-with-graphs.55904/) - maintained by Jack Yaz<br/>
+[uiDivStats](https://www.snbforums.com/threads/beta-uidivstats-webui-for-diversion-statistics.56393/) - maintained by Jack Yaz<br/>
 
 ### How to start amtm after installation
 Enter this into your SSH terminal:
