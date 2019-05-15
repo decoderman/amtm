@@ -17,7 +17,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 version=2.2
-release="May 14 2019"
+release="May 15 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.2
@@ -62,7 +62,7 @@ about_amtm(){
 	show_amtm menu
 }
 
-theme_standard(){ RED_LINE='[31m';RED_BG='[41m';ERR_BG='[41m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';ACORR=20;}
+theme_standard(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN_BG=;GRAY='[90m';NC='[0m';ACORR=15;}
 print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
 continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
