@@ -1,6 +1,6 @@
 ## amtm - the SNBForum Asuswrt-Merlin Terminal Menu
 
-A shortcut manager for popular scripts for wireless routers running Asuswrt-Merlin firmware.
+A shortcut manager for popular scripts for wireless routers running [Asuswrt-Merlin](https://github.com/RMerl) firmware.
 
 Discuss and read more on the SmallNetBuilders Forum: [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/)
 
@@ -11,11 +11,11 @@ Enter this into your favorite SSH terminal:
 /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 ```
 
-Screenshot of amtm 2.1, uses selected color theme when [Diversion](https://diversion.ch/) is installed:
+amtm 2.2, uses selected theme colors when [Diversion](https://diversion.ch/) is installed:
 
-[![amtm v2.1](https://i.imgur.com/GDyvbdr.png "amtm v2.1")](https://i.imgur.com/GDyvbdr.png "amtm v2.1")
+[![amtm v2.2](https://i.imgur.com/tywgFCr.png "amtm v2.2")](https://i.imgur.com/tywgFCr.png "amtm v2.2")
 
-### Currently supported scripts
+### Supported scripts
 
 [Diversion](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) - maintained by thelonelycoder<br/>
 [DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0 (deprecated)<br/>
@@ -39,8 +39,7 @@ Enter this into your SSH terminal:
 /jffs/scripts/amtm
 ```
 
-If Entware is installed on the router, start amtm with this command.<br/>
-[Diversion](https://diversion.ch/) installs Entware by default, amtm has an option to do so.
+If Entware is installed on the router, start amtm with this command, [Diversion](https://diversion.ch/) installs Entware by default, amtm has an option to do so.
 
 ```Shell
 amtm
