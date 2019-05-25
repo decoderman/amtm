@@ -16,11 +16,11 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-version=2.2
-release="May 15 2019"
+version=2.3
+release="May 25 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
-dc_version=2.2
+dc_version=2.3
 
 ascii_logo(){
 	echo "              _"
@@ -62,10 +62,12 @@ about_amtm(){
 	show_amtm menu
 }
 
-theme_standard(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN_BG=;GRAY='[90m';NC='[0m';ACORR=15;}
-print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
-press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
+check_nl(){ [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
 continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
+dos_to_unix(){ dos2unix < $1 | cmp -s - $1;[ "$?" = "1" ] && dos2unix $1;}
+press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
+print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
+theme_standard(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN_BG=;GRAY='[90m';NC='[0m';ACORR=15;}
 
 install_amtm(){
 	clear
@@ -76,15 +78,37 @@ install_amtm(){
 	while true; do
 		printf " Continue? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
-			1)		if [ -d "/jffs" ]; then
+			1)		if [ -z "$(which dos2unix)" ]; then
+						echo
+						echo " This routers firmware is missing"
+						echo " dos2unix. $thisScript cannot be installed."
+						rm -f "$0"
+						echo
+						exit 0
+
+					elif [ ! -f /usr/sbin/curl ]; then
+						echo
+						echo " Sorry, wrong platform."
+						echo " $thisScript cannot be installed."
+						rm -f "$0"
+						echo
+						exit 0
+					elif [ ! -d "/jffs" ]; then
+						echo
+						echo " /jffs partition is not present on this"
+						echo " router. $thisScript cannot be installed."
+						echo " Please investigate."
+						rm -f "$0"
+						echo
+						exit 0
+					else
 						mkdir -p /jffs/scripts
 						if [ "$(nvram get jffs2_scripts)" != "1" ]; then
 							nvram set jffs2_scripts=1
 							nvram commit
 						fi
-
 						[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
-						chmod 0755 /jffs/scripts/$thisScript
+						[ ! -x "/jffs/scripts/$thisScript" ] && chmod 0755 /jffs/scripts/$thisScript
 						message="/jffs/scripts/$thisScript"
 
 						if [ -L "/opt/bin/$thisScript" ]; then
@@ -92,10 +116,9 @@ install_amtm(){
 						fi
 						if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ]; then
 							ln -s /jffs/scripts/$thisScript /opt/bin
-							chmod 0755 /opt/bin/$thisScript
+							[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
 							message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 						fi
-
 						if [ "$0" = "/jffs/scripts/$thisScript" ]; then
 							subshell=
 						else
@@ -103,14 +126,6 @@ install_amtm(){
 							rm -f "$0"
 						fi
 						"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can start $thisScript with:\\n $message"
-					else
-						echo
-						echo " /jffs partition is not present on this"
-						echo " router. amtm cannot be installed."
-						echo " Please investigate."
-						rm -f "$0"
-						echo
-						exit 0
 					fi
 					break;;
 			[Ee])	rm -f "$0";echo;exit 0;break;;
@@ -120,6 +135,7 @@ install_amtm(){
 }
 
 remove_amtm(){
+	remove_when_empty(){ [ "$(sed '/^[[:space:]]*$/d; /#!\/bin\/sh/d' "$1" | wc -c)" = 0 ] && rm "$1";}
 	print_end_line
 	echo " Do you want to remove $thisScript now?"
 	echo
@@ -132,12 +148,14 @@ remove_amtm(){
 	continue_dialog
 	if [ -f /jffs/scripts/disk-check ]; then
 		sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
+		remove_when_empty /jffs/scripts/pre-mount
 		rm -f /jffs/scripts/disk-check
 		rm -f /jffs/amtm-disk-check.log
 	fi
 	[ -f "/jffs/amtm-format-disk.log" ] && rm /jffs/amtm-format-disk.log
 	if [ -f "/jffs/scripts/init-start" ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
 		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
+		remove_when_empty /jffs/scripts/init-start
 		cru d amtm_RebootScheduler
 	fi
 	rm -f /opt/bin/$thisScript
@@ -150,10 +168,7 @@ remove_amtm(){
 
 update_amtm(){
 	case "$release" in
-		*XX*) 	remoteurl="http://diversion.test/scripts/amtm"
-				if ! ping -c1 -W2 -q "$(echo $remoteurl | sed 's#http[s]*://##;s#/.*##')" >/dev/null 2>&1; then
-					remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm"
-				fi;;
+		*XX*) 	remoteurl="http://diversion.test/scripts/amtm";;
 		*) 		remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
 	esac
 	curl -fsNL --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
@@ -171,7 +186,6 @@ update_amtm(){
 		else
 			thisrem="${ERR_BG}no upd${NC}"
 		fi
-
 	else
 		print_end_line
 		if [ "$version" != "$remotever" ]; then
@@ -191,6 +205,88 @@ update_amtm(){
 			echo " do you want to force update $thisScript?"
 			continue_dialog
 			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to $remotever"
+		fi
+	fi
+}
+
+check_swap(){
+	writeswaploc(){
+		if [ ! -f "/jffs/scripts/post-mount" ]; then
+			echo "#!/bin/sh" >/jffs/scripts/post-mount
+		elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
+		fi
+		dos_to_unix /jffs/scripts/post-mount
+		sed -i '\~swapon ~d' /jffs/scripts/post-mount
+		check_nl /jffs/scripts/post-mount
+		sed -i "2i swapon $swaplocation # Added by $thisScript" /jffs/scripts/post-mount
+		swapon "$swaplocation" 2> /dev/null
+		swapsize=$(du -h "$swaplocation" | awk '{print $1}')
+		[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
+	}
+
+	remove_swap_entries(){
+		if grep 'swapon.*\.' /jffs/scripts/post-mount; then
+			sed -i '\~swapon ~d' /jffs/scripts/post-mount
+			swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
+		fi
+	}
+
+	if [ "$(echo "$swaplocation" | wc -l)" -gt "1" ]; then
+		multipleswap=1
+		swtext=" Multiple swap files found, only one file is\\n supported. Enter sw to delete."
+	elif [ -f "$swaplocation" ]; then
+		if ! grep -qF "$swaplocation" /proc/swaps; then
+			swapon "$swaplocation" 2> /dev/null
+			swtext=" Swap file re-enabled"
+		fi
+		swapsize=$(du -h "$swaplocation" | awk '{print $1}')
+	elif [ "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
+		partitionsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
+	elif grep -qF "swap" /jffs/configs/fstab && [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+		partitionsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
+		swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
+	elif [ "$swaplocation" ]; then
+		swaplocation="$(find /tmp/mnt/*/$(basename $swaplocation) 2> /dev/null)"
+		if [ -f "$swaplocation" ]; then
+			writeswaploc
+			swtext=" Swap file path corrected in\\n /jffs/scripts/post-mount"
+		else
+			swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
+			if [ -f "$swaplocation" ]; then
+				writeswaploc
+				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+			elif [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+				swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
+				if [ -f "$swaplocation" ]; then
+					writeswaploc
+					swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+				else
+					remove_swap_entries
+				fi
+			else
+				remove_swap_entries
+			fi
+		fi
+	else
+		swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
+		if [ "$(echo "$swaplocation" | wc -l)" -gt "1" ]; then
+			multipleswap=1
+			swtext=" Multiple swap files found, only one file is\\n supported. Enter sw to delete."
+		elif [ -f "$swaplocation" ]; then
+			writeswaploc
+			swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+		elif [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+			swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
+			if [ -f "$swaplocation" ]; then
+				writeswaploc
+				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
+			else
+				remove_swap_entries
+			fi
+		elif [ "$swaplocation" ] || [ "$(wc -l < /proc/swaps)" -gt "2" ]; then
+			multipleswap=1
+			swtext=" Multiple swap files found, only one file is\\n supported. Enter sw to delete."
 		fi
 	fi
 }
@@ -282,6 +378,7 @@ manage_swap(){
 								elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
 									sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
 								fi
+								dos_to_unix /jffs/scripts/post-mount
 								sed -i "2i swapon $swapDevice/myswap.swp # Swap file created by $thisScript" /jffs/scripts/post-mount
 								[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
 								show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
@@ -322,29 +419,40 @@ manage_swap(){
 		echo " Multiple swap files found, only one file is"
 		echo " supported."
 		echo
-		echo " These swap files were found:"
-		echo
 
+		findswap=$(find /tmp/mnt/*/*.swp 2> /dev/null)
 		i=1
-		for swapfile in $(find /tmp/mnt/*/*.swp 2> /dev/null); do
-			echo " $i. ${GREEN}$swapfile${NC} $(du -h "$swapfile" | awk '{print $1}')"
-			eval swapfile$i="$swapfile"
-			noad="${noad}${i} "
-			i=$((i+1))
-		done
-
-		while true; do
-			printf "\\n Enter swap file to delete [1-$((i-1)) e=Exit] ";read -r continue
-			case "$continue" in
-				[$noad]) 	swapoff -a
-							eval rmswap="\$swapfile$continue"
-							rm "$rmswap"
-							show_amtm menu
-							break;;
-				[Ee])		show_amtm menu;break;;
-				*)			printf "\\n input is not an option\\n";;
-			esac
-		done
+		if [ "$findswap" ]; then
+			for swapfile in $findswap; do
+				echo " $i. ${GREEN}$swapfile${NC} $(du -h "$swapfile" | awk '{print $1}')"
+				eval swapfile$i="$swapfile"
+				noad="${noad}${i} "
+				i=$((i+1))
+			done
+			echo
+		fi
+		if [ "$(wc -l < /proc/swaps)" -ge "2" ]; then
+			echo " Found in /proc/swaps, delete manually:"
+			echo
+			cat /proc/swaps
+		fi
+		if [ "$i" -gt "1" ]; then
+			while true; do
+				printf "\\n Enter swap file to delete [1-$((i-1)) e=Exit] ";read -r continue
+				case "$continue" in
+					[$noad]) 	swapoff -a
+								eval rmswap="\$swapfile$continue"
+								rm "$rmswap"
+								show_amtm menu
+								break;;
+					[Ee])		show_amtm menu;break;;
+					*)			printf "\\n input is not an option\\n";;
+				esac
+			done
+		else
+			press_enter_to "return to the menu"
+			show_amtm menu
+		fi
 	fi
 }
 
@@ -360,10 +468,13 @@ disk_check(){
 			elif [ -f "/jffs/scripts/pre-mount" ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
 				sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
 			fi
+			dos_to_unix /jffs/scripts/pre-mount
 			if ! grep -q ". /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
+				check_nl /jffs/scripts/pre-mount
 				echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
 			fi
-			chmod 0755 /jffs/scripts/pre-mount /jffs/scripts/disk-check
+			[ ! -x "/jffs/scripts/pre-mount" ] && chmod 0755 /jffs/scripts/pre-mount
+			[ ! -x "/jffs/scripts/disk-check" ] && chmod 0755 /jffs/scripts/disk-check
 
 		elif [ "$1" = "remove" ]; then
 			print_end_line
@@ -409,12 +520,14 @@ write_dc_file(){
 	# disk-check, check filesystem before partition is mounted
 	# generated by amtm $version
 
-	# Proudly coded by thelonelycoder/decoderman
+	# Proudly coded by thelonelycoder (aka decoderman@github)
 	# Copyright (C) 2016-2019 thelonelycoder - All Rights Reserved
 	# https://www.snbforums.com/members/thelonelycoder.25480/
 	# https://github.com/decoderman
 
-	# Contributors: ColinTaylor, latenitetech
+	# Contributors:
+	# ColinTaylor: https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)
+	# latenitetech: https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot
 
 	# amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 	# https://opensource.org/licenses/GPL-3.0
@@ -423,6 +536,25 @@ write_dc_file(){
 	TAG="amtm disk-check"
 	CHKLOG="/jffs/amtm-disk-check.log"
 	CHKCMD=
+	ntptimer=0
+	ntptimeout=30
+
+	while [ "\$(nvram get ntp_ready)" = "0" ] && [ "\$ntptimer" -lt "\$ntptimeout" ]; do
+	    ntptimer=\$((ntptimer+1))
+	    sleep 1
+	done
+
+	if [ "\$ntptimer" -ge "\$ntptimeout" ]; then
+	    text="NPT timeout (\${ntptimeout}s) reached, date is router default"
+	    printf "\\\n\$text\\\n" >> \$CHKLOG
+	    logger -t "\$TAG" "\$text"
+	elif [ "\$ntptimer" -gt "0" ]; then
+	    text="Waited \${ntptimer}s for NTP to sync date"
+	    printf "\\\n\$(date) \$text\\\n" >> \$CHKLOG
+	    logger -t "\$TAG" "\$text"
+	else
+	    printf "\\\n" >> \$CHKLOG
+	fi
 
 	if [ -f "\$CHKLOG" ] && [ "\$(wc -c < \$CHKLOG)" -gt "500000" ]; then
 	    sed -i '1,500d' "\$CHKLOG"
@@ -430,33 +562,36 @@ write_dc_file(){
 	    logger -t "\$TAG" "Truncated \$CHKLOG, size over 500KB"
 	fi
 
-	# \$1=device \$2=filesystem type
-
 	if [ "\$#" -lt "2" ]; then
 	    FSTYPE=\$(fdisk -l \${1:0:8} | grep \$1 | cut -c55-65)
-	    logger -t "\$TAG" "Firmware does not support filesystem type parameter, probing \$FSTYPE on device \$1"
-	    printf "\n\$(date) Firmware does not support filesystem type parameter, probing \$FSTYPE on device \$1.\n" >> \$CHKLOG
+	    text="Firmware too old, running basic check. Probing '\$FSTYPE' on device \$1"
+	    printf "\$(date) \$text\\\n" >> \$CHKLOG
+	    logger -t "\$TAG" "\$text"
 	    case "\$FSTYPE" in
 	        Linux*)             CHKCMD="e2fsck -p" ;;
-	        Win95* | FAT*) 	    CHKCMD="fatfsck -a" ;;
+	        Win95* | FAT*)      CHKCMD="fatfsck -a" ;;
 	        HPFS/NTFS)          CHKCMD="ntfsck -a" ;;
-	        *)                  logger -t "\$TAG" "Unknown filesystem type \$FSTYPE on \$1 - skipping check."
-	                            printf "\$(date) Unknown filesystem type \$FSTYPE on \$1 - skipping check.\n" >> \$CHKLOG ;;
+	        *)                  text="Unknown filesystem type '\$FSTYPE' on \$1 - skipping check"
+	                            printf "\$(date) \$text\\\n" >> \$CHKLOG
+	                            logger -t "\$TAG" "\$text" ;;
 	    esac
 	else
-	    logger -t "\$TAG" "Probing \$2 on device \$1"
-	    printf "\n\$(date) Probing \$2 on device \$1\n" >> \$CHKLOG
+	    text="Probing '\$2' on device \$1"
+	    printf "\$(date) \$text\\\n" >> \$CHKLOG
+	    logger -t "\$TAG" "\$text"
 	    case "\$2" in
-	        "")                 logger -t "\$TAG" "Error reading device \$1 - skipping check"
-	                            printf "\$(date) Error reading device \$1 - skipping check.\n" >> \$CHKLOG ;;
+	        "")                 text="Error reading device \$1 - skipping check"
+	                            printf "\$(date) \$text\\\n" >> \$CHKLOG
+	                            logger -t "\$TAG" "\$text" ;;
 	        ext2|ext3|ext4)     CHKCMD="e2fsck -p" ;;
 	        hfs|hfs+j|hfs+jx)   if [ -x /usr/sbin/chkhfs ]; then
 	                                CHKCMD="chkhfs -a -f"
 	                            elif [ -x /usr/sbin/fsck_hfs ]; then
 	                                CHKCMD="fsck_hfs -d -ay"
 	                            else
-	                                logger -t "\$TAG" "Unsupported filesystem \$2 on device \$1 - skipping check"
-	                                printf "\$(date) Unsupported filesystem \$2 on device \$1 - skipping check.\n" >> \$CHKLOG
+	                                text="Unsupported filesystem '\$2' on device \$1 - skipping check"
+	                                printf "\$(date) \$text\\\n" >> \$CHKLOG
+	                                logger -t "\$TAG" "\$text"
 	                            fi ;;
 	        ntfs)               if [ -x /usr/sbin/chkntfs ]; then
 	                                CHKCMD="chkntfs -a -f"
@@ -464,18 +599,23 @@ write_dc_file(){
 	                                CHKCMD="ntfsck -a"
 	                            fi ;;
 	        vfat)               CHKCMD="fatfsck -a" ;;
-	        unknown)            logger -t "\$TAG" "\$1 Unknown filesystem (e.g. exFAT) or no partition table (e.g. blank media) - skipping check."
-	                            printf "\$(date) \$1 Unknown filesystem (e.g. exFAT) or no partition table (e.g. blank media) - skipping check.\n" >> \$CHKLOG ;;
-	        *)                  logger -t "\$TAG" "Unexpected filesystem type \$2 for \$1 - skipping check."
-	                            printf "\$(date) Unexpected filesystem type \$2 for \$1 - skipping check.\n" >> \$CHKLOG ;;
+	        unknown)            text="\$1 Unknown filesystem (e.g. exFAT) or no partition table (e.g. blank media) - skipping check"
+	                            printf "\$(date) \$text\\\n" >> \$CHKLOG
+	                            logger -t "\$TAG" "\$text" ;;
+	        *)                  text="Unexpected filesystem type '\$2' for \$1 - skipping check"
+	                            printf "\$(date) \$text\\\n" >> \$CHKLOG
+	                            logger -t "\$TAG" "\$text" ;;
 	    esac
 	fi
 
 	if [ "\$CHKCMD" ]; then
-	    logger -t "\$TAG" "Running disk check (v\$VERSION) '\$CHKCMD' on \$1"
-	    printf "\$(date) Running disk check (v\$VERSION) '\$CHKCMD' on \$1\n" >> \$CHKLOG
+	    text="Running disk check v\$VERSION, with command '\$CHKCMD' on \$1"
+	    printf "\$text\\\n" >> \$CHKLOG
+	    logger -t "\$TAG" "\$text"
 	    \$CHKCMD "\$1" >> \$CHKLOG 2>&1
-	    logger -t "\$TAG" "Disk check done on \$1"
+	    text="Disk check done on \$1"
+	    printf "\$(date) \$text\\\n" >> \$CHKLOG
+	    logger -t "\$TAG" "\$text"
 	fi
 
 	EOF
@@ -866,7 +1006,9 @@ reboot_scheduler(){
 		elif [ -f "/jffs/scripts/init-start" ] && ! head -1 /jffs/scripts/init-start | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/init-start
 		fi
+		dos_to_unix /jffs/scripts/init-start
 		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
+			check_nl /jffs/scripts/init-start
 			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow service reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
 		fi
 		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow service reboot"
@@ -897,8 +1039,6 @@ install_Entware(){
 	}
 
 	write_jffsfile(){
-		check_nl(){ [ "$(tail -c1 "${1}"; echo x)" != "$'\nx'" ] && echo >>"${1}";}
-
 		echo " Checking /jffs/scripts entries"
 
 		if [ ! -f "/jffs/scripts/post-mount" ]; then
@@ -944,7 +1084,13 @@ install_Entware(){
 		else
 			echo " OK post-mount.div"
 		fi
-		chmod 0755 /jffs/scripts/post-mount /jffs/scripts/services-stop /jffs/scripts/post-mount.div
+		divScripts="/jffs/scripts/post-mount /jffs/scripts/services-stop /jffs/scripts/post-mount.div"
+		for script in $divScripts; do
+			if [ -f "$script" ]; then
+				dos_to_unix "$script"
+				[ ! -x "$script" ] && chmod 0755 "$script"
+			fi
+		done
 	}
 
 	check_device(){
@@ -1178,7 +1324,7 @@ show_amtm(){
 
 	if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
 		ln -s /jffs/scripts/$thisScript /opt/bin
-		chmod 0755 /opt/bin/$thisScript
+		[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
 		rcotext=" /opt/bin detected!\\n You can now start $thisScript with:\\n $thisScript"
 		if [ -z "$1" ] || [ "$1" = "menu" ]; then
 			set -- "$rcotext"
@@ -1201,10 +1347,7 @@ show_amtm(){
 	scriptloc="/opt/bin/diversion"
 	if [ -f "$scriptloc" ]; then
 		case "$release" in
-			*XX*) 	remoteurl="http://diversion.test/diversion"
-					if ! ping -c1 -W2 -q "$(echo $remoteurl | sed 's#http[s]*://##;s#/.*##')" >/dev/null 2>&1; then
-						remoteurl="https://diversion.ch/diversion"
-					fi;;
+			*XX*) 	remoteurl="http://diversion.test/diversion";;
 			*) 		remoteurl="https://diversion.ch/diversion";;
 		esac
 		ii=1
@@ -1250,10 +1393,7 @@ show_amtm(){
 			echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
 			continue_dialog
 			case "$release" in
-				*XX*) 	remoteurl="http://diversion.test/install"
-						if ! ping -c1 -W2 -q "$(echo $remoteurl | sed 's#http[s]*://##;s#/.*##')" >/dev/null 2>&1; then
-							remoteurl="https://diversion.ch/install"
-						fi;;
+				*XX*) 	remoteurl="http://diversion.test/install";;
 				*) 		remoteurl="https://diversion.ch/install";;
 			esac
 			curl -Os "$remoteurl" && sh install
@@ -1733,67 +1873,20 @@ show_amtm(){
 	fi
 
 	# sw/swp/swap Swap file
-	writeswaploc(){
-		if [ ! -f "/jffs/scripts/post-mount" ]; then
-			echo "#!/bin/sh" >/jffs/scripts/post-mount
-		elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
-		fi
-		sed -i '\~swapon ~d' /jffs/scripts/post-mount
-		[ "$(cat /jffs/scripts/post-mount | wc -l)" -le "2" ] && echo >>/jffs/scripts/post-mount
-		sed -i "2i swapon $swaplocation # Swap file created by $thisScript" /jffs/scripts/post-mount
-		swapon "$swaplocation" 2> /dev/null
-		[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
-	}
-
+	unset "swaplocation" "swapsize" "partitionsize" "swtext" "multipleswap"
 	[ -f "/jffs/scripts/post-mount" ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
-	swtext=
-	if [ -f "$swaplocation" ]; then
-		if ! grep -qF "$swaplocation" /proc/swaps; then
-			swapon "$swaplocation" 2> /dev/null
-			swtext=" Swap file re-enabled"
-		fi
-	elif [ "$swaplocation" ]; then
-		swaplocation="$(find /tmp/mnt/*/$(basename $swaplocation) 2> /dev/null)"
-		if [ -f "$swaplocation" ]; then
-			writeswaploc
-			swtext=" Swap file path corrected in\\n /jffs/scripts/post-mount"
-		else
-			swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
-			if [ -f "$swaplocation" ]; then
-				writeswaploc
-				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
-			elif [ "$(wc -l < /proc/swaps)" -ge "2" ]; then
-				swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
-				if [ -f "$swaplocation" ]; then
-					writeswaploc
-					swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
-				else
-					sed -i '\~swapon ~d' /jffs/scripts/post-mount
-					swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
-				fi
+	if [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+		if [ -f "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
+			if grep -qE "^swapon $swaplocation" /jffs/scripts/post-mount; then
+				swapsize=$(du -h "$swaplocation" | awk '{print $1}')
 			else
-				sed -i '\~swapon ~d' /jffs/scripts/post-mount
-				swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
+				check_swap
 			fi
+		else
+			check_swap
 		fi
 	else
-		swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
-		if [ -f "$swaplocation" ]; then
-			writeswaploc
-			swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
-		elif [ "$(wc -l < /proc/swaps)" -ge "2" ]; then
-			swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
-			if [ -f "$swaplocation" ]; then
-				writeswaploc
-				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
-			else
-				sed -i '\~swapon ~d' /jffs/scripts/post-mount
-				swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
-			fi
-		elif [ "$swaplocation" ]; then
-			swtext=" Multiple swap files found, only one file is\\n supported. Run ${GREEN_BG}sw${NC} to delete."
-		fi
+		check_swap
 	fi
 	if [ "$swtext" ]; then
 		if [ -z "$1" ] || [ "$1" = "menu" ]; then
@@ -1804,11 +1897,17 @@ show_amtm(){
 	fi
 	if [ -f "$swaplocation" ]; then
 		swii=1
-		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
+		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC} $swapsize\\n" "manage" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
 		case_swp(){
 			manage_swap delete
 		}
-	elif [ "$swaplocation" ]; then
+	elif [ "$swaplocation" ] && [ "$partitionsize" ]; then
+		swii=1
+		printf "${GREEN_BG}   ${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "Swap" "Partition" "${GREEN_BG}$swaplocation${NC} ${partitionsize}M"
+		case_swp(){
+			show_amtm " $thisScript does not manage swap partitions."
+		}
+	elif [ "$multipleswap" ]; then
 		swii=1
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap files"
 		case_swp(){
@@ -1912,7 +2011,7 @@ if [ ! -f "/jffs/scripts/$thisScript" ]; then
 	install_amtm
 elif ! cmp -s "$0" "/jffs/scripts/$thisScript"; then
 	cp -f "$0" /jffs/scripts/$thisScript
-	chmod 0755 /jffs/scripts/$thisScript
+	[ ! -x "/jffs/scripts/$thisScript" ] && chmod 0755 /jffs/scripts/$thisScript
 	if [ "$0" = "/jffs/scripts/$thisScript" ]; then
 		subshell=
 	else
