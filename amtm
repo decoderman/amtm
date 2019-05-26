@@ -243,7 +243,7 @@ check_swap(){
 		swapsize=$(du -h "$swaplocation" | awk '{print $1}')
 	elif [ "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
 		partitionsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
-	elif grep -qF "swap" /jffs/configs/fstab && [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+	elif [ -f /jffs/configs/fstab ] && grep -qF "swap" /jffs/configs/fstab && [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
 		partitionsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
 		swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
 	elif [ "$swaplocation" ]; then
