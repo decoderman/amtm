@@ -17,7 +17,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 version=2.3
-release="May 25 2019"
+release="June 01 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.3
@@ -67,7 +67,17 @@ continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit
 dos_to_unix(){ dos2unix < $1 | cmp -s - $1;[ "$?" = "1" ] && dos2unix $1;}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
 print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
-theme_standard(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN_BG=;GRAY='[90m';NC='[0m';ACORR=15;}
+theme_standard(){ RED_LINE='[31m';RED_BG='[41m';ERR_BG='[41m';GREEN='[92m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';ACORR=20;}
+theme_green(){ RED_LINE='[33m';RED_BG='[42m';ERR_BG='[41m';GREEN='[92m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';ACORR=20;}
+theme_blue(){ RED_LINE='[34m';RED_BG='[44m';ERR_BG='[101m';GREEN='[94m';GREEN_BG='[104m';GRAY='[90m';NC='[0m';ACORR=21;}
+theme_blue_on_white(){ RED_LINE='[34m';RED_BG='[104m';ERR_BG='[101m';GREEN='[94m';GREEN_BG='[104m';GRAY='[90m';NC='[0m';ACORR=21;}
+theme_high_contrast(){ RED_LINE='[91m';RED_BG='[41m';ERR_BG='[41m';GREEN='[32m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';ACORR=20;}
+theme_reduced(){ RED_LINE='[31m';RED_BG='[100m';ERR_BG='[100m';GREEN='[37m';GREEN_BG='[100m';GRAY='[90m';NC='[0m';ACORR=21;}
+theme_reduced_w(){ RED_LINE='[31m';RED_BG='[97;40m';ERR_BG='[97;40m';GREEN='[32m';GREEN_BG='[97;40m';GRAY='[90m';NC='[0m';ACORR=23;}
+theme_reduced_cw(){ RED_LINE='[31m';RED_BG='[97;40m';ERR_BG='[97;41m';GREEN='[32m';GREEN_BG='[30;42m';GRAY='[90m';NC='[0m';ACORR=23;}
+theme_reduced_b(){ RED_LINE='[38;5;209m';RED_BG='[100m';ERR_BG='[100m';GREEN='[38;5;157m';GREEN_BG='[100m';GRAY='[90m';NC='[0m';ACORR=21;}
+theme_reduced_cb(){ RED_LINE='[31m';RED_BG='[100m';ERR_BG='[30;41m';GREEN='[38;5;157m';GREEN_BG='[30;42m';GRAY='[90m';NC='[0m';ACORR=23;}
+theme_basic(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN=;GREEN_BG=;GRAY='[90m';NC='[0m';ACORR=15;}
 
 install_amtm(){
 	clear
@@ -119,6 +129,7 @@ install_amtm(){
 							[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
 							message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 						fi
+						[ ! -f /opt/share/diversion/.conf/diversion.conf ] && [ ! -f /jffs/.amtm_theme ] && theme_amtm new
 						if [ "$0" = "/jffs/scripts/$thisScript" ]; then
 							subshell=
 						else
@@ -158,6 +169,7 @@ remove_amtm(){
 		remove_when_empty /jffs/scripts/init-start
 		cru d amtm_RebootScheduler
 	fi
+	[ -f /jffs/.amtm_theme ] && rm /jffs/.amtm_theme
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
@@ -207,6 +219,114 @@ update_amtm(){
 			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to $remotever"
 		fi
 	fi
+}
+
+theme_amtm(){
+print_end_line
+if [ -z "$1" ]; then
+	printf " This changes the $thisScript theme.\\n All used colors are shown in the themes below.\\n"
+	printf "\\n Your current theme is: ${RED_BG} $theme ${NC}\\n\\n"
+else
+	printf " Select a theme that works best in your\\n SSH client. All colors in use are shown.\\n\\n"
+fi
+
+theme_standard
+printf "${RED_BG} 1. standard       ${NC}${GREEN_BG}  standard      ${NC}\\n"
+printf "   ${ERR_BG} standard       ${NC}${GREEN}  standard${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_green
+printf "\\n${RED_BG} 2. green          ${NC}${GREEN_BG}  green         ${NC}\\n"
+printf "   ${ERR_BG} green          ${NC}${GREEN}  green${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_blue
+printf "\\n${RED_BG} 3. blue           ${NC}${GREEN_BG}  blue          ${NC}\\n"
+printf "   ${ERR_BG} blue           ${NC}${GREEN}  blue${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_blue_on_white
+printf "\\n${RED_BG} 4. blue_on_white  ${NC}${GREEN_BG}  blue_on_white ${NC}\\n"
+printf "   ${ERR_BG} blue_on_white  ${NC}${GREEN}  blue_on_white ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_high_contrast
+printf "\\n${RED_BG} 5. high_contrast  ${NC}${GREEN_BG}  high_contrast ${NC}\\n"
+printf "   ${ERR_BG} high_contrast  ${NC}${GREEN}  high_contrast ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_reduced
+printf "\\n${RED_BG} 6. reduced        ${NC}${GREEN_BG}  reduced       ${NC}\\n"
+printf "   ${ERR_BG} reduced        ${NC}${GREEN}  reduced       ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_reduced_w
+printf "\\n${RED_BG} 7. reduced_w      ${NC}${GREEN_BG}  reduced_w     ${NC}\\n"
+printf "   ${ERR_BG} reduced_w      ${NC}${GREEN}  reduced_w     ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_reduced_cw
+printf "\\n${RED_BG} 8. reduced_cw     ${NC}${GREEN_BG}  reduced_cw    ${NC}\\n"
+printf "   ${ERR_BG} reduced_cw     ${NC}${GREEN}  reduced_cw    ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_reduced_b
+printf "\\n${RED_BG} 9. reduced_b      ${NC}${GREEN_BG}  reduced_b     ${NC}\\n"
+printf "   ${ERR_BG} reduced_b      ${NC}${GREEN}  reduced_b     ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_reduced_cb
+printf "\\n${RED_BG}10. reduced_cb     ${NC}${GREEN_BG}  reduced_cb    ${NC}\\n"
+printf "   ${ERR_BG} reduced_cb     ${NC}${GREEN}  reduced_cb    ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+theme_basic
+printf "\\n${RED_BG}11. basic          ${NC}${GREEN_BG}  basic         ${NC}\\n"
+echo "${RED_LINE}_____________________________________________${NC}"
+
+ton=11;noad=
+if [ -f "$divconf" ]; then
+	printf "\\n12. Let Diversion set theme ($(grep "THEME=" "$divconf" | sed -e 's/THEME=//'))\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+	ton=12;noad=12
+fi
+
+printf "\\n The basic and reduced themes use no or fewer\\n"
+printf " colors, service states may not be visible.\\n"
+
+theme_standard
+
+while true; do
+	if [ -z "$1" ]; then
+		printf "\\n Set new $thisScript theme: [1-$ton e=Exit] ";read -r continue
+	else
+		printf "\\n Select $thisScript theme: [1-$ton] ";read -r continue
+	fi
+	case "$continue" in
+		1) theme=standard;break;;
+		2) theme=green;break;;
+		3) theme=blue;break;;
+		4) theme=blue_on_white;break;;
+		5) theme=high_contrast;break;;
+		6) theme=reduced;break;;
+		7) theme=reduced_w;break;;
+		8) theme=reduced_cw;break;;
+		9) theme=reduced_b;break;;
+		10) theme=reduced_cb;break;;
+		11) theme=basic;break;;
+	$noad)	[ -f /jffs/.amtm_theme ] && rm /jffs/.amtm_theme
+			theme=
+			show_amtm " now using theme selected in Diversion"
+			break;;
+	 [Ee]) 	show_amtm menu;;
+		*)	printf "\\n input is not an option\\n";;
+	esac
+done
+
+echo "theme=$theme" >/jffs/.amtm_theme
+if [ -z "$1" ] || [ "$1" = "select" ] ; then
+	show_amtm " changed theme to $theme"
+fi
 }
 
 check_swap(){
@@ -1305,21 +1425,15 @@ script_check(){
 }
 
 show_amtm(){
-	clear
+	[ -f /jffs/.amtm_theme ] &&	. /jffs/.amtm_theme
 	divconf=/opt/share/diversion/.conf/diversion.conf
 	if [ -f "$divconf" ]; then
-		theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
-		if [ -z "$theme" ] || ! grep -qm1 "^theme_reduced" /opt/share/diversion/file/theme.div; then
-			theme=standard
-		else
-			. /opt/share/diversion/file/theme.div
-		fi
+		[ ! -f /jffs/.amtm_theme ] && theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
 		divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
 		divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
 		[ "$divMver" ] && divver="${divver}.$divMver" || divver=$divver
-	else
-		theme=standard
 	fi
+	[ -z "$theme" ] && theme_amtm select
 	theme_$theme
 
 	if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
@@ -1332,12 +1446,10 @@ show_amtm(){
 			set -- "$1\\n\\n$rcotext"
 		fi
 	fi
-
+	clear
 	printf "${RED_BG}%-27s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
-
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
-
 	echo "${RED_BG} The ${title}   ${NC}"
 	echo
 
@@ -1935,12 +2047,12 @@ show_amtm(){
 	# amtm menu
 	echo
 	echo "    amtm options"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG} r ${NC} remove"  || thisopt="${GREEN_BG} i ${NC} install"
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG}r${NC}emove"  || thisopt="${GREEN_BG}i${NC}nstall"
 	if [ "$su" = "1" ]; then
 		update_amtm
 		printf "${GREEN_BG} e ${NC} exit     ${GREEN_BG} u ${NC} update $thisScript v$version %${ACORR}s\\n" " $thisrem"
 	else
-		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG} u ${NC} update  $thisopt ${GREEN_BG} a ${NC} about"
+		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG}t${NC}heme  ${GREEN_BG}u${NC}pdate  $thisopt  ${GREEN_BG}a${NC}bout"
 	fi
 
 	# The notification area. $1 can be passed on as positional parameter
@@ -1983,6 +2095,7 @@ show_amtm(){
 			fdl)		format_disk_log;break;;
 			rs)			case_rs;break;;
 			swap|swp|sw)case_swp;break;;
+		[Tt]|[Cc][Tt])	theme_amtm;break;;
 			[Uu])		update_amtm;break;;
 			[Rr])		remove_amtm;break;;
 			[Aa])		about_amtm;break;;
