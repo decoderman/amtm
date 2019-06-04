@@ -17,7 +17,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 version=2.3
-release="June 01 2019"
+release="June 04 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.3
@@ -163,8 +163,8 @@ remove_amtm(){
 		rm -f /jffs/scripts/disk-check
 		rm -f /jffs/amtm-disk-check.log
 	fi
-	[ -f "/jffs/amtm-format-disk.log" ] && rm /jffs/amtm-format-disk.log
-	if [ -f "/jffs/scripts/init-start" ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+	[ -f /jffs/amtm-format-disk.log ] && rm /jffs/amtm-format-disk.log
+	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
 		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
 		remove_when_empty /jffs/scripts/init-start
 		cru d amtm_RebootScheduler
@@ -222,118 +222,118 @@ update_amtm(){
 }
 
 theme_amtm(){
-print_end_line
-if [ -z "$1" ]; then
-	printf " This changes the $thisScript theme.\\n All used colors are shown in the themes below.\\n"
-	printf "\\n Your current theme is: ${RED_BG} $theme ${NC}\\n\\n"
-else
-	printf " Select a theme that works best in your\\n SSH client. All colors in use are shown.\\n\\n"
-fi
-
-theme_standard
-printf "${RED_BG} 1. standard       ${NC}${GREEN_BG}  standard      ${NC}\\n"
-printf "   ${ERR_BG} standard       ${NC}${GREEN}  standard${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_green
-printf "\\n${RED_BG} 2. green          ${NC}${GREEN_BG}  green         ${NC}\\n"
-printf "   ${ERR_BG} green          ${NC}${GREEN}  green${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_blue
-printf "\\n${RED_BG} 3. blue           ${NC}${GREEN_BG}  blue          ${NC}\\n"
-printf "   ${ERR_BG} blue           ${NC}${GREEN}  blue${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_blue_on_white
-printf "\\n${RED_BG} 4. blue_on_white  ${NC}${GREEN_BG}  blue_on_white ${NC}\\n"
-printf "   ${ERR_BG} blue_on_white  ${NC}${GREEN}  blue_on_white ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_high_contrast
-printf "\\n${RED_BG} 5. high_contrast  ${NC}${GREEN_BG}  high_contrast ${NC}\\n"
-printf "   ${ERR_BG} high_contrast  ${NC}${GREEN}  high_contrast ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_reduced
-printf "\\n${RED_BG} 6. reduced        ${NC}${GREEN_BG}  reduced       ${NC}\\n"
-printf "   ${ERR_BG} reduced        ${NC}${GREEN}  reduced       ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_reduced_w
-printf "\\n${RED_BG} 7. reduced_w      ${NC}${GREEN_BG}  reduced_w     ${NC}\\n"
-printf "   ${ERR_BG} reduced_w      ${NC}${GREEN}  reduced_w     ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_reduced_cw
-printf "\\n${RED_BG} 8. reduced_cw     ${NC}${GREEN_BG}  reduced_cw    ${NC}\\n"
-printf "   ${ERR_BG} reduced_cw     ${NC}${GREEN}  reduced_cw    ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_reduced_b
-printf "\\n${RED_BG} 9. reduced_b      ${NC}${GREEN_BG}  reduced_b     ${NC}\\n"
-printf "   ${ERR_BG} reduced_b      ${NC}${GREEN}  reduced_b     ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_reduced_cb
-printf "\\n${RED_BG}10. reduced_cb     ${NC}${GREEN_BG}  reduced_cb    ${NC}\\n"
-printf "   ${ERR_BG} reduced_cb     ${NC}${GREEN}  reduced_cb    ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-theme_basic
-printf "\\n${RED_BG}11. basic          ${NC}${GREEN_BG}  basic         ${NC}\\n"
-echo "${RED_LINE}_____________________________________________${NC}"
-
-ton=11;noad=
-if [ -f "$divconf" ]; then
-	printf "\\n12. Let Diversion set theme ($(grep "THEME=" "$divconf" | sed -e 's/THEME=//'))\\n"
-	echo "${RED_LINE}_____________________________________________${NC}"
-	ton=12;noad=12
-fi
-
-printf "\\n The basic and reduced themes use no or fewer\\n"
-printf " colors, service states may not be visible.\\n"
-
-theme_standard
-
-while true; do
+	print_end_line
 	if [ -z "$1" ]; then
-		printf "\\n Set new $thisScript theme: [1-$ton e=Exit] ";read -r continue
+		printf " This changes the $thisScript theme.\\n All used colors are shown in the themes below.\\n"
+		printf "\\n Your current theme is: ${RED_BG} $theme ${NC}\\n\\n"
 	else
-		printf "\\n Select $thisScript theme: [1-$ton] ";read -r continue
+		printf " Select a theme that works best in your\\n SSH client. All colors in use are shown.\\n\\n"
 	fi
-	case "$continue" in
-		1) theme=standard;break;;
-		2) theme=green;break;;
-		3) theme=blue;break;;
-		4) theme=blue_on_white;break;;
-		5) theme=high_contrast;break;;
-		6) theme=reduced;break;;
-		7) theme=reduced_w;break;;
-		8) theme=reduced_cw;break;;
-		9) theme=reduced_b;break;;
-		10) theme=reduced_cb;break;;
-		11) theme=basic;break;;
-	$noad)	[ -f /jffs/.amtm_theme ] && rm /jffs/.amtm_theme
-			theme=
-			show_amtm " now using theme selected in Diversion"
-			break;;
-	 [Ee]) 	show_amtm menu;;
-		*)	printf "\\n input is not an option\\n";;
-	esac
-done
 
-echo "theme=$theme" >/jffs/.amtm_theme
-if [ -z "$1" ] || [ "$1" = "select" ] ; then
-	show_amtm " changed theme to $theme"
-fi
+	theme_standard
+	printf "${RED_BG} 1. standard       ${NC}${GREEN_BG}  standard      ${NC}\\n"
+	printf "   ${ERR_BG} standard       ${NC}${GREEN}  standard${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_green
+	printf "\\n${RED_BG} 2. green          ${NC}${GREEN_BG}  green         ${NC}\\n"
+	printf "   ${ERR_BG} green          ${NC}${GREEN}  green${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_blue
+	printf "\\n${RED_BG} 3. blue           ${NC}${GREEN_BG}  blue          ${NC}\\n"
+	printf "   ${ERR_BG} blue           ${NC}${GREEN}  blue${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_blue_on_white
+	printf "\\n${RED_BG} 4. blue_on_white  ${NC}${GREEN_BG}  blue_on_white ${NC}\\n"
+	printf "   ${ERR_BG} blue_on_white  ${NC}${GREEN}  blue_on_white ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_high_contrast
+	printf "\\n${RED_BG} 5. high_contrast  ${NC}${GREEN_BG}  high_contrast ${NC}\\n"
+	printf "   ${ERR_BG} high_contrast  ${NC}${GREEN}  high_contrast ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_reduced
+	printf "\\n${RED_BG} 6. reduced        ${NC}${GREEN_BG}  reduced       ${NC}\\n"
+	printf "   ${ERR_BG} reduced        ${NC}${GREEN}  reduced       ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_reduced_w
+	printf "\\n${RED_BG} 7. reduced_w      ${NC}${GREEN_BG}  reduced_w     ${NC}\\n"
+	printf "   ${ERR_BG} reduced_w      ${NC}${GREEN}  reduced_w     ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_reduced_cw
+	printf "\\n${RED_BG} 8. reduced_cw     ${NC}${GREEN_BG}  reduced_cw    ${NC}\\n"
+	printf "   ${ERR_BG} reduced_cw     ${NC}${GREEN}  reduced_cw    ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_reduced_b
+	printf "\\n${RED_BG} 9. reduced_b      ${NC}${GREEN_BG}  reduced_b     ${NC}\\n"
+	printf "   ${ERR_BG} reduced_b      ${NC}${GREEN}  reduced_b     ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_reduced_cb
+	printf "\\n${RED_BG}10. reduced_cb     ${NC}${GREEN_BG}  reduced_cb    ${NC}\\n"
+	printf "   ${ERR_BG} reduced_cb     ${NC}${GREEN}  reduced_cb    ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	theme_basic
+	printf "\\n${RED_BG}11. basic          ${NC}${GREEN_BG}  basic         ${NC}\\n"
+	echo "${RED_LINE}_____________________________________________${NC}"
+
+	ton=11;noad=
+	if [ -f "$divconf" ]; then
+		printf "\\n12. Let Diversion set theme ($(grep "THEME=" "$divconf" | sed -e 's/THEME=//'))\\n"
+		echo "${RED_LINE}_____________________________________________${NC}"
+		ton=12;noad=12
+	fi
+
+	printf "\\n The basic and reduced themes use no or fewer\\n"
+	printf " colors, service states may not be visible.\\n"
+
+	theme_standard
+
+	while true; do
+		if [ -z "$1" ]; then
+			printf "\\n Set new $thisScript theme: [1-$ton e=Exit] ";read -r continue
+		else
+			printf "\\n Select $thisScript theme: [1-$ton] ";read -r continue
+		fi
+		case "$continue" in
+			1) theme=standard;break;;
+			2) theme=green;break;;
+			3) theme=blue;break;;
+			4) theme=blue_on_white;break;;
+			5) theme=high_contrast;break;;
+			6) theme=reduced;break;;
+			7) theme=reduced_w;break;;
+			8) theme=reduced_cw;break;;
+			9) theme=reduced_b;break;;
+			10) theme=reduced_cb;break;;
+			11) theme=basic;break;;
+		$noad)	[ -f /jffs/.amtm_theme ] && rm /jffs/.amtm_theme
+				theme=
+				show_amtm " now using theme selected in Diversion"
+				break;;
+		 [Ee]) 	show_amtm menu;;
+			*)	printf "\\n input is not an option\\n";;
+		esac
+	done
+
+	echo "theme=$theme" >/jffs/.amtm_theme
+	if [ -z "$1" ] || [ "$1" = "select" ] ; then
+		show_amtm " changed theme to $theme"
+	fi
 }
 
 check_swap(){
 	writeswaploc(){
 		if [ ! -f "/jffs/scripts/post-mount" ]; then
 			echo "#!/bin/sh" >/jffs/scripts/post-mount
-		elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+		elif [ -f /jffs/scripts/post-mount ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
 		fi
 		dos_to_unix /jffs/scripts/post-mount
@@ -434,7 +434,7 @@ manage_swap(){
 					done
 
 					if [ "$i" = "1" ]; then
-						show_amtm " No compatible device available."
+						show_amtm " No compatible device available"
 					fi
 
 					[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
@@ -493,9 +493,9 @@ manage_swap(){
 								swapon "$swapDevice/myswap.swp"
 								nvram set usb_idle_timeout=0
 								nvram commit
-								if [ ! -f "/jffs/scripts/post-mount" ]; then
+								if [ ! -f /jffs/scripts/post-mount ]; then
 									echo "#!/bin/sh" > /jffs/scripts/post-mount
-								elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+								elif [ -f /jffs/scripts/post-mount ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
 									sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
 								fi
 								dos_to_unix /jffs/scripts/post-mount
@@ -577,15 +577,15 @@ manage_swap(){
 }
 
 disk_check(){
-	if [ -f "/jffs/scripts/pre-mount" ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
-		show_amtm " Unsupported pre-mount script found,\\n please remove file manually."
+	if [ -f /jffs/scripts/pre-mount ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
+		show_amtm " Unsupported pre-mount script found,\\n please remove file manually"
 	else
 		if [ "$1" = "install" ]; then
 			write_dc_file
 
-			if [ ! -f "/jffs/scripts/pre-mount" ]; then
+			if [ ! -f /jffs/scripts/pre-mount ]; then
 				echo "#!/bin/sh" > /jffs/scripts/pre-mount
-			elif [ -f "/jffs/scripts/pre-mount" ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
+			elif [ -f /jffs/scripts/pre-mount ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
 				sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
 			fi
 			dos_to_unix /jffs/scripts/pre-mount
@@ -606,7 +606,7 @@ disk_check(){
 			show_amtm " Disk check and log removed"
 
 		elif [ "$1" = "log" ]; then
-			if [ -f "/jffs/amtm-disk-check.log" ]; then
+			if [ -f /jffs/amtm-disk-check.log ]; then
 				echo
 				echo " ---------------------------------------------------"
 				printf " /jffs/amtm-disk-check.log has this content:\\n\\n"
@@ -628,7 +628,7 @@ disk_check(){
 					esac
 				done
 			else
-				show_amtm " No disk check log found (yet)."
+				show_amtm " No disk check log found (yet)"
 			fi
 		fi
 	fi
@@ -775,7 +775,7 @@ format_disk(){
 		done
 
 		if [ "$i" = "1" ]; then
-			show_amtm " No compatible device(s) found to format.\\n"
+			show_amtm " No compatible device(s) found to format\\n"
 		fi
 
 		[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
@@ -794,7 +794,7 @@ format_disk(){
 		devtfsize=$(blockdev --getsize64 $devtf)
 
 		if [ "$devtfsize" -gt 2000000000000 ]; then
-			show_amtm " Device is over 2TB and cannot be\\n formatted by $thisScript."
+			show_amtm " Device is over 2TB and cannot be\\n formatted by $thisScript"
 		fi
 
 		print_end_line
@@ -964,7 +964,7 @@ format_disk(){
 		echo " ${ERR_BG} Filesystem(s) did not unmount ${NC}"
 		echo " ${ERR_BG} See error above for reason ${NC}"
 
-		if [ -f "/opt/bin/opkg" ]; then
+		if [ -f /opt/bin/opkg ]; then
 			open_procs(){
 				echo
 				echo " These processes or files are in use:"
@@ -997,12 +997,12 @@ format_disk(){
 		fi
 
 		press_enter_to "return to menu"
-		show_amtm " Formatting failed:\\n Filesystem(s) did not unmount."
+		show_amtm " Formatting failed:\\n Filesystem(s) did not unmount"
 	fi
 }
 
 format_disk_log(){
-	if [ -f "/jffs/amtm-format-disk.log" ]; then
+	if [ -f /jffs/amtm-format-disk.log ]; then
 		echo
 		echo " ---------------------------------------------------"
 		printf " /jffs/amtm-format-disk.log has this content:\\n\\n"
@@ -1024,7 +1024,7 @@ format_disk_log(){
 			esac
 		done
 	else
-		show_amtm " No format disk log found (yet)."
+		show_amtm " No format disk log found (yet)"
 	fi
 }
 
@@ -1049,7 +1049,7 @@ reboot_scheduler(){
 			done
 		fi
 
-		if [ -f "/jffs/scripts/init-start" ] && grep -qE "ScheduledReboot" /jffs/scripts/init-start; then
+		if [ -f /jffs/scripts/init-start ] && grep -qE "ScheduledReboot" /jffs/scripts/init-start; then
 			echo " Removing third party reboot scheduler"
 			echo " in /jffs/scripts/init-start."
 			cru d ScheduledReboot
@@ -1121,9 +1121,9 @@ reboot_scheduler(){
 			esac
 		done
 
-		if [ ! -f "/jffs/scripts/init-start" ]; then
+		if [ ! -f /jffs/scripts/init-start ]; then
 			echo "#!/bin/sh" > /jffs/scripts/init-start
-		elif [ -f "/jffs/scripts/init-start" ] && ! head -1 /jffs/scripts/init-start | grep -qE "^#!/bin/sh"; then
+		elif [ -f /jffs/scripts/init-start ] && ! head -1 /jffs/scripts/init-start | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/init-start
 		fi
 		dos_to_unix /jffs/scripts/init-start
@@ -1134,7 +1134,7 @@ reboot_scheduler(){
 		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow service reboot"
 		[ ! -x "/jffs/scripts/init-start" ] && chmod 0755 /jffs/scripts/init-start
 
-		show_amtm " Reboot scheduler enabled."
+		show_amtm " Reboot scheduler enabled"
 
 	elif [ "$1" = "remove" ]; then
 		print_end_line
@@ -1142,7 +1142,7 @@ reboot_scheduler(){
 		continue_dialog
 		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
 		cru d amtm_RebootScheduler
-		show_amtm " Reboot scheduler removed."
+		show_amtm " Reboot scheduler removed"
 	fi
 }
 
@@ -1161,9 +1161,9 @@ install_Entware(){
 	write_jffsfile(){
 		echo " Checking /jffs/scripts entries"
 
-		if [ ! -f "/jffs/scripts/post-mount" ]; then
+		if [ ! -f /jffs/scripts/post-mount ]; then
 			echo "#!/bin/sh" >/jffs/scripts/post-mount
-		elif [ -f "/jffs/scripts/post-mount" ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
+		elif [ -f /jffs/scripts/post-mount ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
 		fi
 		if ! grep -q ". /jffs/scripts/post-mount.div" /jffs/scripts/post-mount; then
@@ -1174,9 +1174,9 @@ install_Entware(){
 			echo " OK post-mount"
 		fi
 
-		if [ ! -f "/jffs/scripts/services-stop" ]; then
+		if [ ! -f /jffs/scripts/services-stop ]; then
 			echo "#!/bin/sh" >/jffs/scripts/services-stop
-		elif [ -f "/jffs/scripts/services-stop" ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
+		elif [ -f /jffs/scripts/services-stop ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
 			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
 		fi
 		if ! grep -q "/opt/etc/init.d/rc.unslung stop" /jffs/scripts/services-stop; then
@@ -1187,7 +1187,7 @@ install_Entware(){
 			echo " OK services-stop"
 		fi
 
-		if [ ! -f "/jffs/scripts/post-mount.div" ]; then
+		if [ ! -f /jffs/scripts/post-mount.div ]; then
 			cat <<-EOF > /jffs/scripts/post-mount.div
 			#!/bin/sh
 
@@ -1217,7 +1217,7 @@ install_Entware(){
 
 		check_device_nok(){
 		rm -rf "$1/rw_test"
-		show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable."
+		show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable"
 		}
 
 		mkdir -p $1/rw_test
@@ -1248,7 +1248,7 @@ install_Entware(){
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
 					INST_URL='http://bin.entware.net/aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)";;
-		*)			show_amtm " $(uname -m) is an unsupported platform to install Entware on.";;
+		*)			show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
 	esac
 
 	echo " Running pre-install checks"
@@ -1256,7 +1256,7 @@ install_Entware(){
 	if [ -L "/tmp/opt" ]; then
 		# dl master check
 		if [ "$(nvram get apps_mounted_path)" ] && [ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ]; then
-			if [ -f "/opt/etc/init.d/S50downloadmaster" ]; then
+			if [ -f /opt/etc/init.d/S50downloadmaster ]; then
 				echo "${ERR_BG} Download Master appears to be installed ${NC}"
 				echo " $(nvram get apps_mounted_path)/$(nvram get apps_install_folder)"
 				echo " Entware and Download Master cannot be installed at the same time."
@@ -1265,7 +1265,7 @@ install_Entware(){
 				echo
 				echo "${ERR_BG} Correct above error first before installing Entware ${NC}"
 				press_enter_to acknowledge
-				show_amtm " Correct error first before installing Entware."
+				show_amtm " Correct error first before installing Entware"
 			else
 				echo "${ERR_BG} Correcting invalid Entware or Download Master settings ${NC}"
 				if [ -L "/tmp/opt" ]; then
@@ -1307,7 +1307,7 @@ install_Entware(){
 	done
 
 	if [ "$i" = "1" ]; then
-		show_amtm " No compatible device(s) found to install\\n Entware on. A USB storage device formatted\\n with one of these file systems is required:\\n $(echo $PART_TYPES | sed -e 's/|/, /g')\\n Use Format disk (fd) to format FAT or NTFS\\n formatted devices to ext*."
+		show_amtm " No compatible device(s) found to install\\n Entware on. A USB storage device formatted\\n with one of these file systems is required:\\n $(echo $PART_TYPES | sed -e 's/|/, /g')\\n Use Format disk (fd) to format FAT or NTFS\\n formatted devices to ext*"
 	fi
 
 	[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
@@ -1383,17 +1383,18 @@ install_Entware(){
 	wget --timeout=10 --tries=3 --retry-connrefused -qO - "$INST_URL" | sh
 	echo "${NC}"
 
-	if [ -f "/opt/bin/opkg" ]; then
+	if [ -f /opt/bin/opkg ]; then
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="Entware (${ENTURL##*/})"
 		[ -z "$entVersion" ] && entVersion=$entVer
 		check_entware_folder
 		cd
 		write_jffsfile
-		show_amtm " $entVersion install successful."
+		sleep 2
+		show_amtm " $entVersion install successful"
 	else
 		cd
-		show_amtm " $entVer install failed."
+		show_amtm " $entVer install failed"
 	fi
 }
 
@@ -1510,7 +1511,11 @@ show_amtm(){
 			esac
 			curl -Os "$remoteurl" && sh install
 			sleep 2
-			show_amtm " Diversion installed."
+			if [ -f /opt/bin/diversion ]; then
+				show_amtm " Diversion installed"
+			else
+				show_amtm " Diversion installation failed"
+			fi
 		}
 	fi
 
@@ -1546,13 +1551,17 @@ show_amtm(){
 
 			curl --retry 3 "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
 			sleep 2
-			show_amtm " Skynet installed."
+			if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
+				show_amtm " Skynet installed"
+			else
+				show_amtm " Skynet installation failed"
+			fi
 		}
 	fi
 
 	# 3 Stubby-Installer-Asuswrt-Merlin menu (deprecated)
 	scriptloc="/jffs/scripts/install_stubby.sh"
-	if [ -f "$scriptloc" ] && [ -f "/opt/etc/stubby/stubby.yml" ]; then
+	if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
 		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
 		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
@@ -1577,17 +1586,21 @@ show_amtm(){
 			echo " https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/"
 			continue_dialog
 
-			if [ -d "/jffs/dnscrypt" ] || [ -f "/opt/sbin/dnscrypt-proxy" ]; then
-				show_amtm " Stubby DNS install failed. It is not\\n compatible with dnscrypt installer which\\n is installed on this router."
+			if [ -d "/jffs/dnscrypt" ] || [ -f /opt/sbin/dnscrypt-proxy ]; then
+				show_amtm " Stubby DNS install failed. It is not\\n compatible with dnscrypt installer which\\n is installed on this router"
 			fi
 
 			curl --retry 3 "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
 			sleep 2
-			show_amtm " Stubby DNS installed."
+			if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
+				show_amtm " Stubby DNS installed"
+			else
+				show_amtm " Stubby DNS installation failed"
+			fi
 		}
 	else
 		case_3(){
-			show_amtm " Stubby DNS is not available to install. This\\n router supports native DoT, use that instead."
+			show_amtm " Stubby DNS is not available to install. This\\n router supports native DoT, use that instead"
 		}
 	fi
 
@@ -1596,7 +1609,7 @@ show_amtm(){
 
 	# 4 YazFi menu
 	scriptloc="/jffs/scripts/YazFi"
-	if [ -f "$scriptloc" ] && [ -f "/jffs/configs/YazFi/YazFi.config" ]; then
+	if [ -f "$scriptloc" ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
 		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
 		grepcheck=jackyaz
@@ -1619,7 +1632,44 @@ show_amtm(){
 			continue_dialog
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
 			sleep 2
-			show_amtm " YazFi installed."
+			if [ -f /jffs/scripts/YazFi ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
+				show_amtm " YazFi installed"
+			else
+				show_amtm " YazFi installation failed"
+			fi
+		}
+	fi
+
+	# 5 scribe menu
+	scriptloc="/jffs/scripts/scribe"
+	if [ -f "$scriptloc" ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
+		scriptgrep='scribe_ver='
+		grepcheck=cynicastic
+		script_check
+		printf "${GREEN_BG} 5 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "scribe         $localver" " $upd"
+		case_5(){
+			/jffs/scripts/scribe
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} 5 ${NC} %-9s%s\\n" "install" "scribe syslog-ng and logrotate"
+		case_5(){
+			print_end_line
+			echo " This installs scribe - syslog-ng and logrotate installer"
+			echo " on your router."
+			echo
+			echo " Author: cmkelley"
+			echo " https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/"
+			continue_dialog
+			curl --retry 3 "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
+			sleep 2
+			if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+				show_amtm " scribe installed"
+			else
+				show_amtm " scribe installation failed"
+			fi
 		}
 	fi
 
@@ -1652,7 +1702,11 @@ show_amtm(){
 
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh" -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
 			sleep 2
-			show_amtm " connmon installed."
+			if [ -f /jffs/scripts/connmon ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
+				show_amtm " connmon installed"
+			else
+				show_amtm " connmon installation failed"
+			fi
 		}
 	fi
 
@@ -1682,7 +1736,11 @@ show_amtm(){
 
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh" -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
 			sleep 2
-			show_amtm " ntpMerlin installed."
+			if [ -f /jffs/scripts/ntpmerlin ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+				show_amtm " ntpMerlin installed"
+			else
+				show_amtm " ntpMerlin installation failed"
+			fi
 		}
 	fi
 
@@ -1712,7 +1770,11 @@ show_amtm(){
 
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/scmerlin/master/scmerlin.sh" -o "/jffs/scripts/scmerlin" && chmod 0755 /jffs/scripts/scmerlin && /jffs/scripts/scmerlin install
 			sleep 2
-			show_amtm " scMerlin installed."
+			if [ -f /jffs/scripts/scmerlin ]; then
+				show_amtm " scMerlin installed"
+			else
+				show_amtm " scMerlin installation failed"
+			fi
 		}
 	fi
 
@@ -1742,7 +1804,11 @@ show_amtm(){
 
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh" -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
 			sleep 2
-			show_amtm " spdMerlin installed."
+			if [ -f /jffs/scripts/spdmerlin ]; then
+				show_amtm " spdMerlin installed"
+			else
+				show_amtm " spdMerlin installation failed"
+			fi
 		}
 	fi
 
@@ -1772,7 +1838,11 @@ show_amtm(){
 
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
 			sleep 2
-			show_amtm " uiDivStats installed."
+			if [ -f /jffs/scripts/uiDivStats ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
+				show_amtm " uiDivStats installed"
+			else
+				show_amtm " uiDivStats installation failed"
+			fi
 		}
 	fi
 
@@ -1791,26 +1861,26 @@ show_amtm(){
 		}
 	else
 		case_di(){
-			show_amtm " dnscrypt installer is deprecated and no\\n longer available for install."
+			show_amtm " dnscrypt installer is deprecated and no\\n longer available for install"
 		}
 	fi
 
 	# ew Entware menu
-	if [ -f "/opt/bin/opkg" ]; then
+	if [ -f /opt/bin/opkg ]; then
 		ii=1
 		upd=" "
 		printf "${GREEN_BG} ew${NC} %-9s%s\\n" "update" "Entware"
 		case_ew(){
 			print_end_line
 			echo " This updates and upgrades Entware packages"
-			if [ -f "/opt/bin/diversion" ]; then
+			if [ -f /opt/bin/diversion ]; then
 				echo
 				echo " Note: Diversion is installed on this router."
 				echo " It's recommended to update Entware packages"
 				echo " in Diversion using the ${RED_BG} ep ${NC} option."
 				echo " Especially so when pixelserv-tls is installed."
 			fi
-			if [ -f "/jffs/scripts/install_stubby.sh" ] && [ -f "/opt/etc/stubby/stubby.yml" ]; then
+			if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
 				echo
 				echo " Note: Stubby DNS Privacy Daemon is installed"
 				echo " on this router."
@@ -1821,7 +1891,7 @@ show_amtm(){
 			continue_dialog
 			opkg update
 			opkg upgrade
-			show_amtm " Entware packages updated and upgraded."
+			show_amtm " Entware packages updated and upgraded"
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} ew${NC} %-9s%s\\n" "install" "Entware"
@@ -1836,13 +1906,11 @@ show_amtm(){
 			echo " Author: thelonelycoder"
 			continue_dialog
 			install_Entware
-			sleep 2
-			show_amtm menu
 		}
 	fi
 
 	# ps pixelserv-tls menu
-	if [ -L "/opt/bin/pixelserv-tls" ]; then
+	if [ -L /opt/bin/pixelserv-tls ]; then
 		ii=1
 		beta=" beta"
 		psVersionm=
@@ -1880,7 +1948,7 @@ show_amtm(){
 							diversion sh-restart
 							echo
 							sleep 1
-							show_amtm " pixelserv-tls beta removed.";break;;
+							show_amtm " pixelserv-tls beta removed";break;;
 					[Ee])	show_amtm menu;break;;
 					*)		printf "\\n input is not an option\\n";;
 				esac
@@ -1888,7 +1956,7 @@ show_amtm(){
 		}
 	else
 		case_ps(){
-			show_amtm " No pixelserv-tls beta versions are available\\n at the moment from its author kvic."
+			show_amtm " No pixelserv-tls beta versions are available\\n at the moment from its author kvic"
 		}
 	fi
 
@@ -1897,7 +1965,7 @@ show_amtm(){
 	upd=
 
 	# Disk check
-	if [ -f "/jffs/scripts/disk-check" ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
+	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
 		ii=1
 		case_dc(){
 			disk_check remove
@@ -1912,7 +1980,7 @@ show_amtm(){
 				set -- "$1\\n\\n$dctext"
 			fi
 		fi
-		[ -f "/jffs/amtm-disk-check.log" ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
+		[ -f /jffs/amtm-disk-check.log ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
 		printf "${GREEN_BG} dc${NC} %-9s%-19s%${ACORR}s\\n" "remove" "Disk check script" " $dcltext"
 
 	else
@@ -1928,12 +1996,12 @@ show_amtm(){
 			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
 			continue_dialog
 			disk_check install
-			show_amtm " Disk check script installed.\\n The check log can be viewed directly\\n in amtm with dcl."
+			show_amtm " Disk check script installed.\\n The check log can be viewed directly\\n in amtm with dcl"
 		}
 	fi
 
 	# Format disk
-	if [ -f "/jffs/amtm-format-disk.log" ]; then
+	if [ -f /jffs/amtm-format-disk.log ]; then
 		ii=1
 		printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GREEN_BG}fdl${NC} show log"
 	else
@@ -1958,7 +2026,7 @@ show_amtm(){
 	}
 
 	# rs Reboot scheduler
-	if [ -f "/jffs/scripts/init-start" ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
 		ii=1
 		rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//')
 		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
@@ -1986,7 +2054,7 @@ show_amtm(){
 
 	# sw/swp/swap Swap file
 	unset "swaplocation" "swapsize" "partitionsize" "swtext" "multipleswap"
-	[ -f "/jffs/scripts/post-mount" ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+	[ -f /jffs/scripts/post-mount ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
 		if [ -f "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
 			if grep -qE "^swapon $swaplocation" /jffs/scripts/post-mount; then
@@ -2017,7 +2085,7 @@ show_amtm(){
 		swii=1
 		printf "${GREEN_BG}   ${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "Swap" "Partition" "${GREEN_BG}$swaplocation${NC} ${partitionsize}M"
 		case_swp(){
-			show_amtm " $thisScript does not manage swap partitions."
+			show_amtm " $thisScript does not manage swap partitions"
 		}
 	elif [ "$multipleswap" ]; then
 		swii=1
@@ -2077,6 +2145,7 @@ show_amtm(){
 			2)			case_2;break;;
 			3)			case_3;break;;
 			4)			case_4;break;;
+			5)			case_5;break;;
 			j1)			case_j1;break;;
 			j2)			case_j2;break;;
 			j3)			case_j3;break;;
