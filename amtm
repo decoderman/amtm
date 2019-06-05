@@ -17,10 +17,10 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # https://opensource.org/licenses/GPL-3.0
 
 version=2.3
-release="June 04 2019"
+release="June 05 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
-dc_version=2.3
+dc_version=2.4
 
 ascii_logo(){
 	echo "              _"
@@ -32,7 +32,6 @@ ascii_logo(){
 }
 
 about_amtm(){
-	echo
 	print_end_line
 	echo " $thisScript, the $title
  Version $version, released on $release
@@ -205,7 +204,7 @@ update_amtm(){
 			echo
 			echo " Do you want to update now?"
 			continue_dialog
-			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from $version to $remotever"
+			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from v$version to v$remotever"
 		elif [ "$localmd5" != "$remotemd5" ]; then
 			echo " A minor $thisScript update is available."
 			echo
@@ -216,7 +215,7 @@ update_amtm(){
 			echo " No new version or minor update is available,"
 			echo " do you want to force update $thisScript?"
 			continue_dialog
-			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to $remotever"
+			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to v$remotever"
 		fi
 	fi
 }
@@ -346,7 +345,7 @@ check_swap(){
 	}
 
 	remove_swap_entries(){
-		if grep 'swapon.*\.' /jffs/scripts/post-mount; then
+		if grep -q 'swapon.*\.' /jffs/scripts/post-mount; then
 			sed -i '\~swapon ~d' /jffs/scripts/post-mount
 			swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
 		fi
@@ -665,7 +664,7 @@ write_dc_file(){
 	done
 
 	if [ "\$ntptimer" -ge "\$ntptimeout" ]; then
-	    text="NPT timeout (\${ntptimeout}s) reached, date is router default"
+	    text="NTP timeout (\${ntptimeout}s) reached, date is router default"
 	    printf "\\\n\$text\\\n" >> \$CHKLOG
 	    logger -t "\$TAG" "\$text"
 	elif [ "\$ntptimer" -gt "0" ]; then
@@ -1399,7 +1398,6 @@ install_Entware(){
 }
 
 script_check(){
-	ii=1
 	[ "$localVother" ] && localver=$localVother || localver=$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	upd="${ERR_BG}${NC}$localver"
 	if [ "$su" = "1" ]; then
@@ -1497,7 +1495,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} 1 ${NC} %-9s%s\\n" "install" "Diversion"
+		[ "$ss" ] && printf "${ERR_BG} 1 ${NC} %-9s%s\\n" "install" "Diversion - the Router Adblocker"
 		case_1(){
 			print_end_line
 			echo " This installs Diversion, the Router Adblocker."
@@ -1522,6 +1520,7 @@ show_amtm(){
 	# 2 Skynet menu
 	scriptloc="/jffs/scripts/firewall"
 	if [ -f "$scriptloc" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
 		localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
 		remoteVother="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
@@ -1536,7 +1535,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} 2 ${NC} %-9s%s\\n" "install" "Skynet"
+		[ "$ss" ] && printf "${ERR_BG} 2 ${NC} %-9s%s\\n" "install" "Skynet - the Router Firewall"
 		case_2(){
 			print_end_line
 			echo " This installs Skynet on your router."
@@ -1562,6 +1561,7 @@ show_amtm(){
 	# 3 Stubby-Installer-Asuswrt-Merlin menu (deprecated)
 	scriptloc="/jffs/scripts/install_stubby.sh"
 	if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
+		ii=1
 		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
 		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
@@ -1576,7 +1576,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	elif [ -z "$(nvram get rc_support | tr ' ' '\n' | grep dnspriv)" ] && [ -z "$(nvram get rc_support | tr ' ' '\n' | grep stubby)" ]; then
-		[ "$ss" ] && printf "${ERR_BG} 3 ${NC} %-9s%s\\n" "install" "Stubby DNS"
+		[ "$ss" ] && printf "${ERR_BG} 3 ${NC} %-9s%s\\n" "install" "Stubby - DNS Privacy Daemon"
 		case_3(){
 			print_end_line
 			echo " This installs Stubby DNS Privacy Daemon"
@@ -1610,6 +1610,7 @@ show_amtm(){
 	# 4 YazFi menu
 	scriptloc="/jffs/scripts/YazFi"
 	if [ -f "$scriptloc" ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
 		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
 		grepcheck=jackyaz
@@ -1621,7 +1622,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "YazFi enhanced guest WiFi"
+		[ "$ss" ] && printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "YazFi - enhanced guest WiFi"
 		case_4(){
 			print_end_line
 			echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
@@ -1643,6 +1644,7 @@ show_amtm(){
 	# 5 scribe menu
 	scriptloc="/jffs/scripts/scribe"
 	if [ -f "$scriptloc" ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
 		scriptgrep='scribe_ver='
 		grepcheck=cynicastic
@@ -1654,7 +1656,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} 5 ${NC} %-9s%s\\n" "install" "scribe syslog-ng and logrotate"
+		[ "$ss" ] && printf "${ERR_BG} 5 ${NC} %-9s%s\\n" "install" "scribe - syslog-ng and logrotate"
 		case_5(){
 			print_end_line
 			echo " This installs scribe - syslog-ng and logrotate installer"
@@ -1679,6 +1681,7 @@ show_amtm(){
 	# j1 connmon menu
 	scriptloc="/jffs/scripts/connmon"
 	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
 		scriptgrep='SCRIPT_VERSION=\|CONNMON_VERSION='
 		grepcheck=jackyaz
@@ -1690,7 +1693,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} j1${NC} %-9s%s\\n" "install" "connmon Internet uptime monitor"
+		[ "$ss" ] && printf "${ERR_BG} j1${NC} %-9s%s\\n" "install" "connmon - Internet uptime monitor"
 		case_j1(){
 			print_end_line
 			echo " This installs connmon- Internet connection monitoring"
@@ -1713,6 +1716,7 @@ show_amtm(){
 	# j2 ntpMerlin menu
 	scriptloc="/jffs/scripts/ntpmerlin"
 	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|NTPD_VERSION='
 		grepcheck=jackyaz
@@ -1724,7 +1728,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} j2${NC} %-9s%s\\n" "install" "ntpMerlin NTP Daemon"
+		[ "$ss" ] && printf "${ERR_BG} j2${NC} %-9s%s\\n" "install" "ntpMerlin - NTP Daemon"
 		case_j2(){
 			print_end_line
 			echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
@@ -1747,6 +1751,7 @@ show_amtm(){
 	# j3 scMerlin menu
 	scriptloc="/jffs/scripts/scmerlin"
 	if [ -f "$scriptloc" ]; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/scMerlin/master/scmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|SCM_VERSION='
 		grepcheck=jackyaz
@@ -1758,7 +1763,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} j3${NC} %-9s%s\\n" "install" "scMerlin Quick access control"
+		[ "$ss" ] && printf "${ERR_BG} j3${NC} %-9s%s\\n" "install" "scMerlin - Quick access control"
 		case_j3(){
 			print_end_line
 			echo " This installs scMerlin - service and script control menu for AsusWRT-Merlin"
@@ -1781,6 +1786,7 @@ show_amtm(){
 	# j4 spdMerlin menu
 	scriptloc="/jffs/scripts/spdmerlin"
 	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|SPD_VERSION='
 		grepcheck=jackyaz
@@ -1792,7 +1798,7 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} j4${NC} %-9s%s\\n" "install" "spdMerlin Automatic speedtest"
+		[ "$ss" ] && printf "${ERR_BG} j4${NC} %-9s%s\\n" "install" "spdMerlin - Automatic speedtest"
 		case_j4(){
 			print_end_line
 			echo " This installs spdMerlin - Automatic speedtest for AsusWRT Merlin - with graphs"
@@ -1815,6 +1821,7 @@ show_amtm(){
 	# j5 uiDivStats menu
 	scriptloc="/jffs/scripts/uiDivStats"
 	if [ -f "$scriptloc" ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
+		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
 		scriptgrep='SCRIPT_VERSION=\|SCRIPT_VERSION='
 		grepcheck=jackyaz
@@ -1826,14 +1833,14 @@ show_amtm(){
 			show_amtm menu
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} j5${NC} %-9s%s\\n" "install" "uiDivStats Diversion statistics"
+		[ "$ss" ] && printf "${ERR_BG} j5${NC} %-9s%s\\n" "install" "uiDivStats - Diversion WebUI stats"
 		case_j5(){
 			print_end_line
 			echo " This installs uiDivStats - WebUI for Diversion statistics"
 			echo " on your router."
 			echo
 			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/beta-uidivstats-webui-for-diversion-statistics.56393/"
+			echo " https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/"
 			continue_dialog
 
 			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
@@ -1851,7 +1858,6 @@ show_amtm(){
 
 	# di dnscrypt installer menu (deprecated)
 	if [ -d /jffs/dnscrypt ]; then
-		ii=1
 		upd=" "
 		printf "${GREEN_BG} di${NC} %-9s%s\\n" "open" "dnscrypt installer"
 		case_di(){
@@ -1867,7 +1873,6 @@ show_amtm(){
 
 	# ew Entware menu
 	if [ -f /opt/bin/opkg ]; then
-		ii=1
 		upd=" "
 		printf "${GREEN_BG} ew${NC} %-9s%s\\n" "update" "Entware"
 		case_ew(){
@@ -1894,11 +1899,11 @@ show_amtm(){
 			show_amtm " Entware packages updated and upgraded"
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} ew${NC} %-9s%s\\n" "install" "Entware"
+		[ "$ss" ] && printf "${ERR_BG} ew${NC} %-9s%s\\n" "install" "Entware - Software repository"
 		case_ew(){
 			print_end_line
-			echo " This installs Entware on this router."
-			echo
+			echo " This installs Entware - the ultimate Software repository"
+			echo " on this router."
 			echo " Note: If you plan to install Diversion on"
 			echo " this router, install Diversion first,"
 			echo " it includes the installation of Entware."
@@ -1966,7 +1971,7 @@ show_amtm(){
 
 	# Disk check
 	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
-		ii=1
+		atii=1
 		case_dc(){
 			disk_check remove
 			show_amtm menu
@@ -2002,7 +2007,7 @@ show_amtm(){
 
 	# Format disk
 	if [ -f /jffs/amtm-format-disk.log ]; then
-		ii=1
+		atii=1
 		printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GREEN_BG}fdl${NC} show log"
 	else
 		[ "$ss" ] && printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
@@ -2027,7 +2032,7 @@ show_amtm(){
 
 	# rs Reboot scheduler
 	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
-		ii=1
+		atii=1
 		rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//')
 		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
 		printf "${GREEN_BG} rs${NC} %-9s%s\\n" "remove" "Reboot scheduler ${GREEN_BG}${rstext}${NC}"
@@ -2076,19 +2081,19 @@ show_amtm(){
 		fi
 	fi
 	if [ -f "$swaplocation" ]; then
-		swii=1
+		atii=1
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC} $swapsize\\n" "manage" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
 		case_swp(){
 			manage_swap delete
 		}
 	elif [ "$swaplocation" ] && [ "$partitionsize" ]; then
-		swii=1
+		atii=1
 		printf "${GREEN_BG}   ${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "Swap" "Partition" "${GREEN_BG}$swaplocation${NC} ${partitionsize}M"
 		case_swp(){
 			show_amtm " $thisScript does not manage swap partitions"
 		}
 	elif [ "$multipleswap" ]; then
-		swii=1
+		atii=1
 		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap files"
 		case_swp(){
 			manage_swap multidelete
@@ -2100,7 +2105,7 @@ show_amtm(){
 		}
 	fi
 
-	[ "$ii" ] || [ "$ss" ] || [ "$swii" ] && echo
+	[ "$ss" ] || [ "$atii" ] && echo
 
 	# su check for script updates
 	[ "$ii" ] && printf "${GREEN_BG} su${NC} %-9s%s\\n" "check" "for script updates"
@@ -2125,10 +2130,10 @@ show_amtm(){
 
 	# The notification area. $1 can be passed on as positional parameter
 	[ "$ss" ] && ssi=1 || ssi=
-	ss=;ii=
+	unset "ss" "ii" "atii" "upd"
 	if [ "$su" = "1" ]; then
 		su=
-		[ "$suUpd" = "1" ] && set -- " Script update(s) are available!" || set -- " No script update(s) available"
+		[ "$suUpd" = "1" ] && set -- " Script update(s) are available!" || set -- " All scripts are up to date"
 	fi
 	if [ "$1" = "menu" ]; then
 		print_end_line
