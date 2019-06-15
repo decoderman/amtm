@@ -11,7 +11,7 @@ Enter this into your favorite SSH terminal:
 /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 ```
 
-[![amtm v2.3](https://i.imgur.com/jCLGDEG.png "amtm v2.3")](https://i.imgur.com/jCLGDEG.png "amtm v2.3")
+[![amtm v2.4](https://i.imgur.com/LcbQxrP.png "amtm v2.4")](https://i.imgur.com/LcbQxrP.png "amtm v2.4")
 
 ### Supported scripts
 
@@ -32,7 +32,7 @@ Enter this into your favorite SSH terminal:
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic (beta support suspended)<br/>
 
 [USB Disk Check at Boot or Hot Plug (improved version)](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)) - maintained by ColinTaylor, latenitetech, thelonelycoder<br/>
-[Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder and ColinTaylor<br/>
+[Format Disk](https://www.snbforums.com/threads/amtm-the-snbforum-asuswrt-merlin-terminal-menu.42415/) - maintained by thelonelycoder and ColinTaylor. Now supports creation of up to three partitions.<br/>
 
 ### Additional features
 

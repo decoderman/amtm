@@ -16,8 +16,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-version=2.3
-release="June 05 2019"
+version=2.4
+release="June 15 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.4
@@ -42,26 +42,28 @@ about_amtm(){
  For updates and discussion visit this thread:
  https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/
 
- Author: thelonelycoder/decoderman
+ Author: thelonelycoder (aka decoderman@github)
  https://www.snbforums.com/members/thelonelycoder.25480/
  https://github.com/decoderman
  https://diversion.ch/amtm.html
 
- Contributor: Adamm
+ Contributors: Adamm, ColinTaylor
  https://www.snbforums.com/members/adamm.19554/
+ https://www.snbforums.com/members/colintaylor.27699/
 
  $thisScript License:
  $thisScript is free to use under the GNU General
  Public License, version 3 (GPL-3.0).
  https://opensource.org/licenses/GPL-3.0
 
- Copyright (C) 2016-2019 thelonelycoder - All Rights Reserved"
+ Copyright (c) 2016-2019 thelonelycoder - All Rights Reserved"
 	print_end_line
 	press_enter_to "return to menu"
 	show_amtm menu
 }
 
-check_nl(){ [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
+check_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
+check_jffs_scripts(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then check_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; dos_to_unix "$1"; check_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 dos_to_unix(){ dos2unix < $1 | cmp -s - $1;[ "$?" = "1" ] && dos2unix $1;}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
@@ -80,6 +82,7 @@ theme_basic(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN=;GREEN_BG=;GRAY='[90m';NC
 
 install_amtm(){
 	clear
+	theme_standard
 	ascii_logo
 	echo " Do you want to install $thisScript,"
 	echo " the $title?"
@@ -129,6 +132,7 @@ install_amtm(){
 							message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 						fi
 						[ ! -f /opt/share/diversion/.conf/diversion.conf ] && [ ! -f /jffs/.amtm_theme ] && theme_amtm new
+						add_profile_add
 						if [ "$0" = "/jffs/scripts/$thisScript" ]; then
 							subshell=
 						else
@@ -142,6 +146,17 @@ install_amtm(){
 			*)		printf "\\n input is not an option\\n\\n";;
 		esac
 	done
+}
+
+add_profile_add(){
+	if [ ! -f "/jffs/configs/profile.add" ]; then
+		echo "alias amtm='/jffs/scripts/amtm' # added by $thisScript" >/jffs/configs/profile.add
+	elif ! grep -q "^alias amtm=" /jffs/configs/profile.add; then
+		sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
+		dos_to_unix /jffs/configs/profile.add
+		check_nl /jffs/configs/profile.add
+		echo "alias amtm='/jffs/scripts/amtm' # added by $thisScript" >>/jffs/configs/profile.add
+	fi
 }
 
 remove_amtm(){
@@ -169,6 +184,10 @@ remove_amtm(){
 		cru d amtm_RebootScheduler
 	fi
 	[ -f /jffs/.amtm_theme ] && rm /jffs/.amtm_theme
+	if [ -f "/jffs/configs/profile.add" ]; then
+		sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
+		remove_when_empty /jffs/configs/profile.add
+	fi
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
@@ -198,6 +217,7 @@ update_amtm(){
 			thisrem="${ERR_BG}no upd${NC}"
 		fi
 	else
+		add_profile_add
 		print_end_line
 		if [ "$version" != "$remotever" ]; then
 			echo " $thisScript $remotever is now available!"
@@ -330,18 +350,11 @@ theme_amtm(){
 
 check_swap(){
 	writeswaploc(){
-		if [ ! -f "/jffs/scripts/post-mount" ]; then
-			echo "#!/bin/sh" >/jffs/scripts/post-mount
-		elif [ -f /jffs/scripts/post-mount ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
-		fi
-		dos_to_unix /jffs/scripts/post-mount
 		sed -i '\~swapon ~d' /jffs/scripts/post-mount
-		check_nl /jffs/scripts/post-mount
+		check_jffs_scripts /jffs/scripts/post-mount
 		sed -i "2i swapon $swaplocation # Added by $thisScript" /jffs/scripts/post-mount
 		swapon "$swaplocation" 2> /dev/null
 		swapsize=$(du -h "$swaplocation" | awk '{print $1}')
-		[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
 	}
 
 	remove_swap_entries(){
@@ -429,7 +442,7 @@ manage_swap(){
 						echo " $i. ${GREEN_BG}$mounted${NC}"
 						eval mounts$i=\"$mounted\"
 						noad="${noad}${i} "
-						i=$(( i + 1 ))
+						i=$((i+1))
 					done
 
 					if [ "$i" = "1" ]; then
@@ -456,10 +469,10 @@ manage_swap(){
 							1)	print_end_line
 								echo " Select a Swap file size"
 								echo
-								echo " 1. --> 256MB"
-								echo " 2. --> 512MB"
-								echo " 3. -->   1GB"
-								echo " 4. -->   2GB"
+								echo " 1. --> 256 MB"
+								echo " 2. --> 512 MB"
+								echo " 3. -->   1 GB"
+								echo " 4. -->   2 GB"
 
 								while true; do
 									printf "\\n Enter size [1-4 e=Exit] ";read -r size
@@ -492,14 +505,8 @@ manage_swap(){
 								swapon "$swapDevice/myswap.swp"
 								nvram set usb_idle_timeout=0
 								nvram commit
-								if [ ! -f /jffs/scripts/post-mount ]; then
-									echo "#!/bin/sh" > /jffs/scripts/post-mount
-								elif [ -f /jffs/scripts/post-mount ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
-									sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
-								fi
-								dos_to_unix /jffs/scripts/post-mount
+								check_jffs_scripts /jffs/scripts/post-mount
 								sed -i "2i swapon $swapDevice/myswap.swp # Swap file created by $thisScript" /jffs/scripts/post-mount
-								[ ! -x "/jffs/scripts/post-mount" ] && chmod 0755 /jffs/scripts/post-mount
 								show_amtm " Swap file created at:\\n $swapDevice/myswap.swp";break;;
 						[Ee])	show_amtm menu;break;;
 							*)  printf "\\n input is not an option\\n";;
@@ -582,18 +589,11 @@ disk_check(){
 		if [ "$1" = "install" ]; then
 			write_dc_file
 
-			if [ ! -f /jffs/scripts/pre-mount ]; then
-				echo "#!/bin/sh" > /jffs/scripts/pre-mount
-			elif [ -f /jffs/scripts/pre-mount ] && ! head -1 /jffs/scripts/pre-mount | grep -qE "^#!/bin/sh"; then
-				sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/pre-mount
-			fi
-			dos_to_unix /jffs/scripts/pre-mount
-			if ! grep -q ". /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
-				check_nl /jffs/scripts/pre-mount
+			check_jffs_scripts /jffs/scripts/pre-mount
+			if ! grep -q "^. /jffs/scripts/disk-check" /jffs/scripts/pre-mount; then
+				sed -i '\~/jffs/scripts/disk-check ~d' /jffs/scripts/pre-mount
 				echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
 			fi
-			[ ! -x "/jffs/scripts/pre-mount" ] && chmod 0755 /jffs/scripts/pre-mount
-			[ ! -x "/jffs/scripts/disk-check" ] && chmod 0755 /jffs/scripts/disk-check
 
 		elif [ "$1" = "remove" ]; then
 			print_end_line
@@ -640,7 +640,7 @@ write_dc_file(){
 	# generated by amtm $version
 
 	# Proudly coded by thelonelycoder (aka decoderman@github)
-	# Copyright (C) 2016-2019 thelonelycoder - All Rights Reserved
+	# Copyright (c) 2016-2019 thelonelycoder - All Rights Reserved
 	# https://www.snbforums.com/members/thelonelycoder.25480/
 	# https://github.com/decoderman
 
@@ -738,6 +738,8 @@ write_dc_file(){
 	fi
 
 	EOF
+
+	[ ! -x "/jffs/scripts/disk-check" ] && chmod 0755 /jffs/scripts/disk-check
 }
 
 format_disk(){
@@ -750,9 +752,9 @@ format_disk(){
 		echo " ${ERR_BG} partitions on the selected device! ${NC}"
 		echo
 
-		pto=4;pts=4
+		pts=4
 		case "$(uname -m)" in
-			mips)		PART_TYPES='ext2|ext3|fat|tntfs|ufsd';pto=3;pts=;;
+			mips)		PART_TYPES='ext2|ext3|fat|tntfs|ufsd';pts=;;
 			armv7l)		PART_TYPES='ext2|ext3|ext4|fat|tntfs|ufsd';;
 			aarch64)	PART_TYPES='ext2|ext3|ext4|fat|tntfs';;
 		esac
@@ -763,7 +765,11 @@ format_disk(){
 			usb_manufacturer="$(nvram get ${usb_path}_manufacturer | xargs)"
 			usb_product="$(nvram get ${usb_path}_product | xargs)"
 			[ -z "$usb_manufacturer" ] && usb_name="$usb_product" || usb_name="$usb_manufacturer $usb_product"
-			thisdevsize=$(blockdev --getsize64 "/dev/$usb_dev" 2>/dev/null)
+			if [ "$(which blockdev)" ]; then
+				thisdevsize=$(blockdev --getsize64 "/dev/$usb_dev" 2>/dev/null)
+			else
+				thisdevsize=$(cat /proc/partitions | grep "$usb_dev$" | awk '{print $3 * 1024}')
+			fi
 			if [ $? -eq 0 ]; then
 				thisdevsize="$(echo $thisdevsize | awk '{ byte=$1/1000000000; printf "%.1f GB",byte }')"
 				echo " $i. ${GREEN_BG} $usb_dev $usb_name ($thisdevsize) ${NC}"
@@ -790,7 +796,11 @@ format_disk(){
 		eval mtddev="\$mounts$device"
 
 		devtf="/dev/${mtddev:0:3}"
-		devtfsize=$(blockdev --getsize64 $devtf)
+		if [ "$(which blockdev)" ]; then
+			devtfsize=$(blockdev --getsize64 $devtf)
+		else
+			devtfsize=$(cat /proc/partitions | grep "$(echo ${devtf##*/})$" | awk '{print $3 * 1024}')
+		fi
 
 		if [ "$devtfsize" -gt 2000000000000 ]; then
 			show_amtm " Device is over 2TB and cannot be\\n formatted by $thisScript"
@@ -826,49 +836,116 @@ format_disk(){
 	}
 	select_device
 
-	print_end_line
-	printf " Select new filesystem\\n\\n"
-	printf " 2. ext2\\n 3. ext3\\n"
-	[ "$pto" = "4" ] && printf " 4. ext4\\n"
-	while true; do
-		printf "\\n Set filesystem [2-$pto] ";read -r continue
-		case "$continue" in
-			2)		nfs=ext2;break;;
-			3)		nfs=ext3;break;;
-			[$pts])	nfs=ext4;break;;
-			*)		printf "\\n input is not an option\\n";;
-		esac
-	done
-
-	if [ "$nfs" = "ext3" ] || [ "$nfs" = "ext4" ]; then
+	select_file_system(){
 		print_end_line
-		printf " Do you want to enable journalling?\\n\\n"
-		printf " 1. No journalling\\n 2. Enable journalling\\n"
+		printf " Select new filesystem$pn\\n\\n"
+		printf " 2. ext2\\n"
+		pto=3
+
+		case "$1" in
+			1)		recomm="(recommended)";;
+			2|3)	recomm=;;
+		esac
+
+		if [ "$pts" ]; then
+			pto=4
+			printf " 3. ext3\\n"
+			printf " 4. ext4 $recomm\\n"
+		else
+			printf " 3. ext3 $recomm\\n"
+			printf "${GRAY} 4. ext4 not available on this router${NC}\\n"
+		fi
+
+		unset "ptf" "ptn" "ptz"
+		if [ "$1" -gt 1 ]; then
+			if [ -f /sbin/mkdosfs ] || [ -f /usr/sbin/mkdosfs ] ; then
+				printf " 5. FAT32\\n"
+				ptf=5
+			else
+				printf "${GRAY} 5. FAT32 not available on this router${NC}\\n"
+			fi
+			if [ -f /usr/sbin/mkntfs ] ; then
+				printf " 6. NTFS\\n"
+				ptn=6
+			else
+				printf "${GRAY} 6. NTFS not available on this router${NC}\\n"
+			fi
+			printf " 7. Don't format, just zero Partition ${GREEN_BG} $1 ${NC}\\n"
+			pto=7;ptz=7
+		fi
+
 		while true; do
-			printf "\\n Enter selection [1-2] ";read -r continue
+			printf "\\n Set filesystem [2-$pto] ";read -r continue
 			case "$continue" in
-				1)	journalling=off;break;;
-				2)	journalling=on;break;;
-				*)	printf "\\n input is not an option\\n";;
+				2)		nfs=ext2;break;;
+				3)		nfs=ext3;break;;
+				[$pts])	nfs=ext4;break;;
+				[$ptf])	nfs=FAT32;break;;
+				[$ptn])	nfs=NTFS;break;;
+				[$ptz])	nfs=none;break;;
+				*)		printf "\\n input is not an option\\n";;
 			esac
 		done
-	fi
+		case "$1" in
+			1)	nfs1=$nfs;;
+			2)	nfs2=$nfs;;
+			3)	nfs3=$nfs;;
+		esac
+	}
+
+	select_journalling(){
+		if [ "$nfs" = "ext3" ] || [ "$nfs" = "ext4" ]; then
+			print_end_line
+			printf " Enable journalling$pn\\n\\n"
+			printf " 1. Enable journalling (recommended)\\n 2. No journalling\\n"
+			while true; do
+				printf "\\n Enter selection [1-2] ";read -r continue
+				case "$continue" in
+					1)	journalling=on;break;;
+					2)	journalling=off;break;;
+					*)	printf "\\n input is not an option\\n";;
+				esac
+			done
+			case "$1" in
+				1)	journalling1=$journalling;;
+				2)	journalling2=$journalling;;
+				3)	journalling3=$journalling;;
+			esac
+		else
+			case "$1" in
+				1)	journalling1=off;;
+				2)	journalling2=off;;
+				3)	journalling3=off;;
+			esac
+		fi
+	}
+
+	enter_label(){
+		printf "\\n Enter label: ";read -r label
+		case "$label" in
+			*[^a-zA-Z0-9-_]*)	printf "\\n Label contains unsupported character\\n"
+								enter_label;;
+		esac
+		if [ "${#label}" -gt 11 ]; then
+			printf "\\n Label is over the limit of 11 characters\\n"
+			enter_label
+		fi
+	}
 
 	select_label(){
 		print_end_line
-		printf " Do you want to set a device label?\\n\\n"
-		printf " 1. No label\\n 2. Set label\\n"
+		printf " Set device label$pn\\n\\n"
+		printf " 1. Set label (recommended)\\n 2. No label\\n"
 		while true; do
 			printf "\\n Enter selection [1-2] ";read -r continue
 			case "$continue" in
-				1)	label=;break;;
-				2)	printf "\\n Enter label: ";read -r label
+				1)	print_end_line
+					printf " Label may only:\\n - contain letters, numbers - (dash) or _ (underscore)\\n - be 11 characters or shorter\\n"
+					enter_label
 					print_end_line
 					echo " You entered this label: ${GREEN_BG} $label ${NC}"
 					echo
-					echo " Is this correct?"
-					echo
-					printf " 1. Yes, continue\\n 2. No, back to label selection\\n"
+					printf " 1. Correct, continue\\n 2. Back to label selection\\n"
 					while true; do
 						printf "\\n Enter selection [1-2] ";read -r continue
 						case "$continue" in
@@ -878,15 +955,241 @@ format_disk(){
 						esac
 					done
 					break;;
+				2)	label=;break;;
+				*)	printf "\\n input is not an option\\n";;
+			esac
+		done
+		case "$1" in
+			1)	label1=$label;;
+			2)	label2=$label;;
+			3)	label3=$label;;
+		esac
+	}
+
+	enter_partition_size(){
+		part1s=
+		case "$partitions" in
+			2)	deduct=10;;
+			3)	deduct=20
+				if [ "$1" = 2 ]; then
+					deduct=10
+					part1s="- $psize1"
+				fi
+				;;
+		esac
+
+		echo " Valid size is: 10 - $((devmbsize-deduct $part1s)) MB"
+		while true; do
+			printf "\\n Enter size$pn in MB: ";read -r psize
+			case $psize in
+				''|*[!0-9]*|[1-9]|[!1-9]*) 	printf "\\n input is not an option\\n";;
+				*) 							break;;
+			esac
+		done
+
+		if [ "$psize" -gt "$((devmbsize-deduct $part1s))" ]; then
+			printf "\\n input is not an option\\n\\n"
+			psize=;enter_partition_size $1
+		fi
+	}
+
+	set_partition_size(){
+		print_end_line
+		case "$1" in
+			1)	printf " Common size usage info, amtm scripts\\n including these require ext* filesystem:\\n  - Diversion, installs into Entware:   250 MB\\n"
+				printf "  - Scribe, installs into Entware:       50 MB\\n  - Entware, installs into partition:    20 MB\\n"
+				printf "  - Skynet, installs into partition:     24 MB\\n  - Swapfile, installs into partition:  256 MB\\n"
+				printf " Recommended min. size for all above:   600 MB\\n\\n\\n";;
+		esac
+		printf " Set size$pn on\\n\\n ${GREEN_BG} $mtddev (${devmbsize} MB) ${NC}\\n\\n"
+
+		case "$partitions" in
+			2)	echo " 1. Use 50% ($((devmbsize/2)) MB) of ${devmbsize} MB";;
+			3)	case "$1" in
+					1)	echo " 1. Use 33% ($((devmbsize/3)) MB) of ${devmbsize} MB";;
+					2)	echo " 1. Use 50% ($(((devmbsize-psize1)/2)) MB) of $((devmbsize-psize1)) MB";;
+				esac
+				;;
+		esac
+		echo " 2. Set size manually in MB"
+		while true; do
+			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+			case "$continue" in
+				1)		case "$partitions" in
+							2)	psize="$((devmbsize/2))";;
+							3)	psize="$((devmbsize/3))"
+								[ "$1" = 2 ] && psize="$(((devmbsize-psize1)/2))"
+								;;
+						esac
+						break;;
+				2)		print_end_line
+						enter_partition_size $1
+						break;;
+				[Ee])	show_amtm " Exited Format disk function";;
+				*)		printf "\\n input is not an option\\n";;
+			esac
+		done
+	}
+
+	confirm_partition_size(){
+		print_end_line
+		echo " You entered this size: ${GREEN_BG} $psize MB ${NC}"
+		echo
+		case "$partitions" in
+			2)	echo " Size of Partition ${GREEN_BG} 1 ${NC} will be: $psize MB"
+				echo " Size of Partition ${GREEN_BG} 2 ${NC} will be: $((devmbsize-psize)) MB";;
+			3)	case "$1" in
+					1)	echo " Size of Partition ${GREEN_BG} 1 ${NC} will be: $psize MB"
+						echo " Size left for Partition ${GREEN_BG} 2 ${NC} and ${GREEN_BG} 3 ${NC} will be: $((devmbsize-psize)) MB";;
+					2)	echo " Size of Partition ${GREEN_BG} 1 ${NC} will be: $psize1 MB"
+						echo " Size of Partition ${GREEN_BG} 2 ${NC} will be: $psize MB"
+						echo " Size of Partition ${GREEN_BG} 3 ${NC} will be: $((devmbsize-psize1-psize)) MB";;
+				esac
+				;;
+		esac
+
+		echo
+		printf " 1. Correct, continue\\n 2. Back to size selection\\n"
+		while true; do
+			printf "\\n Enter selection [1-2] ";read -r continue
+			case "$continue" in
+				1)	case "$1" in
+						1)	psize1=$psize;;
+						2)	psize2=$psize;;
+					esac
+					break;;
+				2)	psize=;set_partition_size $1
+					confirm_partition_size $1;break;;
 				*)	printf "\\n input is not an option\\n";;
 			esac
 		done
 	}
-	select_label
+
+	print_end_line
+	unset "partitions" "psize" "psize1" "psize2" "nfs1" "nfs2" "nfs3" "label1" "label2" "label3" "journalling1" "journalling2" "journalling3"
+	printf " Select partition(s) on device\\n\\n ${GREEN_BG} $mtddev ${NC}\\n\\n"
+	printf " 1. One partition (recommended)\\n    ext* filesystem only\\n 2. Two partitions**\\n 3. Three partitions**\\n\\n"
+	printf " *) ext2, ext3 and ext4 for newer routers\\n"
+	printf " **) ext*, FAT32, NTFS or no filesystem\\n for 2nd and 3rd partition available\\n"
+
+	while true; do
+		printf "\\n Set partitions [1-3 e=Exit] ";read -r partitions
+		case "$partitions" in
+			1)		pn=" for\\n\\n ${GREEN_BG} $mtddev ${NC}"
+					select_file_system 1
+					case "$nfs1" in
+						ext*)	select_journalling 1
+								select_label 1;;
+						FAT32)	select_label 1;;
+						NTFS)	select_label 1;;
+					esac
+					break;;
+			2)		devmbsize=$(echo $devtfsize | awk '{ byte=$1/1000000; printf "%d",byte }')
+					pn=" for Partition ${GREEN_BG} 1 ${NC}"
+					set_partition_size 1
+					confirm_partition_size 1
+
+					select_file_system 1
+					case "$nfs1" in
+						ext*)	select_journalling 1
+								select_label 1;;
+						FAT32)	select_label 1;;
+						NTFS)	select_label 1;;
+					esac
+
+					pn=" for Partition ${GREEN_BG} 2 ${NC}"
+					select_file_system 2
+					case "$nfs2" in
+						none)	;;
+						ext*)	select_journalling 2
+								select_label 2;;
+						FAT32)	select_label 2;;
+						NTFS)	select_label 2;;
+					esac
+					break;;
+			3)		devmbsize=$(echo $devtfsize | awk '{ byte=$1/1000000; printf "%d",byte }')
+					pn=" for Partition ${GREEN_BG} 1 ${NC}"
+					set_partition_size 1
+					confirm_partition_size 1
+
+					pn=" for Partition ${GREEN_BG} 2 ${NC}"
+					set_partition_size 2
+					confirm_partition_size 2
+
+					pn=" for Partition ${GREEN_BG} 1 ${NC}"
+					select_file_system 1
+					case "$nfs1" in
+						ext*)	select_journalling 1
+								select_label 1;;
+						FAT32)	select_label 1;;
+						NTFS)	select_label 1;;
+					esac
+
+					pn=" for Partition ${GREEN_BG} 2 ${NC}"
+					select_file_system 2
+					case "$nfs2" in
+						none)	;;
+						ext*)	select_journalling 2
+								select_label 2;;
+						FAT32)	select_label 2;;
+						NTFS)	select_label 2;;
+					esac
+
+					pn=" for Partition ${GREEN_BG} 3 ${NC}"
+					select_file_system 3
+					case "$nfs3" in
+						none)	;;
+						ext*)	select_journalling 3
+								select_label 3;;
+						FAT32)	select_label 3;;
+						NTFS)	select_label 3;;
+					esac
+					break;;
+			[Ee])	show_amtm " Exited Format disk function";;
+			*)		printf "\\n input is not an option\\n";;
+		esac
+	done
+
+	unset "j1" "l1" "j2" "l2" "j3" "l3"
+	[ "$journalling1" = "on" ] && j1=", journalling ${GREEN_BG} on ${NC}"
+	[ "$label1" ] && l1=", label as ${GREEN_BG} $label1 ${NC}"
+
+	[ "$nfs2" = none ]&& f2=" (no formatting)" || f2=", format as ${GREEN_BG} $nfs2 ${NC}"
+	[ "$journalling2" = "on" ] && j2=", journalling ${GREEN_BG} on ${NC}"
+	[ "$label2" ] && l2=", label as ${GREEN_BG} $label2 ${NC}"
+
+	[ "$nfs3" = none ]&& f3=" (no formatting)" || f3=", format as ${GREEN_BG} $nfs3 ${NC}"
+	[ "$journalling3" = "on" ] && j3=", journalling ${GREEN_BG} on ${NC}"
+	[ "$label3" ] && l3=", label as ${GREEN_BG} $label3 ${NC}"
+
+	print_end_line
+	printf " Confirm formatting job for\\n\\n ${GREEN_BG} $mtddev ${NC}\\n"
+	echo
+	case "$partitions" in
+		1)	echo " - ${GREEN_BG} One ${NC} Partition, format as ${GREEN_BG} $nfs1 ${NC}${j1}$l1";;
+		2)	echo " - Partition ${GREEN_BG} 1 ${NC} $psize1 MB, format as ${GREEN_BG} $nfs1 ${NC}${j1}$l1"
+			echo " - Partition ${GREEN_BG} 2 ${NC} $((devmbsize-psize1)) MB${f2}${j2}$l2";;
+		3)	echo " - Partition ${GREEN_BG} 1 ${NC} $psize1 MB, format as ${GREEN_BG} $nfs1 ${NC}${j1}$l1"
+			echo " - Partition ${GREEN_BG} 2 ${NC} $psize2 MB${f2}${j2}$l2"
+			echo " - Partition ${GREEN_BG} 3 ${NC} $((devmbsize-psize1-psize2)) MB${f3}${NC}${j3}$l3";;
+	esac
+
+	echo
+	printf " 1. Correct, format device now\\n 2. Exit format disk function\\n"
+	while true; do
+		printf "\\n Enter selection [1-2] ";read -r continue
+		case "$continue" in
+			1)		break;;
+			2)		show_amtm " Exited Format disk function";;
+			[Ee])	show_amtm " Exited Format disk function";;
+			*)		printf "\\n input is not an option\\n";;
+		esac
+	done
 
 	print_end_line
 	echo " Formatting $mtddev now!"
-	echo
+	print_end_line
+
 	echo " Stopping file serving services and swap file"
 	service stop_nasapps >/dev/null
 	sleep 1
@@ -904,7 +1207,7 @@ format_disk(){
 	if [ "$rc" -eq "0" ]; then
 		format_device(){
 			echo
-			echo " Zeroing disk and creating partition on $mtddev"
+			echo " Zeroing disk $mtddev"
 			echo "${GRAY}"
 
 			dd if=/dev/zero of=$devtf count=16065 bs=512 && sync
@@ -913,36 +1216,145 @@ format_disk(){
 
 			rm /etc/hotplug2.rules; killall hotplug2
 
-			echo "o
-			n
-			p
-			1
-
-
-			w" | fdisk $devtf
-			ln -sf /rom/etc/hotplug2.rules /etc/hotplug2.rules; killall hotplug2
-
 			echo
-			if [ "$nfs" = "ext2" ]; then
-				echo "${NC} Formatting disk as \"$nfs\"${GRAY}"
-				echo
-				mke2fs -t $nfs ${devtf}1
-			elif [ "$journalling" = "on" ]; then
-				echo "${NC} Formatting as \"$nfs\", enabling journalling${GRAY}"
-				echo
-				mke2fs -t $nfs -O has_journal ${devtf}1
-			else
-				echo "${NC} Formatting disk as \"$nfs\"${GRAY}"
-				echo
-				mke2fs -t $nfs -O ^has_journal ${devtf}1
-			fi
+			echo "${NC} Creating partition(s) on $mtddev${GRAY}"
+			echo
 
-			if [ "$label" ]; then
-				echo "${NC} Setting device label \"$label\"${GRAY}"
+			(
+			echo o
+			echo n
+			echo p
+			echo 1
+			if [ "$partitions" -ge 2 ]; then
 				echo
-				tune2fs -L "$label" ${devtf}1
+				echo +${psize1}M
+				echo n
+				echo p
+				echo 2
 			fi
-			echo "${NC}"
+			if [ "$partitions" = 3 ]; then
+				echo
+				echo +${psize2}M
+				echo n
+				echo p
+				echo 3
+			fi
+			echo
+			echo
+			echo w
+			) | fdisk $devtf
+
+			formatting_dev(){
+				echo
+				case "$3" in
+					ext*)	if [ "$3" = "ext2" ]; then
+								echo "${NC} Formatting $1 as \"$3\"${GRAY}"
+								echo
+								mke2fs -t $3 ${devtf}${2}
+							elif [ "$4" = "on" ]; then
+								echo "${NC} Formatting $1 as \"$3\", enabling journalling${GRAY}"
+								echo
+								mke2fs -t $3 -O has_journal ${devtf}${2}
+							else
+								echo "${NC} Formatting $1 as \"$3\"${GRAY}"
+								echo
+								mke2fs -t $3 -O ^has_journal ${devtf}${2}
+							fi
+
+							if [ "$5" ]; then
+								echo "${NC} Setting $1 device label \"$5\"${GRAY}"
+								echo
+								tune2fs -L "$5" ${devtf}${2}
+							fi
+							;;
+					FAT32)	echo "${NC} Formatting $1 as \"$3\"${GRAY}"
+							if [ "$4" ]; then
+								echo "${NC} Setting $1 device label \"$4\"${GRAY}"
+								mkdosfs -n "$4" ${devtf}${2}
+							else
+								mkdosfs ${devtf}${2}
+							fi
+							echo
+							echo "${NC} Setting $1 type \"$3\"${GRAY}"
+							if [ "$partitions" -gt 1 ]; then
+								echo "t
+								$2
+								b
+								w" | fdisk $devtf
+							else
+								echo "t
+								b
+								w" | fdisk $devtf
+							fi
+							;;
+					NTFS)	echo "${NC} Formatting $1 as \"$3\"${GRAY}"
+							if [ "$4" ]; then
+								echo "${NC} Setting $1 device label \"$4\"${GRAY}"
+								if /usr/sbin/mkntfs 2> /dev/null | grep -q 'v:label'; then
+									/usr/sbin/mkntfs -f -v:"$4" ${devtf}${2}
+								else
+									/usr/sbin/mkntfs -f -L "$4" ${devtf}${2}
+								fi
+							else
+								/usr/sbin/mkntfs -f ${devtf}${2}
+							fi
+							echo
+							echo "${NC} Setting $1 type \"$3\"${GRAY}"
+							if [ "$partitions" -gt 1 ]; then
+								echo "t
+								$2
+								7
+								w" | fdisk $devtf
+							else
+								echo "t
+								7
+								w" | fdisk $devtf
+							fi
+							;;
+				esac
+				echo "${NC}"
+			}
+
+			case "$partitions" in
+				1)		if [ "$nfs1" != none ]; then
+							formatting_dev disk 1 $nfs1 $journalling1 $label1
+						else
+							echo "${NC} Disk is set to not be formatted${GRAY}"
+						fi
+						;;
+				2)		if [ "$nfs1" != none ]; then
+							formatting_dev "Partition 1" 1 $nfs1 $journalling1 $label1
+						else
+							echo "${NC} Partition 1 is set to not be formatted${GRAY}"
+						fi
+
+						if [ "$nfs2" != none ]; then
+							formatting_dev "Partition 2" 2 $nfs2 $journalling2 $label2
+						else
+							echo "${NC} Partition 2 is set to not be formatted${GRAY}"
+						fi
+						;;
+				3)		if [ "$nfs1" != none ]; then
+							formatting_dev "Partition 1" 1 $nfs1 $journalling1 $label1
+						else
+							echo "${NC} Partition 1 is set to not be formatted${GRAY}"
+						fi
+
+						if [ "$nfs2" != none ]; then
+							formatting_dev "Partition 2" 2 $nfs2 $journalling2 $label2
+						else
+							echo "${NC} Partition 2 is set to not be formatted${GRAY}"
+						fi
+
+						if [ "$nfs3" != none ]; then
+							formatting_dev "Partition 3" 3 $nfs3 $journalling3 $label3
+						else
+							echo "${NC} Partition 3 is set to not be formatted${GRAY}"
+						fi
+						;;
+			esac
+
+			ln -sf /rom/etc/hotplug2.rules /etc/hotplug2.rules; killall hotplug2
 		}
 
 		echo "$thisScript format disk log $(date -R)" >"/jffs/amtm-format-disk.log"
@@ -1120,18 +1532,11 @@ reboot_scheduler(){
 			esac
 		done
 
-		if [ ! -f /jffs/scripts/init-start ]; then
-			echo "#!/bin/sh" > /jffs/scripts/init-start
-		elif [ -f /jffs/scripts/init-start ] && ! head -1 /jffs/scripts/init-start | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/init-start
-		fi
-		dos_to_unix /jffs/scripts/init-start
+		check_jffs_scripts /jffs/scripts/init-start
 		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
-			check_nl /jffs/scripts/init-start
 			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow service reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
 		fi
 		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow service reboot"
-		[ ! -x "/jffs/scripts/init-start" ] && chmod 0755 /jffs/scripts/init-start
 
 		show_amtm " Reboot scheduler enabled"
 
@@ -1160,26 +1565,16 @@ install_Entware(){
 	write_jffsfile(){
 		echo " Checking /jffs/scripts entries"
 
-		if [ ! -f /jffs/scripts/post-mount ]; then
-			echo "#!/bin/sh" >/jffs/scripts/post-mount
-		elif [ -f /jffs/scripts/post-mount ] && ! head -1 /jffs/scripts/post-mount | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/post-mount
-		fi
+		check_jffs_scripts /jffs/scripts/post-mount
 		if ! grep -q ". /jffs/scripts/post-mount.div" /jffs/scripts/post-mount; then
-			check_nl /jffs/scripts/post-mount
 			echo ". /jffs/scripts/post-mount.div # Added by $NAME" >>/jffs/scripts/post-mount
 			echo " post-mount entry added"
 		else
 			echo " OK post-mount"
 		fi
 
-		if [ ! -f /jffs/scripts/services-stop ]; then
-			echo "#!/bin/sh" >/jffs/scripts/services-stop
-		elif [ -f /jffs/scripts/services-stop ] && ! head -1 /jffs/scripts/services-stop | grep -qE "^#!/bin/sh"; then
-			sed -i '1s~^~#!/bin/sh\n~' /jffs/scripts/services-stop
-		fi
+		check_jffs_scripts /jffs/scripts/services-stop
 		if ! grep -q "/opt/etc/init.d/rc.unslung stop" /jffs/scripts/services-stop; then
-			check_nl /jffs/scripts/services-stop
 			echo "/opt/etc/init.d/rc.unslung stop # Added by $NAME" >>/jffs/scripts/services-stop
 			echo " services-stop entry added"
 		else
@@ -1203,13 +1598,7 @@ install_Entware(){
 		else
 			echo " OK post-mount.div"
 		fi
-		divScripts="/jffs/scripts/post-mount /jffs/scripts/services-stop /jffs/scripts/post-mount.div"
-		for script in $divScripts; do
-			if [ -f "$script" ]; then
-				dos_to_unix "$script"
-				[ ! -x "$script" ] && chmod 0755 "$script"
-			fi
-		done
+		check_jffs_scripts /jffs/scripts/post-mount.div
 	}
 
 	check_device(){
@@ -1398,6 +1787,7 @@ install_Entware(){
 }
 
 script_check(){
+	ii=1
 	[ "$localVother" ] && localver=$localVother || localver=$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	upd="${ERR_BG}${NC}$localver"
 	if [ "$su" = "1" ]; then
@@ -1520,7 +1910,6 @@ show_amtm(){
 	# 2 Skynet menu
 	scriptloc="/jffs/scripts/firewall"
 	if [ -f "$scriptloc" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
 		localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
 		remoteVother="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
@@ -1561,7 +1950,6 @@ show_amtm(){
 	# 3 Stubby-Installer-Asuswrt-Merlin menu (deprecated)
 	scriptloc="/jffs/scripts/install_stubby.sh"
 	if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-		ii=1
 		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
 		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
@@ -1610,7 +1998,6 @@ show_amtm(){
 	# 4 YazFi menu
 	scriptloc="/jffs/scripts/YazFi"
 	if [ -f "$scriptloc" ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
 		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
 		grepcheck=jackyaz
@@ -1644,7 +2031,6 @@ show_amtm(){
 	# 5 scribe menu
 	scriptloc="/jffs/scripts/scribe"
 	if [ -f "$scriptloc" ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
 		scriptgrep='scribe_ver='
 		grepcheck=cynicastic
@@ -1681,7 +2067,6 @@ show_amtm(){
 	# j1 connmon menu
 	scriptloc="/jffs/scripts/connmon"
 	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
 		scriptgrep='SCRIPT_VERSION=\|CONNMON_VERSION='
 		grepcheck=jackyaz
@@ -1716,7 +2101,6 @@ show_amtm(){
 	# j2 ntpMerlin menu
 	scriptloc="/jffs/scripts/ntpmerlin"
 	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|NTPD_VERSION='
 		grepcheck=jackyaz
@@ -1751,7 +2135,6 @@ show_amtm(){
 	# j3 scMerlin menu
 	scriptloc="/jffs/scripts/scmerlin"
 	if [ -f "$scriptloc" ]; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/scMerlin/master/scmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|SCM_VERSION='
 		grepcheck=jackyaz
@@ -1786,7 +2169,6 @@ show_amtm(){
 	# j4 spdMerlin menu
 	scriptloc="/jffs/scripts/spdmerlin"
 	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|SPD_VERSION='
 		grepcheck=jackyaz
@@ -1821,7 +2203,6 @@ show_amtm(){
 	# j5 uiDivStats menu
 	scriptloc="/jffs/scripts/uiDivStats"
 	if [ -f "$scriptloc" ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
-		ii=1
 		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
 		scriptgrep='SCRIPT_VERSION=\|SCRIPT_VERSION='
 		grepcheck=jackyaz
@@ -1996,7 +2377,7 @@ show_amtm(){
 			echo " It runs a filesystem check on compatible"
 			echo " USB storage devices before they are mounted."
 			echo
-			echo " Authors: ColinTaylor, latenitetech, thelonelycoder"
+			echo " Authors: ColinTaylor, thelonelycoder, latenitetech"
 			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)"
 			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
 			continue_dialog
@@ -2016,14 +2397,15 @@ show_amtm(){
 	case_fd(){
 		print_end_line
 		echo " This (re)formats your plugged in USB storage"
-		echo " device to ext* filesystem.  The process"
-		echo " erases all data and partitions on the device."
+		echo " device with up to three partitions."
+		echo " The process erases all data and partitions"
+		echo " on the device."
 		echo " After formatting, the router will reboot."
 		echo
 		echo " To be on the safe side, remove all other"
 		echo " attached USB devices before continuing."
 		echo
-		echo " Authors: Zonkd, ColinTaylor, thelonelycoder"
+		echo " Authors: ColinTaylor, thelonelycoder, Zonkd"
 		echo " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
 		echo " https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723"
 		continue_dialog
