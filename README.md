@@ -11,7 +11,7 @@ Enter this into your favorite SSH terminal:
 /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 ```
 
-[![amtm v2.4](https://i.imgur.com/LcbQxrP.png "amtm v2.4")](https://i.imgur.com/LcbQxrP.png "amtm v2.4")
+[![amtm v2.5](https://i.imgur.com/4HRB57M.png "amtm v2.5")](https://i.imgur.com/4HRB57M.png "amtm v2.5")
 
 ### Supported scripts
 
@@ -25,7 +25,8 @@ Enter this into your favorite SSH terminal:
 [ntpMerlin](https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/) - maintained by Jack Yaz<br/>
 [scMerlin](https://www.snbforums.com/threads/scmerlin-service-and-script-control-menu-for-asuswrt-merlin.56277/) - maintained by Jack Yaz<br/>
 [spdMerlin](https://www.snbforums.com/threads/spdmerlin-automated-speedtests-with-graphs.55904/) - maintained by Jack Yaz<br/>
-[uiDivStats](https://www.snbforums.com/threads/beta-uidivstats-webui-for-diversion-statistics.56393/) - maintained by Jack Yaz<br/>
+[uiDivStats](https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/) - maintained by Jack Yaz<br/>
+[uiScribe](https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/) - maintained by Jack Yaz<br/>
 
 [DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0 (deprecated)<br/>
 [Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau<br/>

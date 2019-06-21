@@ -16,8 +16,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-version=2.4
-release="June 15 2019"
+version=2.5
+release="June 21 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.4
@@ -65,7 +65,7 @@ about_amtm(){
 check_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
 check_jffs_scripts(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then check_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; dos_to_unix "$1"; check_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
-dos_to_unix(){ dos2unix < $1 | cmp -s - $1;[ "$?" = "1" ] && dos2unix $1;}
+dos_to_unix(){ dos2unix < $1 | cmp -s - $1;[ "$?" = 1 ] && dos2unix $1;}
 press_enter_to(){ printf "\\n Press [Enter] to $1 ";read -r;echo;}
 print_end_line(){ echo "${RED_LINE}_____________________________________________${NC}";echo;}
 theme_standard(){ RED_LINE='[31m';RED_BG='[41m';ERR_BG='[41m';GREEN='[92m';GREEN_BG='[42m';GRAY='[90m';NC='[0m';ACORR=20;}
@@ -105,7 +105,7 @@ install_amtm(){
 						rm -f "$0"
 						echo
 						exit 0
-					elif [ ! -d "/jffs" ]; then
+					elif [ ! -d /jffs ]; then
 						echo
 						echo " /jffs partition is not present on this"
 						echo " router. $thisScript cannot be installed."
@@ -115,7 +115,7 @@ install_amtm(){
 						exit 0
 					else
 						mkdir -p /jffs/scripts
-						if [ "$(nvram get jffs2_scripts)" != "1" ]; then
+						if [ "$(nvram get jffs2_scripts)" != 1 ]; then
 							nvram set jffs2_scripts=1
 							nvram commit
 						fi
@@ -126,7 +126,7 @@ install_amtm(){
 						if [ -L "/opt/bin/$thisScript" ]; then
 							rm -f "/opt/bin/$thisScript"
 						fi
-						if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ]; then
+						if [ -d /opt/bin ] && [ ! -L "/opt/bin/$thisScript" ]; then
 							ln -s /jffs/scripts/$thisScript /opt/bin
 							[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
 							message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
@@ -149,7 +149,7 @@ install_amtm(){
 }
 
 add_profile_add(){
-	if [ ! -f "/jffs/configs/profile.add" ]; then
+	if [ ! -f /jffs/configs/profile.add ]; then
 		echo "alias amtm='/jffs/scripts/amtm' # added by $thisScript" >/jffs/configs/profile.add
 	elif ! grep -q "^alias amtm=" /jffs/configs/profile.add; then
 		sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
@@ -198,45 +198,42 @@ remove_amtm(){
 
 update_amtm(){
 	case "$release" in
-		*XX*) 	remoteurl="http://diversion.test/scripts/amtm";;
-		*) 		remoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
+		*XX*) 	amtmRemoteurl="http://diversion.test/scripts/amtm";;
+		*) 		amtmRemoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
 	esac
-	curl -fsNL --retry 3 "$remoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
-	remotever="$(curl -fsNL --retry 3 "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
+	curl -fsNL --retry 3 "$amtmRemoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
+	amtmRemotever="$(curl -fsNL --retry 3 "$amtmRemoteurl" | grep "^version=" | sed -e 's/version=//')"
 	localmd5="$(md5sum "$0" | awk '{print $1}')"
-	remotemd5="$(curl -fsNL --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
+	remotemd5="$(curl -fsNL --retry 3 "$amtmRemoteurl" | md5sum | awk '{print $1}')"
 
-	if [ "$su" = "1" ]; then
-		if [ "$version" != "$remotever" ]; then
-			thisrem="${GREEN_BG}-> v$remotever${NC}"
-			suUpd=1
+	if [ "$su" = 1 ]; then
+		if [ "$version" != "$amtmRemotever" ]; then
+			thisrem="${GREEN_BG}-> v$amtmRemotever${NC}"
+			amtmUpd=1
 		elif [ "$localmd5" != "$remotemd5" ]; then
 			thisrem="${GREEN_BG}-> min upd${NC}"
-			suUpd=1
+			amtmUpd=2
 		else
 			thisrem="${ERR_BG}no upd${NC}"
+			amtmUpd=0
 		fi
 	else
-		add_profile_add
 		print_end_line
-		if [ "$version" != "$remotever" ]; then
-			echo " $thisScript $remotever is now available!"
-			echo
+		if [ "$version" != "$amtmRemotever" ]; then
+			echo " $thisScript $amtmRemotever is now available!"
 			echo " Do you want to update now?"
-			continue_dialog
-			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n updated from v$version to v$remotever"
+			amtmUpdText="updated from v$version to v$amtmRemotever"
 		elif [ "$localmd5" != "$remotemd5" ]; then
-			echo " A minor $thisScript update is available."
-			echo
+			echo " A minor $thisScript update is available!"
 			echo " Do you want to update now?"
-			continue_dialog
-			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n minor $thisScript version update applied"
+			amtmUpdText="minor version update applied"
 		else
-			echo " No new version or minor update is available,"
+			echo " No $thisScript update available,"
 			echo " do you want to force update $thisScript?"
-			continue_dialog
-			curl -fsL --retry 3 "$remoteurl" -o "$0" && exec "$0" " $title\\n force updated to v$remotever"
+			amtmUpdText="force updated to v$amtmRemotever"
 		fi
+		continue_dialog
+		curl -fsL --retry 3 "$amtmRemoteurl" -o "$0" && exec "$0" " $thisScript $amtmUpdText"
 	fi
 }
 
@@ -364,7 +361,7 @@ check_swap(){
 		fi
 	}
 
-	if [ "$(echo "$swaplocation" | wc -l)" -gt "1" ]; then
+	if [ "$(echo "$swaplocation" | wc -l)" -gt 1 ]; then
 		multipleswap=1
 		swtext=" Multiple swap files found, only one file is\\n supported. Enter sw to delete."
 	elif [ -f "$swaplocation" ]; then
@@ -375,7 +372,7 @@ check_swap(){
 		swapsize=$(du -h "$swaplocation" | awk '{print $1}')
 	elif [ "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
 		partitionsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
-	elif [ -f /jffs/configs/fstab ] && grep -qF "swap" /jffs/configs/fstab && [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+	elif [ -f /jffs/configs/fstab ] && grep -qF "swap" /jffs/configs/fstab && [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
 		partitionsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
 		swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
 	elif [ "$swaplocation" ]; then
@@ -388,7 +385,7 @@ check_swap(){
 			if [ -f "$swaplocation" ]; then
 				writeswaploc
 				swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
-			elif [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+			elif [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
 				swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
 				if [ -f "$swaplocation" ]; then
 					writeswaploc
@@ -402,13 +399,13 @@ check_swap(){
 		fi
 	else
 		swaplocation="$(find /tmp/mnt/*/myswap.swp 2> /dev/null)"
-		if [ "$(echo "$swaplocation" | wc -l)" -gt "1" ]; then
+		if [ "$(echo "$swaplocation" | wc -l)" -gt 1 ]; then
 			multipleswap=1
 			swtext=" Multiple swap files found, only one file is\\n supported. Enter sw to delete."
 		elif [ -f "$swaplocation" ]; then
 			writeswaploc
 			swtext=" Added missing swap file entry to\\n /jffs/scripts/post-mount"
-		elif [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+		elif [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
 			swaplocation="$(sed -n '2p' /proc/swaps | awk '{print $1}')"
 			if [ -f "$swaplocation" ]; then
 				writeswaploc
@@ -416,7 +413,7 @@ check_swap(){
 			else
 				remove_swap_entries
 			fi
-		elif [ "$swaplocation" ] || [ "$(wc -l < /proc/swaps)" -gt "2" ]; then
+		elif [ "$swaplocation" ] || [ "$(wc -l < /proc/swaps)" -gt 2 ]; then
 			multipleswap=1
 			swtext=" Multiple swap files found, only one file is\\n supported. Enter sw to delete."
 		fi
@@ -424,7 +421,7 @@ check_swap(){
 }
 
 manage_swap(){
-	if [ "$1" = "create" ]; then
+	if [ "$1" = create ]; then
 		print_end_line
 		echo " This creates a Swap file."
 		echo " A Swap file is useful when the router"
@@ -445,11 +442,11 @@ manage_swap(){
 						i=$((i+1))
 					done
 
-					if [ "$i" = "1" ]; then
+					if [ "$i" = 1 ]; then
 						show_amtm " No compatible device available"
 					fi
 
-					[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
+					[ "$i" = 2 ] && devNo=1-1 || devNo="1-$((i-1))"
 					while true; do
 						printf "\\n Select device [$devNo e=Exit] ";read -r device
 						case "$device" in
@@ -517,7 +514,7 @@ manage_swap(){
 			esac
 		done
 
-	elif [ "$1" = "delete" ]; then
+	elif [ "$1" = delete ]; then
 		print_end_line
 		echo " Swap file found at:"
 		echo " ${GREEN}$swaplocation${NC}"
@@ -540,7 +537,7 @@ manage_swap(){
 			esac
 		done
 
-	elif [ "$1" = "multidelete" ]; then
+	elif [ "$1" = multidelete ]; then
 		print_end_line
 		echo " Multiple swap files found, only one file is"
 		echo " supported."
@@ -557,12 +554,12 @@ manage_swap(){
 			done
 			echo
 		fi
-		if [ "$(wc -l < /proc/swaps)" -ge "2" ]; then
+		if [ "$(wc -l < /proc/swaps)" -ge 2 ]; then
 			echo " Found in /proc/swaps, delete manually:"
 			echo
 			cat /proc/swaps
 		fi
-		if [ "$i" -gt "1" ]; then
+		if [ "$i" -gt 1 ]; then
 			while true; do
 				printf "\\n Enter swap file to delete [1-$((i-1)) e=Exit] ";read -r continue
 				case "$continue" in
@@ -586,7 +583,7 @@ disk_check(){
 	if [ -f /jffs/scripts/pre-mount ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
 		show_amtm " Unsupported pre-mount script found,\\n please remove file manually"
 	else
-		if [ "$1" = "install" ]; then
+		if [ "$1" = install ]; then
 			write_dc_file
 
 			check_jffs_scripts /jffs/scripts/pre-mount
@@ -595,7 +592,7 @@ disk_check(){
 				echo ". /jffs/scripts/disk-check # Added by $thisScript" >> /jffs/scripts/pre-mount
 			fi
 
-		elif [ "$1" = "remove" ]; then
+		elif [ "$1" = remove ]; then
 			print_end_line
 			printf " This removes the Disk check script and its\\n log file.\\n"
 			continue_dialog
@@ -604,7 +601,7 @@ disk_check(){
 			rm -f /jffs/amtm-disk-check.log
 			show_amtm " Disk check and log removed"
 
-		elif [ "$1" = "log" ]; then
+		elif [ "$1" = log ]; then
 			if [ -f /jffs/amtm-disk-check.log ]; then
 				echo
 				echo " ---------------------------------------------------"
@@ -681,7 +678,7 @@ write_dc_file(){
 	    logger -t "\$TAG" "Truncated \$CHKLOG, size over 500KB"
 	fi
 
-	if [ "\$#" -lt "2" ]; then
+	if [ "\$#" -lt 2 ]; then
 	    FSTYPE=\$(fdisk -l \${1:0:8} | grep \$1 | cut -c55-65)
 	    text="Firmware too old, running basic check. Probing '\$FSTYPE' on device \$1"
 	    printf "\$(date) \$text\\\n" >> \$CHKLOG
@@ -739,7 +736,7 @@ write_dc_file(){
 
 	EOF
 
-	[ ! -x "/jffs/scripts/disk-check" ] && chmod 0755 /jffs/scripts/disk-check
+	[ ! -x /jffs/scripts/disk-check ] && chmod 0755 /jffs/scripts/disk-check
 }
 
 format_disk(){
@@ -754,9 +751,7 @@ format_disk(){
 
 		pts=4
 		case "$(uname -m)" in
-			mips)		PART_TYPES='ext2|ext3|fat|tntfs|ufsd';pts=;;
-			armv7l)		PART_TYPES='ext2|ext3|ext4|fat|tntfs|ufsd';;
-			aarch64)	PART_TYPES='ext2|ext3|ext4|fat|tntfs';;
+			mips)	pts=;;
 		esac
 
 		i=1;noad=
@@ -779,11 +774,11 @@ format_disk(){
 			fi
 		done
 
-		if [ "$i" = "1" ]; then
+		if [ "$i" = 1 ]; then
 			show_amtm " No compatible device(s) found to format\\n"
 		fi
 
-		[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
+		[ "$i" = 2 ] && devNo=1-1 || devNo="1-$((i-1))"
 		while true; do
 			printf "\\n Select device [$devNo e=Exit] ";read -r device
 			case "$device" in
@@ -1154,11 +1149,11 @@ format_disk(){
 	[ "$journalling1" = "on" ] && j1=", journalling ${GREEN_BG} on ${NC}"
 	[ "$label1" ] && l1=", label as ${GREEN_BG} $label1 ${NC}"
 
-	[ "$nfs2" = none ]&& f2=" (no formatting)" || f2=", format as ${GREEN_BG} $nfs2 ${NC}"
+	[ "$nfs2" = none ] && f2=" (no formatting)" || f2=", format as ${GREEN_BG} $nfs2 ${NC}"
 	[ "$journalling2" = "on" ] && j2=", journalling ${GREEN_BG} on ${NC}"
 	[ "$label2" ] && l2=", label as ${GREEN_BG} $label2 ${NC}"
 
-	[ "$nfs3" = none ]&& f3=" (no formatting)" || f3=", format as ${GREEN_BG} $nfs3 ${NC}"
+	[ "$nfs3" = none ] && f3=" (no formatting)" || f3=", format as ${GREEN_BG} $nfs3 ${NC}"
 	[ "$journalling3" = "on" ] && j3=", journalling ${GREEN_BG} on ${NC}"
 	[ "$label3" ] && l3=", label as ${GREEN_BG} $label3 ${NC}"
 
@@ -1440,8 +1435,8 @@ format_disk_log(){
 }
 
 reboot_scheduler(){
-	if [ "$1" = "install" ]; then
-		if [ "$(nvram get reboot_schedule_enable)" = "1" ]; then
+	if [ "$1" = install ]; then
+		if [ "$(nvram get reboot_schedule_enable)" = 1 ]; then
 			print_end_line
 			echo " Reboot scheduler is enabled in the WebUI."
 			echo " This needs to be disabled first."
@@ -1518,7 +1513,7 @@ reboot_scheduler(){
 		print_end_line
 		echo " Your router will reboot every:"
 		echo
-		[ "$(echo $rsm | wc -m)" -lt "3" ] && rsmc=$(echo $rsm | sed -e 's/^/0/') || rsmc=$rsm
+		[ "$(echo $rsm | wc -m)" -lt 3 ] && rsmc=$(echo $rsm | sed -e 's/^/0/') || rsmc=$rsm
 		echo " $rsdow @ ${rsh}:${rsmc}"
 		echo
 		while true; do
@@ -1553,7 +1548,7 @@ reboot_scheduler(){
 install_Entware(){
 	NAME="$thisScript Entware installer"
 	check_entware_folder(){
-		if [ "$(/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" 2>/dev/null | wc -l)" -gt "1" ]; then
+		if [ "$(/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" 2>/dev/null | wc -l)" -gt 1 ]; then
 			/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" | while read fdir; do
 				if [ "$fdir" != "$(readlink /tmp/opt)" ] && [ -f "$fdir/bin/opkg" ]; then
 					mv "$fdir" "$(dirname "$fdir")/old.$(basename "$fdir")"
@@ -1641,7 +1636,7 @@ install_Entware(){
 
 	echo " Running pre-install checks"
 
-	if [ -L "/tmp/opt" ]; then
+	if [ -L /tmp/opt ]; then
 		# dl master check
 		if [ "$(nvram get apps_mounted_path)" ] && [ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ]; then
 			if [ -f /opt/etc/init.d/S50downloadmaster ]; then
@@ -1672,7 +1667,7 @@ install_Entware(){
 				nvram commit
 			fi
 		else
-			if [ -L "/tmp/opt" ]; then
+			if [ -L /tmp/opt ]; then
 				rm -f /tmp/opt 2> /dev/null
 				rm -f /opt 2> /dev/null
 			fi
@@ -1694,11 +1689,11 @@ install_Entware(){
 		i=$((i+1))
 	done
 
-	if [ "$i" = "1" ]; then
+	if [ "$i" = 1 ]; then
 		show_amtm " No compatible device(s) found to install\\n Entware on. A USB storage device formatted\\n with one of these file systems is required:\\n $(echo $PART_TYPES | sed -e 's/|/, /g')\\n Use Format disk (fd) to format FAT or NTFS\\n formatted devices to ext*"
 	fi
 
-	[ "$i" = "2" ] && devNo=1-1 || devNo="1-$((i-1))"
+	[ "$i" = 2 ] && devNo=1-1 || devNo="1-$((i-1))"
 	while true; do
 		printf "\\n Select device [$devNo e=Exit] ";read -r device
 		case "$device" in
@@ -1790,7 +1785,7 @@ script_check(){
 	ii=1
 	[ "$localVother" ] && localver=$localVother || localver=$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	upd="${ERR_BG}${NC}$localver"
-	if [ "$su" = "1" ]; then
+	if [ "$su" = 1 ]; then
 		if curl -fsLN --retry 3 "$remoteurl" | grep -qF "$grepcheck"; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 			upd="${ERR_BG}no upd${NC}"
@@ -1845,7 +1840,7 @@ show_amtm(){
 	# SNBForum scripts follow
 
 	# 1 Diversion menu
-	scriptloc="/opt/bin/diversion"
+	scriptloc=/opt/bin/diversion
 	if [ -f "$scriptloc" ]; then
 		case "$release" in
 			*XX*) 	remoteurl="http://diversion.test/diversion";;
@@ -1854,7 +1849,7 @@ show_amtm(){
 		ii=1
 		localver="v$divver"
 		upd="${ERR_BG}${NC}$localver"
-		if [ "$su" = "1" ]; then
+		if [ "$su" = 1 ]; then
 			if curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
 				remotever="$(curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
 				S_VERSION=$(echo $remotever | awk '{print $1}')
@@ -1908,7 +1903,7 @@ show_amtm(){
 	fi
 
 	# 2 Skynet menu
-	scriptloc="/jffs/scripts/firewall"
+	scriptloc=/jffs/scripts/firewall
 	if [ -f "$scriptloc" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
 		localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
@@ -1948,7 +1943,7 @@ show_amtm(){
 	fi
 
 	# 3 Stubby-Installer-Asuswrt-Merlin menu (deprecated)
-	scriptloc="/jffs/scripts/install_stubby.sh"
+	scriptloc=/jffs/scripts/install_stubby.sh
 	if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
 		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
@@ -1996,7 +1991,7 @@ show_amtm(){
 	upd=
 
 	# 4 YazFi menu
-	scriptloc="/jffs/scripts/YazFi"
+	scriptloc=/jffs/scripts/YazFi
 	if [ -f "$scriptloc" ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
 		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
@@ -2029,13 +2024,13 @@ show_amtm(){
 	fi
 
 	# 5 scribe menu
-	scriptloc="/jffs/scripts/scribe"
+	scriptloc=/jffs/scripts/scribe
 	if [ -f "$scriptloc" ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
 		scriptgrep='scribe_ver='
 		grepcheck=cynicastic
 		script_check
-		printf "${GREEN_BG} 5 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "scribe         $localver" " $upd"
+		printf "${GREEN_BG} 5 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "scribe        $localver" " $upd"
 		case_5(){
 			/jffs/scripts/scribe
 			sleep 2
@@ -2065,7 +2060,7 @@ show_amtm(){
 	upd=
 
 	# j1 connmon menu
-	scriptloc="/jffs/scripts/connmon"
+	scriptloc=/jffs/scripts/connmon
 	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
 		scriptgrep='SCRIPT_VERSION=\|CONNMON_VERSION='
@@ -2099,7 +2094,7 @@ show_amtm(){
 	fi
 
 	# j2 ntpMerlin menu
-	scriptloc="/jffs/scripts/ntpmerlin"
+	scriptloc=/jffs/scripts/ntpmerlin
 	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|NTPD_VERSION='
@@ -2133,7 +2128,7 @@ show_amtm(){
 	fi
 
 	# j3 scMerlin menu
-	scriptloc="/jffs/scripts/scmerlin"
+	scriptloc=/jffs/scripts/scmerlin
 	if [ -f "$scriptloc" ]; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/scMerlin/master/scmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|SCM_VERSION='
@@ -2166,8 +2161,10 @@ show_amtm(){
 		}
 	fi
 
+	[ "$ss" ] && echo
+
 	# j4 spdMerlin menu
-	scriptloc="/jffs/scripts/spdmerlin"
+	scriptloc=/jffs/scripts/spdmerlin
 	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
 		scriptgrep='SCRIPT_VERSION=\|SPD_VERSION='
@@ -2201,10 +2198,10 @@ show_amtm(){
 	fi
 
 	# j5 uiDivStats menu
-	scriptloc="/jffs/scripts/uiDivStats"
+	scriptloc=/jffs/scripts/uiDivStats
 	if [ -f "$scriptloc" ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
 		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
-		scriptgrep='SCRIPT_VERSION=\|SCRIPT_VERSION='
+		scriptgrep='SCRIPT_VERSION='
 		grepcheck=jackyaz
 		script_check
 		printf "${GREEN_BG} j5${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiDivStats    $localver" " $upd"
@@ -2234,6 +2231,44 @@ show_amtm(){
 		}
 	fi
 
+	# j6 uiScribe menu
+	scriptloc=/jffs/scripts/uiScribe
+	if [ -f "$scriptloc" ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
+		remoteurl="https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh"
+		scriptgrep='SCRIPT_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j6${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiScribe      $localver" " $upd"
+		case_j6(){
+			/jffs/scripts/uiScribe
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j6${NC} %-9s%s\\n" "install" "uiScribe - WebUI for scribe logs"
+		case_j6(){
+			print_end_line
+			echo " This installs uiScribe - Custom System Log page for Scribe"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/"
+			continue_dialog
+
+			if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+				curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh" -o "/jffs/scripts/uiScribe" && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
+				sleep 2
+				if [ -f /jffs/scripts/uiScribe ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
+					show_amtm " uiScribe installed"
+				else
+					show_amtm " uiScribe installation failed"
+				fi
+			else
+				show_amtm " uiScribe installation failed, scribe missing"
+			fi
+		}
+	fi
+
 	[ "$upd" ] || [ "$ss" ] && echo
 	upd=
 
@@ -2252,11 +2287,11 @@ show_amtm(){
 		}
 	fi
 
-	# ew Entware menu
+	# ep Entware packages menu
 	if [ -f /opt/bin/opkg ]; then
 		upd=" "
-		printf "${GREEN_BG} ew${NC} %-9s%s\\n" "update" "Entware"
-		case_ew(){
+		printf "${GREEN_BG} ep${NC} %-9s%s\\n" "update" "Entware packages"
+		case_ep(){
 			print_end_line
 			echo " This updates and upgrades Entware packages"
 			if [ -f /opt/bin/diversion ]; then
@@ -2280,8 +2315,8 @@ show_amtm(){
 			show_amtm " Entware packages updated and upgraded"
 		}
 	else
-		[ "$ss" ] && printf "${ERR_BG} ew${NC} %-9s%s\\n" "install" "Entware - Software repository"
-		case_ew(){
+		[ "$ss" ] && printf "${ERR_BG} ep${NC} %-9s%s\\n" "install" "Entware - Software repository"
+		case_ep(){
 			print_end_line
 			echo " This installs Entware - the ultimate Software repository"
 			echo " on this router."
@@ -2442,7 +2477,7 @@ show_amtm(){
 	# sw/swp/swap Swap file
 	unset "swaplocation" "swapsize" "partitionsize" "swtext" "multipleswap"
 	[ -f /jffs/scripts/post-mount ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
-	if [ "$(wc -l < /proc/swaps)" -eq "2" ]; then
+	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
 		if [ -f "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
 			if grep -qE "^swapon $swaplocation" /jffs/scripts/post-mount; then
 				swapsize=$(du -h "$swaplocation" | awk '{print $1}')
@@ -2489,9 +2524,6 @@ show_amtm(){
 
 	[ "$ss" ] || [ "$atii" ] && echo
 
-	# su check for script updates
-	[ "$ii" ] && printf "${GREEN_BG} su${NC} %-9s%s\\n" "check" "for script updates"
-
 	# i show available scripts to install
 	if [ "$ss" ]; then
 		printf "${GREEN_BG} i ${NC} %-9s%s\\n" "hide" "inactive scripts or tools"
@@ -2499,25 +2531,49 @@ show_amtm(){
 		printf "${GREEN_BG} i ${NC} %-9s%s\\n" "install" "scripts or tools"
 	fi
 
+	# u check for updates
+	printf "${GREEN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
+
 	# amtm menu
 	echo
 	echo "    amtm options"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG}r${NC}emove"  || thisopt="${GREEN_BG}i${NC}nstall"
-	if [ "$su" = "1" ]; then
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG} r ${NC} remove"  || thisopt="${GREEN_BG} i ${NC} install"
+	if [ "$su" = 1 ]; then
 		update_amtm
-		printf "${GREEN_BG} e ${NC} exit     ${GREEN_BG} u ${NC} update $thisScript v$version %${ACORR}s\\n" " $thisrem"
+		printf "${GREEN_BG} e ${NC} %-9s%-21s%${ACORR}s\\n" "exit" "amtm          v$version" " $thisrem"
 	else
-		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG}t${NC}heme  ${GREEN_BG}u${NC}pdate  $thisopt  ${GREEN_BG}a${NC}bout"
+		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG} t ${NC} theme  $thisopt  ${GREEN_BG} a ${NC} about"
 	fi
 
 	# The notification area. $1 can be passed on as positional parameter
 	[ "$ss" ] && ssi=1 || ssi=
 	unset "ss" "ii" "atii" "upd"
-	if [ "$su" = "1" ]; then
+	if [ "$su" = 1 ]; then
 		su=
-		[ "$suUpd" = "1" ] && set -- " Script update(s) are available!" || set -- " All scripts are up to date"
+		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+			if [ "$amtmUpd" -gt 0 ]; then
+				print_end_line
+				if [ "$suUpd" = 1 ]; then
+					printf " Script update(s) are available!\\n"
+					print_end_line
+				fi
+				amtmUpdText="updated from v$version to v$amtmRemotever"
+				[ "$amtmUpd" = 1 ] && echo " $thisScript $amtmRemotever is now available!"
+				if [ "$amtmUpd" = 2 ]; then
+					echo " A minor $thisScript update is available!"
+					amtmUpdText="minor version update applied"
+				fi
+				echo " Do you want to update $thisScript now?"
+				continue_dialog
+				curl -fsL --retry 3 "$amtmRemoteurl" -o "$0" && exec "$0" " $thisScript $amtmUpdText"
+			else
+				set -- " Script update(s) are available!"
+			fi
+		else
+			set -- " All scripts are up to date"
+		fi
 	fi
-	if [ "$1" = "menu" ]; then
+	if [ "$1" = menu ]; then
 		print_end_line
 	else
 		print_end_line
@@ -2533,26 +2589,27 @@ show_amtm(){
 			3)			case_3;break;;
 			4)			case_4;break;;
 			5)			case_5;break;;
-			j1)			case_j1;break;;
-			j2)			case_j2;break;;
-			j3)			case_j3;break;;
-			j4)			case_j4;break;;
-			j5)			case_j5;break;;
+			[Jj]1)		case_j1;break;;
+			[Jj]2)		case_j2;break;;
+			[Jj]3)		case_j3;break;;
+			[Jj]4)		case_j4;break;;
+			[Jj]5)		case_j5;break;;
+			[Jj]6)		case_j6;break;;
 			[Ii])		[ "$ssi" ] && ss= || ss=1
 						show_amtm menu;break;;
-			di)			case_di;break;;
-			ew)			case_ew;break;;
-			ps)			case_ps;break;;
-			[Ss][Uu])	su=1;suUpd=0;show_amtm menu;break;;
+			[Dd][Ii])	case_di;break;;
+			[Ee][Pp])	case_ep;break;;
+			[Pp][Ss])	case_ps;break;;
+			[Uu])		su=1;suUpd=0;show_amtm menu;break;;
 			[Dd][Cc])	case_dc;break;;
-			dcl)		disk_check log
+			dcl|DCL)	disk_check log
 						show_amtm menu;break;;
 			[Ff][Dd])	case_fd;break;;
-			fdl)		format_disk_log;break;;
-			rs)			case_rs;break;;
+			fdl|FDL)	format_disk_log;break;;
+			[Rr][Ss])	case_rs;break;;
 			swap|swp|sw)case_swp;break;;
 		[Tt]|[Cc][Tt])	theme_amtm;break;;
-			[Uu])		update_amtm;break;;
+			[Uu][Uu])	update_amtm;break;;
 			[Rr])		remove_amtm;break;;
 			[Aa])		about_amtm;break;;
 			[Ee])		clear
@@ -2580,14 +2637,14 @@ if [ ! -f "/jffs/scripts/$thisScript" ]; then
 	install_amtm
 elif ! cmp -s "$0" "/jffs/scripts/$thisScript"; then
 	cp -f "$0" /jffs/scripts/$thisScript
-	[ ! -x "/jffs/scripts/$thisScript" ] && chmod 0755 /jffs/scripts/$thisScript
+	[ ! -x "/jffs/scripts/$thisScript" ] && chmod 0755 "/jffs/scripts/$thisScript"
 	if [ "$0" = "/jffs/scripts/$thisScript" ]; then
 		subshell=
 	else
 		subshell="exec"
 		rm -f "$0"
 	fi
-	"$subshell" /jffs/scripts/$thisScript " $thisScript auto-update applied (v$version)"
+	"$subshell" "/jffs/scripts/$thisScript" " $thisScript auto-update applied (v$version)"
 elif [ -z "$1" ]; then
 	show_amtm menu
 else
