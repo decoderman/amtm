@@ -11,7 +11,7 @@ Enter this into your favorite SSH terminal:
 /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
 ```
 
-[![amtm v2.5](https://i.imgur.com/4HRB57M.png "amtm v2.5")](https://i.imgur.com/4HRB57M.png "amtm v2.5")
+[![amtm v2.6](https://i.imgur.com/XjTVUD5.png "amtm v2.6")](https://i.imgur.com/XjTVUD5.png "amtm v2.6")
 
 ### Supported scripts
 

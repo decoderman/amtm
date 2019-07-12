@@ -16,8 +16,8 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-version=2.5
-release="June 21 2019"
+version=2.6
+release="July 13 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.4
@@ -29,6 +29,7 @@ ascii_logo(){
 	echo " ( ( | | | | | |__| | | |"
 	echo "  \_||_|_|_|_|\___)_|_|_|"
 	echo
+	echo " $1"
 }
 
 about_amtm(){
@@ -62,6 +63,874 @@ about_amtm(){
 	show_amtm menu
 }
 
+show_amtm(){
+	[ -f /jffs/.amtm_theme ] &&	. /jffs/.amtm_theme
+	divconf=/opt/share/diversion/.conf/diversion.conf
+	if [ -s "$divconf" ]; then
+		[ ! -f /jffs/.amtm_theme ] && theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
+		divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
+		divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
+		[ "$divMver" ] && divver="${divver}.$divMver" || divver=$divver
+	fi
+	[ -z "$theme" ] && theme_amtm select
+	theme_$theme
+
+	if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
+		ln -s /jffs/scripts/$thisScript /opt/bin
+		[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
+	fi
+	clear
+	printf "${RED_BG}%-27s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
+	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
+	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+	echo "${RED_BG} The ${title}   ${NC}"
+	echo
+
+	# SNBForum scripts follow
+
+	# 1 Diversion menu
+	scriptloc=/opt/bin/diversion
+	if [ -f "$scriptloc" ]; then
+		case "$release" in
+			*XX*) 	remoteurl="http://diversion.test/diversion";;
+			*) 		remoteurl="https://diversion.ch/diversion";;
+		esac
+		ii=1
+		localver="v$divver"
+		upd="${ERR_BG}${NC}$localver"
+		if [ "$su" = 1 ]; then
+			if curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
+				remotever="$(curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
+				S_VERSION=$(echo $remotever | awk '{print $1}')
+				S_M_VERSION=$(echo $remotever | awk '{print $2}')
+				[ "$S_M_VERSION" ] && remotever="v${S_VERSION}.$S_M_VERSION" || remotever="v$S_VERSION"
+				upd="${ERR_BG}no upd${NC}"
+				if [ "$localver" != "$remotever" ]; then
+					upd="${GREEN_BG}-> $remotever${NC}"
+					suUpd=1
+				else
+					localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
+					remotemd5="$(curl -fsLN --retry 3 "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
+					if [ "$localmd5" != "$remotemd5" ]; then
+						upd="${GREEN_BG}-> min upd${NC}"
+						suUpd=1
+					fi
+				fi
+			else
+				upd=" ${ERR_BG}upd err${NC}"
+			fi
+		else
+			localver=
+		fi
+		printf "${GREEN_BG} 1 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Diversion     $localver" " $upd"
+		case_1(){
+			/opt/bin/diversion
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} 1 ${NC} %-9s%s\\n" "install" "Diversion - the Router Adblocker"
+		case_1(){
+			print_end_line
+			echo " This installs Diversion, the Router Adblocker."
+			echo
+			echo " Author: thelonelycoder"
+			echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
+			continue_dialog
+			case "$release" in
+				*XX*) 	remoteurl="http://diversion.test/install";;
+				*) 		remoteurl="https://diversion.ch/install";;
+			esac
+			curl -Os "$remoteurl" && sh install
+			sleep 2
+			if [ -f /opt/bin/diversion ]; then
+				show_amtm " Diversion installed"
+			else
+				show_amtm " Diversion installation failed"
+			fi
+		}
+	fi
+
+	# 2 Skynet menu
+	scriptloc=/jffs/scripts/firewall
+	if [ -f "$scriptloc" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
+		scriptname=Skynet
+		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
+		localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
+		remoteVother="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+		grepcheck=Adamm
+		script_check
+		localVother=
+		remoteVother=
+		printf "${GREEN_BG} 2 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Skynet        $localver" " $upd"
+		case_2(){
+			/jffs/scripts/firewall
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} 2 ${NC} %-9s%s\\n" "install" "Skynet - the Router Firewall"
+		case_2(){
+			print_end_line
+			echo " This installs Skynet on your router."
+			echo
+			echo " Author: Adamm"
+			echo " https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/"
+			continue_dialog
+
+			if ! ipset -v | grep -qF "v6"; then
+				show_amtm " Skynet install failed,\\n IPSet version on router not supported:\\n\\n$(ipset -v | sed -e 's/^/ /')"
+			fi
+
+			curl --retry 3 "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
+			sleep 2
+			if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
+				show_amtm " Skynet installed"
+			else
+				show_amtm " Skynet installation failed"
+			fi
+		}
+	fi
+
+	# 3 Stubby-Installer-Asuswrt-Merlin menu (deprecated)
+	scriptloc=/jffs/scripts/install_stubby.sh
+	if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
+		scriptname='Stubby DNS'
+		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
+		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
+		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
+		grepcheck=Xentrk
+		script_check
+		localVother=
+		remoteVother=
+		printf "${GREEN_BG} 3 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Stubby DNS    $localver" " $upd"
+		case_3(){
+			/jffs/scripts/install_stubby.sh
+			sleep 2
+			show_amtm menu
+		}
+	elif [ -z "$(nvram get rc_support | tr ' ' '\n' | grep dnspriv)" ] && [ -z "$(nvram get rc_support | tr ' ' '\n' | grep stubby)" ]; then
+		[ "$ss" ] && printf "${ERR_BG} 3 ${NC} %-9s%s\\n" "install" "Stubby - DNS Privacy Daemon"
+		case_3(){
+			print_end_line
+			echo " This installs Stubby DNS Privacy Daemon"
+			echo " on your router."
+			echo
+			echo " Authors: Xentrk, Adamm"
+			echo " https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/"
+			continue_dialog
+
+			if [ -d "/jffs/dnscrypt" ] || [ -f /opt/sbin/dnscrypt-proxy ]; then
+				show_amtm " Stubby DNS install failed. It is not\\n compatible with dnscrypt installer which\\n is installed on this router"
+			fi
+
+			curl --retry 3 "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
+			sleep 2
+			if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
+				show_amtm " Stubby DNS installed"
+			else
+				show_amtm " Stubby DNS installation failed"
+			fi
+		}
+	else
+		case_3(){
+			show_amtm " Stubby DNS is not available to install. This\\n router supports native DoT, use that instead"
+		}
+	fi
+
+	[ "$upd" ] || [ "$ss" ] && echo
+	upd=
+
+	# 4 YazFi menu
+	scriptloc=/jffs/scripts/YazFi
+	if [ -f "$scriptloc" ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
+		scriptname=YazFi
+		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
+		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} 4 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "YazFi         $localver" " $upd"
+		case_4(){
+			/jffs/scripts/YazFi
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "YazFi - enhanced guest WiFi"
+		case_4(){
+			print_end_line
+			echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/"
+			continue_dialog
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
+			sleep 2
+			if [ -f /jffs/scripts/YazFi ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
+				show_amtm " YazFi installed"
+			else
+				show_amtm " YazFi installation failed"
+			fi
+		}
+	fi
+
+	# 5 scribe menu
+	scriptloc=/jffs/scripts/scribe
+	if [ -f "$scriptloc" ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+		scriptname=scribe
+		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
+		scriptgrep='scribe_ver='
+		grepcheck=cynicastic
+		script_check
+		printf "${GREEN_BG} 5 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "scribe        $localver" " $upd"
+		case_5(){
+			/jffs/scripts/scribe
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} 5 ${NC} %-9s%s\\n" "install" "scribe - syslog-ng and logrotate"
+		case_5(){
+			print_end_line
+			echo " This installs scribe - syslog-ng and logrotate installer"
+			echo " on your router."
+			echo
+			echo " Author: cmkelley"
+			echo " https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/"
+			continue_dialog
+			curl --retry 3 "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
+			sleep 2
+			if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+				show_amtm " scribe installed"
+			else
+				show_amtm " scribe installation failed"
+			fi
+		}
+	fi
+
+	[ "$upd" ] || [ "$ss" ] && echo
+	upd=
+
+	# j1 connmon menu
+	scriptloc=/jffs/scripts/connmon
+	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
+		scriptname=connmon
+		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
+		scriptgrep='SCRIPT_VERSION=\|CONNMON_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j1${NC} %-9s%-21s%${ACORR}s\\n" "open" "connmon       $localver" " $upd"
+		case_j1(){
+			/jffs/scripts/connmon
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j1${NC} %-9s%s\\n" "install" "connmon - Internet uptime monitor"
+		case_j1(){
+			print_end_line
+			echo " This installs connmon- Internet connection monitoring"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh" -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
+			sleep 2
+			if [ -f /jffs/scripts/connmon ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
+				show_amtm " connmon installed"
+			else
+				show_amtm " connmon installation failed"
+			fi
+		}
+	fi
+
+	# j2 ntpMerlin menu
+	scriptloc=/jffs/scripts/ntpmerlin
+	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+		scriptname=ntpMerlin
+		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
+		scriptgrep='SCRIPT_VERSION=\|NTPD_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j2${NC} %-9s%-21s%${ACORR}s\\n" "open" "ntpMerlin     $localver" " $upd"
+		case_j2(){
+			/jffs/scripts/ntpmerlin
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j2${NC} %-9s%s\\n" "install" "ntpMerlin - NTP Daemon"
+		case_j2(){
+			print_end_line
+			echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh" -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
+			sleep 2
+			if [ -f /jffs/scripts/ntpmerlin ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+				show_amtm " ntpMerlin installed"
+			else
+				show_amtm " ntpMerlin installation failed"
+			fi
+		}
+	fi
+
+	# j3 scMerlin menu
+	scriptloc=/jffs/scripts/scmerlin
+	if [ -f "$scriptloc" ]; then
+		scriptname=scMerlin
+		remoteurl="https://raw.githubusercontent.com/jackyaz/scMerlin/master/scmerlin.sh"
+		scriptgrep='SCRIPT_VERSION=\|SCM_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j3${NC} %-9s%-21s%${ACORR}s\\n" "open" "scMerlin      $localver" " $upd"
+		case_j3(){
+			/jffs/scripts/scmerlin
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j3${NC} %-9s%s\\n" "install" "scMerlin - Quick access control"
+		case_j3(){
+			print_end_line
+			echo " This installs scMerlin - service and script control menu for AsusWRT-Merlin"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/scmerlin-service-and-script-control-menu-for-asuswrt-merlin.56277/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/scmerlin/master/scmerlin.sh" -o "/jffs/scripts/scmerlin" && chmod 0755 /jffs/scripts/scmerlin && /jffs/scripts/scmerlin install
+			sleep 2
+			if [ -f /jffs/scripts/scmerlin ]; then
+				show_amtm " scMerlin installed"
+			else
+				show_amtm " scMerlin installation failed"
+			fi
+		}
+	fi
+
+	[ "$ss" ] && echo
+
+	# j4 spdMerlin menu
+	scriptloc=/jffs/scripts/spdmerlin
+	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+		scriptname=spdMerlin
+		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
+		scriptgrep='SCRIPT_VERSION=\|SPD_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j4${NC} %-9s%-21s%${ACORR}s\\n" "open" "spdMerlin     $localver" " $upd"
+		case_j4(){
+			/jffs/scripts/spdmerlin
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j4${NC} %-9s%s\\n" "install" "spdMerlin - Automatic speedtest"
+		case_j4(){
+			print_end_line
+			echo " This installs spdMerlin - Automatic speedtest for AsusWRT Merlin - with graphs"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/spdmerlin-automated-speedtests-with-graphs.55904/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh" -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
+			sleep 2
+			if [ -f /jffs/scripts/spdmerlin ]; then
+				show_amtm " spdMerlin installed"
+			else
+				show_amtm " spdMerlin installation failed"
+			fi
+		}
+	fi
+
+	# j5 uiDivStats menu
+	scriptloc=/jffs/scripts/uiDivStats
+	if [ -f "$scriptloc" ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
+		scriptname=uiDivStats
+		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
+		scriptgrep='SCRIPT_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j5${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiDivStats    $localver" " $upd"
+		case_j5(){
+			/jffs/scripts/uiDivStats
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j5${NC} %-9s%s\\n" "install" "uiDivStats - Diversion WebUI stats"
+		case_j5(){
+			print_end_line
+			echo " This installs uiDivStats - WebUI for Diversion statistics"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/"
+			continue_dialog
+
+			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
+			sleep 2
+			if [ -f /jffs/scripts/uiDivStats ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
+				show_amtm " uiDivStats installed"
+			else
+				show_amtm " uiDivStats installation failed"
+			fi
+		}
+	fi
+
+	# j6 uiScribe menu
+	scriptloc=/jffs/scripts/uiScribe
+	if [ -f "$scriptloc" ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
+		scriptname=uiScribe
+		remoteurl="https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh"
+		scriptgrep='SCRIPT_VERSION='
+		grepcheck=jackyaz
+		script_check
+		printf "${GREEN_BG} j6${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiScribe      $localver" " $upd"
+		case_j6(){
+			/jffs/scripts/uiScribe
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} j6${NC} %-9s%s\\n" "install" "uiScribe - WebUI for scribe logs"
+		case_j6(){
+			print_end_line
+			echo " This installs uiScribe - Custom System Log page for Scribe"
+			echo " on your router."
+			echo
+			echo " Author: Jack Yaz"
+			echo " https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/"
+			continue_dialog
+
+			if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+				curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh" -o "/jffs/scripts/uiScribe" && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
+				sleep 2
+				if [ -f /jffs/scripts/uiScribe ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
+					show_amtm " uiScribe installed"
+				else
+					show_amtm " uiScribe installation failed"
+				fi
+			else
+				show_amtm " uiScribe installation failed, scribe missing"
+			fi
+		}
+	fi
+
+	[ "$upd" ] || [ "$ss" ] && echo
+	upd=
+	if [ "$tpu" ]; then
+		[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
+		exit 0
+	fi
+	# di dnscrypt installer menu (deprecated)
+	if [ -d /jffs/dnscrypt ]; then
+		upd=" "
+		printf "${GREEN_BG} di${NC} %-9s%s\\n" "open" "dnscrypt installer"
+		case_di(){
+			printf "\\n dnscrypt installer menu:\\n\\n"
+			curl -L -s -k -O https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer && sh installer ; rm installer
+			show_amtm menu
+		}
+	else
+		case_di(){
+			show_amtm " dnscrypt installer is deprecated and no\\n longer available for install"
+		}
+	fi
+
+	# ep Entware packages menu
+	if [ -f /opt/bin/opkg ]; then
+		upd=" "
+		printf "${GREEN_BG} ep${NC} %-9s%s\\n" "update" "Entware packages"
+		case_ep(){
+			print_end_line
+			echo " This updates and upgrades Entware packages"
+			if [ -f /opt/bin/diversion ]; then
+				echo
+				echo " Note: Diversion is installed on this router."
+				echo " It's recommended to update Entware packages"
+				echo " in Diversion using the ${RED_BG} ep ${NC} option."
+				echo " Especially so when pixelserv-tls is installed."
+			fi
+			if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
+				echo
+				echo " Note: Stubby DNS Privacy Daemon is installed"
+				echo " on this router."
+				echo " It's recommended to update Entware packages"
+				echo " selectively through the Stubby DNS menu to"
+				echo " prevent overwriting configuration files."
+			fi
+			continue_dialog
+			opkg update
+			opkg upgrade
+			show_amtm " Entware packages updated and upgraded"
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} ep${NC} %-9s%s\\n" "install" "Entware - Software repository"
+		case_ep(){
+			print_end_line
+			echo " This installs Entware - the ultimate Software repository"
+			echo " on this router."
+			echo " Note: If you plan to install Diversion on"
+			echo " this router, install Diversion first,"
+			echo " it includes the installation of Entware."
+			echo
+			echo " Author: thelonelycoder"
+			continue_dialog
+			install_Entware
+		}
+	fi
+
+	# ps pixelserv-tls menu
+	if [ -f /opt/bin/pixelserv-tls ]; then
+		ii=1
+		if [ -L /opt/bin/pixelserv-tls ]; then
+			beta=" beta"
+			psVersionm=
+			psVersion="$(pixelserv-tls -v | awk 'NR == 1 {print $2}')"
+			[ -z "$psVersion" ] && psVersion="likely v.Kk"
+			case $psVersion in
+			  v*|*v.K*) ;;
+			  * ) psVersion="v$psVersion" ;;
+			esac
+			upd="${ERR_BG}${NC}$psVersion"
+			if [ -z "$(pidof pixelserv-tls)" ]; then
+				upd=
+				psVersionm="$psVersion ${ERR_BG}(not running)${NC}"
+			fi
+			printf "${GREEN_BG} ps${NC} %-9s%-21s%${ACORR}s\\n" "remove" "pixelserv-tls$beta $psVersionm" " $upd"
+			case_ps(){
+				print_end_line
+				echo " This removes the pixelserv-tls beta and"
+				echo " installs the latest release version"
+				echo " available trough Entware."
+				echo
+				echo " No beta versions are available at the moment from its author kvic."
+				echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
+				print_end_line
+				echo
+				echo " 1. Remove pixelserv-tls beta version"
+				while true; do
+					printf "\\n Enter selection [1-1 e=Exit] ";read -r continue
+					case "$continue" in
+						1)		echo
+								opkg --force-reinstall install pixelserv-tls
+								rm -rf /opt/tmp/pixelserv-tls-beta
+								echo
+								echo "pixelserv-tls beta removed, restarting Diversion services"
+								diversion sh-restart
+								echo
+								sleep 1
+								show_amtm " pixelserv-tls beta removed";break;;
+						[Ee])	show_amtm menu;break;;
+						*)		printf "\\n input is not an option\\n";;
+					esac
+				done
+			}
+		elif [ -f /opt/bin/pixelserv-tls ]; then
+			if [ -f /opt/var/cache/pixelserv/router.asus.com ] || [ -f "/opt/var/cache/pixelserv/$(nvram get ddns_hostname_x)" ]; then
+				printf "${GREEN_BG} ps${NC} %-9s%-21s%${ACORR}s\\n" "reissue" "pixelserv-tls CA for WebUI" ""
+			else
+				printf "${GREEN_BG} ps${NC} %-9s%-21s%${ACORR}s\\n" "use" "pixelserv-tls CA for WebUI" ""
+			fi
+
+			case_ps(){
+			print_end_line
+				echo " This (re)runs the pixelserv-tls helper"
+				echo " script to use its CA to issue a certificate"
+				echo " for your routers https (secure) WebUI."
+				echo
+				echo " Author: kvic"
+				echo " https://github.com/kvic-z/pixelserv-tls/wiki/%5BASUSWRT%5D-Use-Pixelserv-CA-to-issue-a-certificate-for-WebGUI"
+				print_end_line
+				echo
+				echo " 1. (Re)run helper script "
+				while true; do
+					printf "\\n Enter selection [1-1 e=Exit] ";read -r continue
+					case "$continue" in
+						1)		echo
+								sh -c "$(wget -qO - https://kazoo.ga/pixelserv-tls/config-webgui.sh)"
+								echo
+								if [ -f /opt/var/cache/pixelserv/router.asus.com ] || [ -f "/opt/var/cache/pixelserv/$(nvram get ddns_hostname_x)" ]; then
+									show_amtm " pixelserv-tls CA for WebUI (re)issued "
+								else
+									show_amtm " Failed to issue pixelserv-tls CA for WebUI"
+								fi
+								break;;
+						[Ee])	show_amtm menu;break;;
+						*)		printf "\\n input is not an option\\n";;
+					esac
+				done
+			}
+
+
+		fi
+	else
+		case_ps(){
+			show_amtm " No pixelserv-tls beta versions are available\\n at the moment from its author kvic"
+		}
+	fi
+
+	# amtm tools follow
+	[ "$upd" ] || [ "$ss" ] && echo
+	upd=
+
+	# Disk check
+	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
+		atii=1
+		case_dc(){
+			disk_check remove
+			show_amtm menu
+		}
+		if ! grep -qE "VERSION=$dc_version" /jffs/scripts/disk-check; then
+			write_dc_file
+			dctext=" Disk check script auto-updated to v$dc_version"
+			if [ -z "$1" ] || [ "$1" = "menu" ]; then
+				set -- "$dctext"
+			else
+				set -- "$1\\n\\n$dctext"
+			fi
+		fi
+		[ -f /jffs/amtm-disk-check.log ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
+		printf "${GREEN_BG} dc${NC} %-9s%-19s%${ACORR}s\\n" "remove" "Disk check script" " $dcltext"
+
+	else
+		[ "$ss" ] && printf "${ERR_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
+		case_dc(){
+			print_end_line
+			echo " This installs /jffs/scripts/disk-check."
+			echo " It runs a filesystem check on compatible"
+			echo " USB storage devices before they are mounted."
+			echo
+			echo " Authors: ColinTaylor, thelonelycoder, latenitetech"
+			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)"
+			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
+			continue_dialog
+			disk_check install
+			show_amtm " Disk check script installed.\\n The check log can be viewed directly\\n in amtm with dcl"
+		}
+	fi
+
+	# Format disk
+	if [ -f /jffs/amtm-format-disk.log ]; then
+		atii=1
+		printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GREEN_BG}fdl${NC} show log"
+	else
+		[ "$ss" ] && printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
+	fi
+
+	case_fd(){
+		print_end_line
+		echo " This (re)formats your plugged in USB storage"
+		echo " device with up to three partitions."
+		echo " The process erases all data and partitions"
+		echo " on the device."
+		echo " After formatting, the router will reboot."
+		echo
+		echo " To be on the safe side, remove all other"
+		echo " attached USB devices before continuing."
+		echo
+		echo " Authors: ColinTaylor, thelonelycoder, Zonkd"
+		echo " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
+		echo " https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723"
+		continue_dialog
+		format_disk
+	}
+
+	# rs Reboot scheduler
+	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+		atii=1
+		rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//')
+		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
+		printf "${GREEN_BG} rs${NC} %-9s%s\\n" "remove" "Reboot scheduler ${GREEN_BG}${rstext}${NC}"
+
+		case_rs(){
+			reboot_scheduler remove
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
+
+		case_rs(){
+			print_end_line
+			echo " This enables the reboot scheduler for your"
+			echo " router."
+			echo " The scheduler is set with a cron job via"
+			echo " init-start, as opposed to the WebUI setting"
+			echo " which uses an internal mechanism to reboot."
+			echo
+			echo " Author: thelonelycoder"
+			continue_dialog
+			reboot_scheduler install
+		}
+	fi
+
+	# sw/swp/swap Swap file
+	unset "swaplocation" "swapsize" "partitionsize" "swtext" "multipleswap"
+	[ -f /jffs/scripts/post-mount ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
+	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
+		if [ -f "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
+			if grep -qE "^swapon $swaplocation" /jffs/scripts/post-mount; then
+				swapsize=$(du -h "$swaplocation" | awk '{print $1}')
+			else
+				check_swap
+			fi
+		else
+			check_swap
+		fi
+	else
+		check_swap
+	fi
+	if [ "$swtext" ] && ! grep -q 'do-not-check-swap' /jffs/scripts/post-mount; then
+		if [ -z "$1" ] || [ "$1" = "menu" ]; then
+			set -- "$swtext"
+		else
+			set -- "$1\\n\\n$swtext"
+		fi
+	fi
+	if [ -f "$swaplocation" ]; then
+		atii=1
+		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC} $swapsize\\n" "manage" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
+		case_swp(){
+			manage_swap delete
+		}
+	elif [ "$swaplocation" ] && [ "$partitionsize" ]; then
+		atii=1
+		printf "${GREEN_BG}   ${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "Swap" "Partition" "${GREEN_BG}$swaplocation${NC} ${partitionsize}M"
+		case_swp(){
+			show_amtm " $thisScript does not manage swap partitions"
+		}
+	elif [ "$multipleswap" ]; then
+		atii=1
+		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap files"
+		case_swp(){
+			manage_swap multidelete
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
+		case_swp(){
+			manage_swap create
+		}
+	fi
+
+	[ "$ss" ] || [ "$atii" ] && echo
+
+	# i show available scripts to install
+	if [ "$ss" ]; then
+		printf "${GREEN_BG} i ${NC} %-9s%s\\n" "hide" "inactive scripts or tools"
+	else
+		printf "${GREEN_BG} i ${NC} %-9s%s\\n" "install" "scripts or tools"
+	fi
+
+	# u check for updates
+	printf "${GREEN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
+
+	# amtm menu
+	echo
+	echo "    amtm options"
+	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG} r ${NC} remove"  || thisopt="${GREEN_BG} i ${NC} install"
+	if [ "$su" = 1 ]; then
+		update_amtm
+		printf "${GREEN_BG} e ${NC} %-9s%-21s%${ACORR}s\\n" "exit" "amtm          v$version" " $thisrem"
+	else
+		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG} t ${NC} theme  $thisopt  ${GREEN_BG} a ${NC} about"
+	fi
+	# The notification area. $1 can be passed on as positional parameter
+	[ "$ss" ] && ssi=1 || ssi=
+	unset "ss" "ii" "atii" "upd"
+	if [ "$su" = 1 ]; then
+		su=
+		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+			if [ "$amtmUpd" -gt 0 ]; then
+				print_end_line
+				if [ "$suUpd" = 1 ]; then
+					printf " Script update(s) available!\\n"
+					print_end_line
+				fi
+				amtmUpdText="updated from v$version to v$amtmRemotever"
+				[ "$amtmUpd" = 1 ] && echo " $thisScript $amtmRemotever is now available!"
+				if [ "$amtmUpd" = 2 ]; then
+					echo " A minor $thisScript update is available!"
+					amtmUpdText="minor version update applied"
+				fi
+				echo " Do you want to update $thisScript now?"
+				continue_dialog
+				curl -fsL --retry 3 "$amtmRemoteurl" -o "$0" && exec "$0" " $thisScript $amtmUpdText"
+			else
+				set -- " Script update(s) available!"
+			fi
+		else
+			set -- " All scripts are up to date"
+		fi
+	fi
+	if [ "$1" = menu ]; then
+		print_end_line
+	else
+		print_end_line
+		printf "$1\\n"
+		print_end_line
+	fi
+
+	while true; do
+		printf "${RED_BG} Enter option ${NC} ";read -r selection
+		case "$selection" in
+			1)				case_1;break;;
+			2)				case_2;break;;
+			3)				case_3;break;;
+			4)				case_4;break;;
+			5)				case_5;break;;
+			[Jj]1)			case_j1;break;;
+			[Jj]2)			case_j2;break;;
+			[Jj]3)			case_j3;break;;
+			[Jj]4)			case_j4;break;;
+			[Jj]5)			case_j5;break;;
+			[Jj]6)			case_j6;break;;
+			[Ii])			[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
+			[Dd][Ii])		case_di;break;;
+			[Ee][Pp])		case_ep;break;;
+			[Pp][Ss])		case_ps;break;;
+			[Uu])			su=1;suUpd=0;show_amtm menu;break;;
+			[Dd][Cc])		case_dc;break;;
+			dcl|DCL)		disk_check log;show_amtm menu;break;;
+			[Ff][Dd])		case_fd;break;;
+			fdl|FDL)		format_disk_log;break;;
+			[Rr][Ss])		case_rs;break;;
+			swap|swp|sw)	case_swp;break;;
+			[Tt]|[Cc][Tt])	theme_amtm;break;;
+			[Uu][Uu])		update_amtm;break;; 	# hidden dev option
+			[Rr])			remove_amtm;break;;
+			[Aa])			about_amtm;break;;
+			[Ee])			clear
+							ascii_logo '  Goodbye'
+							echo
+							exit 0;break;;
+			11)				exec "$0";break;; 		# hidden dev option
+			reboot)			print_end_line 			# hidden, reboot router
+							echo " OK then, rebooting this router, are you sure?"
+							continue_dialog
+							clear
+							ascii_logo '  See ya!'
+							echo
+							printf " $thisScript reboots this router now\\n\\n"
+							sleep 1
+							service reboot >/dev/null 2>&1 &
+							exit 0
+							break;;
+			*)				printf "\\n               input is not an option\\n\\n";;
+		esac
+	done
+}
+
 check_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
 check_jffs_scripts(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then check_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; dos_to_unix "$1"; check_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 continue_dialog(){ print_end_line;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
@@ -83,12 +952,13 @@ theme_basic(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN=;GREEN_BG=;GRAY='[90m';NC
 install_amtm(){
 	clear
 	theme_standard
-	ascii_logo
-	echo " Do you want to install $thisScript,"
-	echo " the $title?"
+	ascii_logo "This is $thisScript $version    coded by thelonelycoder"
+	print_end_line
+	echo " Welcome to $thisScript,"
+	echo " the $title"
 	print_end_line
 	while true; do
-		printf " Continue? [1=Yes e=Exit] ";read -r continue
+		printf " Install amtm now? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)		if [ -z "$(which dos2unix)" ]; then
 						echo
@@ -116,12 +986,15 @@ install_amtm(){
 					else
 						mkdir -p /jffs/scripts
 						if [ "$(nvram get jffs2_scripts)" != 1 ]; then
+							echo
+							echo " JFFS custom scripts and configs were enabled"
+							echo
 							nvram set jffs2_scripts=1
 							nvram commit
 						fi
 						[ ! -f "/jffs/scripts/$thisScript" ] && cp "$0" /jffs/scripts/$thisScript
 						[ ! -x "/jffs/scripts/$thisScript" ] && chmod 0755 /jffs/scripts/$thisScript
-						message="/jffs/scripts/$thisScript"
+						message="${GREEN_BG} /jffs/scripts/$thisScript ${NC}\\n\\n or simply with:\\n ${GREEN_BG} $thisScript ${NC}"
 
 						if [ -L "/opt/bin/$thisScript" ]; then
 							rm -f "/opt/bin/$thisScript"
@@ -129,7 +1002,6 @@ install_amtm(){
 						if [ -d /opt/bin ] && [ ! -L "/opt/bin/$thisScript" ]; then
 							ln -s /jffs/scripts/$thisScript /opt/bin
 							[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
-							message="/jffs/scripts/$thisScript\\n\\n or simply with:\\n $thisScript"
 						fi
 						[ ! -f /opt/share/diversion/.conf/diversion.conf ] && [ ! -f /jffs/.amtm_theme ] && theme_amtm new
 						add_profile_add
@@ -139,10 +1011,11 @@ install_amtm(){
 							subshell="exec"
 							rm -f "$0"
 						fi
-						"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n You can start $thisScript with:\\n $message"
+						"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n Start $thisScript with:\\n $message"
 					fi
 					break;;
-			[Ee])	rm -f "$0";echo;exit 0;break;;
+			[Ee])	clear;ascii_logo "  Goodbye"
+					rm -f "$0";echo;exit 0;break;;
 			*)		printf "\\n input is not an option\\n\\n";;
 		esac
 	done
@@ -191,15 +1064,18 @@ remove_amtm(){
 	rm -f /opt/bin/$thisScript
 	rm -f /jffs/scripts/$thisScript
 	rm -f "$0"
-	echo " $thisScript completely removed"
+	clear
+	ascii_logo '  See ya!'
+	echo
+	echo "   $thisScript completely removed"
 	echo
 	exit 0
 }
 
 update_amtm(){
 	case "$release" in
-		*XX*) 	amtmRemoteurl="http://diversion.test/scripts/amtm";;
-		*) 		amtmRemoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
+		*XX*)	amtmRemoteurl="http://diversion.test/scripts/amtm";;
+		*)		amtmRemoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
 	esac
 	curl -fsNL --retry 3 "$amtmRemoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
 	amtmRemotever="$(curl -fsNL --retry 3 "$amtmRemoteurl" | grep "^version=" | sed -e 's/version=//')"
@@ -347,15 +1223,17 @@ theme_amtm(){
 
 check_swap(){
 	writeswaploc(){
-		sed -i '\~swapon ~d' /jffs/scripts/post-mount
-		check_jffs_scripts /jffs/scripts/post-mount
-		sed -i "2i swapon $swaplocation # Added by $thisScript" /jffs/scripts/post-mount
-		swapon "$swaplocation" 2> /dev/null
-		swapsize=$(du -h "$swaplocation" | awk '{print $1}')
+		if ! grep -q 'do-not-check-swap' /jffs/scripts/post-mount 2> /dev/null; then
+			[ -f /jffs/scripts/post-mount ] && sed -i '\~swapon ~d' /jffs/scripts/post-mount
+			check_jffs_scripts /jffs/scripts/post-mount
+			sed -i "2i swapon $swaplocation # Added by $thisScript" /jffs/scripts/post-mount
+			swapon "$swaplocation" 2> /dev/null
+			swapsize=$(du -h "$swaplocation" | awk '{print $1}')
+		fi
 	}
 
 	remove_swap_entries(){
-		if grep -q 'swapon.*\.' /jffs/scripts/post-mount; then
+		if grep -q 'swapon.*\.' /jffs/scripts/post-mount && ! grep -q 'do-not-check-swap' /jffs/scripts/post-mount; then
 			sed -i '\~swapon ~d' /jffs/scripts/post-mount
 			swtext=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
 		fi
@@ -421,6 +1299,12 @@ check_swap(){
 }
 
 manage_swap(){
+	if grep -q 'do-not-check-swap' /jffs/scripts/post-mount; then
+		print_end_line
+		echo " Found \"do-not-check-swap\" entry in"
+		echo " /jffs/scripts/post-mount. Diversion and amtm"
+		echo " will not auto-correct paths."
+	fi
 	if [ "$1" = create ]; then
 		print_end_line
 		echo " This creates a Swap file."
@@ -1789,14 +2673,22 @@ script_check(){
 		if curl -fsLN --retry 3 "$remoteurl" | grep -qF "$grepcheck"; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 			upd="${ERR_BG}no upd${NC}"
-			if [ "$localver" != "$remotever" ]; then
+			bareLocalver=$(echo $localver | sed 's/[^0-9]*//g')
+			bareRemotever=$(echo $remotever | sed 's/[^0-9]*//g')
+			if [ "$bareLocalver" -gt "$bareRemotever" ]; then
+				upd="${ERR_BG}<- $remotever${NC}"
+				[ "$tpu" ] && echo "- $scriptname $localver <- $remotever <br>" >>/tmp/amtm-tpu-check
+				suUpd=1
+			elif [ "$bareLocalver" -lt "$bareRemotever" ]; then
 				upd="${GREEN_BG}-> $remotever${NC}"
+				[ "$tpu" ] && echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
 			else
 				localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 				remotemd5="$(curl -fsLN --retry 3 "$remoteurl" | md5sum | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
 					upd="${GREEN_BG}-> min upd${NC}"
+					[ "$tpu" ] && echo "- $scriptname $localver minor update available <br>" >>/tmp/amtm-tpu-check
 					suUpd=1
 				fi
 			fi
@@ -1806,830 +2698,6 @@ script_check(){
 	else
 		localver=
 	fi
-}
-
-show_amtm(){
-	[ -f /jffs/.amtm_theme ] &&	. /jffs/.amtm_theme
-	divconf=/opt/share/diversion/.conf/diversion.conf
-	if [ -f "$divconf" ]; then
-		[ ! -f /jffs/.amtm_theme ] && theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
-		divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
-		divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
-		[ "$divMver" ] && divver="${divver}.$divMver" || divver=$divver
-	fi
-	[ -z "$theme" ] && theme_amtm select
-	theme_$theme
-
-	if [ -d "/opt/bin" ] && [ ! -L "/opt/bin/$thisScript" ] && [ -f "/jffs/scripts/$thisScript" ]; then
-		ln -s /jffs/scripts/$thisScript /opt/bin
-		[ ! -x "/opt/bin/$thisScript" ] && chmod 0755 /opt/bin/$thisScript
-		rcotext=" /opt/bin detected!\\n You can now start $thisScript with:\\n $thisScript"
-		if [ -z "$1" ] || [ "$1" = "menu" ]; then
-			set -- "$rcotext"
-		else
-			set -- "$1\\n\\n$rcotext"
-		fi
-	fi
-	clear
-	printf "${RED_BG}%-27s%s\\n" " $thisScript $version" "by thelonelycoder ${NC}"
-	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
-	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
-	echo "${RED_BG} The ${title}   ${NC}"
-	echo
-
-	# SNBForum scripts follow
-
-	# 1 Diversion menu
-	scriptloc=/opt/bin/diversion
-	if [ -f "$scriptloc" ]; then
-		case "$release" in
-			*XX*) 	remoteurl="http://diversion.test/diversion";;
-			*) 		remoteurl="https://diversion.ch/diversion";;
-		esac
-		ii=1
-		localver="v$divver"
-		upd="${ERR_BG}${NC}$localver"
-		if [ "$su" = 1 ]; then
-			if curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
-				remotever="$(curl -fsLN --retry 3 "$remoteurl/diversion.info" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
-				S_VERSION=$(echo $remotever | awk '{print $1}')
-				S_M_VERSION=$(echo $remotever | awk '{print $2}')
-				[ "$S_M_VERSION" ] && remotever="v${S_VERSION}.$S_M_VERSION" || remotever="v$S_VERSION"
-				upd="${ERR_BG}no upd${NC}"
-				if [ "$localver" != "$remotever" ]; then
-					upd="${GREEN_BG}-> $remotever${NC}"
-					suUpd=1
-				else
-					localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
-					remotemd5="$(curl -fsLN --retry 3 "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
-					if [ "$localmd5" != "$remotemd5" ]; then
-						upd="${GREEN_BG}-> min upd${NC}"
-						suUpd=1
-					fi
-				fi
-			else
-				upd=" ${ERR_BG}upd err${NC}"
-			fi
-		else
-			localver=
-		fi
-		printf "${GREEN_BG} 1 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Diversion     $localver" " $upd"
-		case_1(){
-			/opt/bin/diversion
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} 1 ${NC} %-9s%s\\n" "install" "Diversion - the Router Adblocker"
-		case_1(){
-			print_end_line
-			echo " This installs Diversion, the Router Adblocker."
-			echo
-			echo " Author: thelonelycoder"
-			echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
-			continue_dialog
-			case "$release" in
-				*XX*) 	remoteurl="http://diversion.test/install";;
-				*) 		remoteurl="https://diversion.ch/install";;
-			esac
-			curl -Os "$remoteurl" && sh install
-			sleep 2
-			if [ -f /opt/bin/diversion ]; then
-				show_amtm " Diversion installed"
-			else
-				show_amtm " Diversion installation failed"
-			fi
-		}
-	fi
-
-	# 2 Skynet menu
-	scriptloc=/jffs/scripts/firewall
-	if [ -f "$scriptloc" ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
-		localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
-		remoteVother="$(curl -fsLN --retry 3 "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
-		grepcheck=Adamm
-		script_check
-		localVother=
-		remoteVother=
-		printf "${GREEN_BG} 2 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Skynet        $localver" " $upd"
-		case_2(){
-			/jffs/scripts/firewall
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} 2 ${NC} %-9s%s\\n" "install" "Skynet - the Router Firewall"
-		case_2(){
-			print_end_line
-			echo " This installs Skynet on your router."
-			echo
-			echo " Author: Adamm"
-			echo " https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/"
-			continue_dialog
-
-			if ! ipset -v | grep -qF "v6"; then
-				show_amtm " Skynet install failed,\\n IPSet version on router not supported:\\n\\n$(ipset -v | sed -e 's/^/ /')"
-			fi
-
-			curl --retry 3 "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
-			sleep 2
-			if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-				show_amtm " Skynet installed"
-			else
-				show_amtm " Skynet installation failed"
-			fi
-		}
-	fi
-
-	# 3 Stubby-Installer-Asuswrt-Merlin menu (deprecated)
-	scriptloc=/jffs/scripts/install_stubby.sh
-	if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-		localVother="v$(grep "VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
-		remoteurl="https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh"
-		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "VERSION=" | sed -e 's/VERSION=//;s/"//g')"
-		grepcheck=Xentrk
-		script_check
-		localVother=
-		remoteVother=
-		printf "${GREEN_BG} 3 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "Stubby DNS    $localver" " $upd"
-		case_3(){
-			/jffs/scripts/install_stubby.sh
-			sleep 2
-			show_amtm menu
-		}
-	elif [ -z "$(nvram get rc_support | tr ' ' '\n' | grep dnspriv)" ] && [ -z "$(nvram get rc_support | tr ' ' '\n' | grep stubby)" ]; then
-		[ "$ss" ] && printf "${ERR_BG} 3 ${NC} %-9s%s\\n" "install" "Stubby - DNS Privacy Daemon"
-		case_3(){
-			print_end_line
-			echo " This installs Stubby DNS Privacy Daemon"
-			echo " on your router."
-			echo
-			echo " Authors: Xentrk, Adamm"
-			echo " https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/"
-			continue_dialog
-
-			if [ -d "/jffs/dnscrypt" ] || [ -f /opt/sbin/dnscrypt-proxy ]; then
-				show_amtm " Stubby DNS install failed. It is not\\n compatible with dnscrypt installer which\\n is installed on this router"
-			fi
-
-			curl --retry 3 "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
-			sleep 2
-			if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-				show_amtm " Stubby DNS installed"
-			else
-				show_amtm " Stubby DNS installation failed"
-			fi
-		}
-	else
-		case_3(){
-			show_amtm " Stubby DNS is not available to install. This\\n router supports native DoT, use that instead"
-		}
-	fi
-
-	[ "$upd" ] || [ "$ss" ] && echo
-	upd=
-
-	# 4 YazFi menu
-	scriptloc=/jffs/scripts/YazFi
-	if [ -f "$scriptloc" ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
-		scriptgrep='SCRIPT_VERSION=\|YAZFI_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} 4 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "YazFi         $localver" " $upd"
-		case_4(){
-			/jffs/scripts/YazFi
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} 4 ${NC} %-9s%s\\n" "install" "YazFi - enhanced guest WiFi"
-		case_4(){
-			print_end_line
-			echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/"
-			continue_dialog
-			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
-			sleep 2
-			if [ -f /jffs/scripts/YazFi ] && [ -f /jffs/configs/YazFi/YazFi.config ]; then
-				show_amtm " YazFi installed"
-			else
-				show_amtm " YazFi installation failed"
-			fi
-		}
-	fi
-
-	# 5 scribe menu
-	scriptloc=/jffs/scripts/scribe
-	if [ -f "$scriptloc" ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
-		scriptgrep='scribe_ver='
-		grepcheck=cynicastic
-		script_check
-		printf "${GREEN_BG} 5 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "scribe        $localver" " $upd"
-		case_5(){
-			/jffs/scripts/scribe
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} 5 ${NC} %-9s%s\\n" "install" "scribe - syslog-ng and logrotate"
-		case_5(){
-			print_end_line
-			echo " This installs scribe - syslog-ng and logrotate installer"
-			echo " on your router."
-			echo
-			echo " Author: cmkelley"
-			echo " https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/"
-			continue_dialog
-			curl --retry 3 "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
-			sleep 2
-			if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
-				show_amtm " scribe installed"
-			else
-				show_amtm " scribe installation failed"
-			fi
-		}
-	fi
-
-	[ "$upd" ] || [ "$ss" ] && echo
-	upd=
-
-	# j1 connmon menu
-	scriptloc=/jffs/scripts/connmon
-	if [ -f "$scriptloc" ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
-		scriptgrep='SCRIPT_VERSION=\|CONNMON_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} j1${NC} %-9s%-21s%${ACORR}s\\n" "open" "connmon       $localver" " $upd"
-		case_j1(){
-			/jffs/scripts/connmon
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} j1${NC} %-9s%s\\n" "install" "connmon - Internet uptime monitor"
-		case_j1(){
-			print_end_line
-			echo " This installs connmon- Internet connection monitoring"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/"
-			continue_dialog
-
-			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh" -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
-			sleep 2
-			if [ -f /jffs/scripts/connmon ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
-				show_amtm " connmon installed"
-			else
-				show_amtm " connmon installation failed"
-			fi
-		}
-	fi
-
-	# j2 ntpMerlin menu
-	scriptloc=/jffs/scripts/ntpmerlin
-	if [ -f "$scriptloc" ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
-		scriptgrep='SCRIPT_VERSION=\|NTPD_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} j2${NC} %-9s%-21s%${ACORR}s\\n" "open" "ntpMerlin     $localver" " $upd"
-		case_j2(){
-			/jffs/scripts/ntpmerlin
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} j2${NC} %-9s%s\\n" "install" "ntpMerlin - NTP Daemon"
-		case_j2(){
-			print_end_line
-			echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/"
-			continue_dialog
-
-			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh" -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
-			sleep 2
-			if [ -f /jffs/scripts/ntpmerlin ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
-				show_amtm " ntpMerlin installed"
-			else
-				show_amtm " ntpMerlin installation failed"
-			fi
-		}
-	fi
-
-	# j3 scMerlin menu
-	scriptloc=/jffs/scripts/scmerlin
-	if [ -f "$scriptloc" ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/scMerlin/master/scmerlin.sh"
-		scriptgrep='SCRIPT_VERSION=\|SCM_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} j3${NC} %-9s%-21s%${ACORR}s\\n" "open" "scMerlin      $localver" " $upd"
-		case_j3(){
-			/jffs/scripts/scmerlin
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} j3${NC} %-9s%s\\n" "install" "scMerlin - Quick access control"
-		case_j3(){
-			print_end_line
-			echo " This installs scMerlin - service and script control menu for AsusWRT-Merlin"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/scmerlin-service-and-script-control-menu-for-asuswrt-merlin.56277/"
-			continue_dialog
-
-			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/scmerlin/master/scmerlin.sh" -o "/jffs/scripts/scmerlin" && chmod 0755 /jffs/scripts/scmerlin && /jffs/scripts/scmerlin install
-			sleep 2
-			if [ -f /jffs/scripts/scmerlin ]; then
-				show_amtm " scMerlin installed"
-			else
-				show_amtm " scMerlin installation failed"
-			fi
-		}
-	fi
-
-	[ "$ss" ] && echo
-
-	# j4 spdMerlin menu
-	scriptloc=/jffs/scripts/spdmerlin
-	if [ -f "$scriptloc" ] && grep -q 'spdmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
-		scriptgrep='SCRIPT_VERSION=\|SPD_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} j4${NC} %-9s%-21s%${ACORR}s\\n" "open" "spdMerlin     $localver" " $upd"
-		case_j4(){
-			/jffs/scripts/spdmerlin
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} j4${NC} %-9s%s\\n" "install" "spdMerlin - Automatic speedtest"
-		case_j4(){
-			print_end_line
-			echo " This installs spdMerlin - Automatic speedtest for AsusWRT Merlin - with graphs"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/spdmerlin-automated-speedtests-with-graphs.55904/"
-			continue_dialog
-
-			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh" -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
-			sleep 2
-			if [ -f /jffs/scripts/spdmerlin ]; then
-				show_amtm " spdMerlin installed"
-			else
-				show_amtm " spdMerlin installation failed"
-			fi
-		}
-	fi
-
-	# j5 uiDivStats menu
-	scriptloc=/jffs/scripts/uiDivStats
-	if [ -f "$scriptloc" ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
-		scriptgrep='SCRIPT_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} j5${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiDivStats    $localver" " $upd"
-		case_j5(){
-			/jffs/scripts/uiDivStats
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} j5${NC} %-9s%s\\n" "install" "uiDivStats - Diversion WebUI stats"
-		case_j5(){
-			print_end_line
-			echo " This installs uiDivStats - WebUI for Diversion statistics"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/"
-			continue_dialog
-
-			curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
-			sleep 2
-			if [ -f /jffs/scripts/uiDivStats ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
-				show_amtm " uiDivStats installed"
-			else
-				show_amtm " uiDivStats installation failed"
-			fi
-		}
-	fi
-
-	# j6 uiScribe menu
-	scriptloc=/jffs/scripts/uiScribe
-	if [ -f "$scriptloc" ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh"
-		scriptgrep='SCRIPT_VERSION='
-		grepcheck=jackyaz
-		script_check
-		printf "${GREEN_BG} j6${NC} %-9s%-21s%${ACORR}s\\n" "open" "uiScribe      $localver" " $upd"
-		case_j6(){
-			/jffs/scripts/uiScribe
-			sleep 2
-			show_amtm menu
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} j6${NC} %-9s%s\\n" "install" "uiScribe - WebUI for scribe logs"
-		case_j6(){
-			print_end_line
-			echo " This installs uiScribe - Custom System Log page for Scribe"
-			echo " on your router."
-			echo
-			echo " Author: Jack Yaz"
-			echo " https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/"
-			continue_dialog
-
-			if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
-				curl --retry 3 "https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh" -o "/jffs/scripts/uiScribe" && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
-				sleep 2
-				if [ -f /jffs/scripts/uiScribe ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
-					show_amtm " uiScribe installed"
-				else
-					show_amtm " uiScribe installation failed"
-				fi
-			else
-				show_amtm " uiScribe installation failed, scribe missing"
-			fi
-		}
-	fi
-
-	[ "$upd" ] || [ "$ss" ] && echo
-	upd=
-
-	# di dnscrypt installer menu (deprecated)
-	if [ -d /jffs/dnscrypt ]; then
-		upd=" "
-		printf "${GREEN_BG} di${NC} %-9s%s\\n" "open" "dnscrypt installer"
-		case_di(){
-			printf "\\n dnscrypt installer menu:\\n\\n"
-			curl -L -s -k -O https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer && sh installer ; rm installer
-			show_amtm menu
-		}
-	else
-		case_di(){
-			show_amtm " dnscrypt installer is deprecated and no\\n longer available for install"
-		}
-	fi
-
-	# ep Entware packages menu
-	if [ -f /opt/bin/opkg ]; then
-		upd=" "
-		printf "${GREEN_BG} ep${NC} %-9s%s\\n" "update" "Entware packages"
-		case_ep(){
-			print_end_line
-			echo " This updates and upgrades Entware packages"
-			if [ -f /opt/bin/diversion ]; then
-				echo
-				echo " Note: Diversion is installed on this router."
-				echo " It's recommended to update Entware packages"
-				echo " in Diversion using the ${RED_BG} ep ${NC} option."
-				echo " Especially so when pixelserv-tls is installed."
-			fi
-			if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-				echo
-				echo " Note: Stubby DNS Privacy Daemon is installed"
-				echo " on this router."
-				echo " It's recommended to update Entware packages"
-				echo " selectively through the Stubby DNS menu to"
-				echo " prevent overwriting configuration files."
-			fi
-			continue_dialog
-			opkg update
-			opkg upgrade
-			show_amtm " Entware packages updated and upgraded"
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} ep${NC} %-9s%s\\n" "install" "Entware - Software repository"
-		case_ep(){
-			print_end_line
-			echo " This installs Entware - the ultimate Software repository"
-			echo " on this router."
-			echo " Note: If you plan to install Diversion on"
-			echo " this router, install Diversion first,"
-			echo " it includes the installation of Entware."
-			echo
-			echo " Author: thelonelycoder"
-			continue_dialog
-			install_Entware
-		}
-	fi
-
-	# ps pixelserv-tls menu
-	if [ -L /opt/bin/pixelserv-tls ]; then
-		ii=1
-		beta=" beta"
-		psVersionm=
-		psVersion="$(pixelserv-tls -v | awk 'NR == 1 {print $2}')"
-		[ -z "$psVersion" ] && psVersion="likely v.Kk"
-		case $psVersion in
-		  v*|*v.K*) ;;
-		  * ) psVersion="v$psVersion" ;;
-		esac
-		upd="${ERR_BG}${NC}$psVersion"
-		if [ -z "$(pidof pixelserv-tls)" ]; then
-			upd=
-			psVersionm="$psVersion ${ERR_BG}(not running)${NC}"
-		fi
-		printf "${GREEN_BG} ps${NC} %-9s%-21s%${ACORR}s\\n" "remove" "pixelserv-tls$beta $psVersionm" " $upd"
-		case_ps(){
-			print_end_line
-			echo " This removes the pixelserv-tls beta and"
-			echo " installs the latest release version"
-			echo " available trough Entware."
-			echo
-			echo " No beta versions are available at the moment from its author kvic."
-			echo " https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/"
-			print_end_line
-			echo
-			echo " 1. Remove pixelserv-tls beta version"
-			while true; do
-				printf "\\n Enter selection [1-1 e=Exit] ";read -r continue
-				case "$continue" in
-					1)		echo
-							opkg --force-reinstall install pixelserv-tls
-							rm -rf /opt/tmp/pixelserv-tls-beta
-							echo
-							echo "pixelserv-tls beta removed, restarting Diversion services"
-							diversion sh-restart
-							echo
-							sleep 1
-							show_amtm " pixelserv-tls beta removed";break;;
-					[Ee])	show_amtm menu;break;;
-					*)		printf "\\n input is not an option\\n";;
-				esac
-			done
-		}
-	else
-		case_ps(){
-			show_amtm " No pixelserv-tls beta versions are available\\n at the moment from its author kvic"
-		}
-	fi
-
-	# amtm tools follow
-	[ "$upd" ] || [ "$ss" ] && echo
-	upd=
-
-	# Disk check
-	if [ -f /jffs/scripts/disk-check ] && grep -qE "/jffs/scripts/disk-check # Added by" /jffs/scripts/pre-mount; then
-		atii=1
-		case_dc(){
-			disk_check remove
-			show_amtm menu
-		}
-		if ! grep -qE "VERSION=$dc_version" /jffs/scripts/disk-check; then
-			write_dc_file
-			dctext=" Disk check script auto-updated to v$dc_version"
-			if [ -z "$1" ] || [ "$1" = "menu" ]; then
-				set -- "$dctext"
-			else
-				set -- "$1\\n\\n$dctext"
-			fi
-		fi
-		[ -f /jffs/amtm-disk-check.log ] && dcltext="${GREEN_BG}dcl${NC} show log" || dcltext=
-		printf "${GREEN_BG} dc${NC} %-9s%-19s%${ACORR}s\\n" "remove" "Disk check script" " $dcltext"
-
-	else
-		[ "$ss" ] && printf "${ERR_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
-		case_dc(){
-			print_end_line
-			echo " This installs /jffs/scripts/disk-check."
-			echo " It runs a filesystem check on compatible"
-			echo " USB storage devices before they are mounted."
-			echo
-			echo " Authors: ColinTaylor, thelonelycoder, latenitetech"
-			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)"
-			echo " https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot"
-			continue_dialog
-			disk_check install
-			show_amtm " Disk check script installed.\\n The check log can be viewed directly\\n in amtm with dcl"
-		}
-	fi
-
-	# Format disk
-	if [ -f /jffs/amtm-format-disk.log ]; then
-		atii=1
-		printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GREEN_BG}fdl${NC} show log"
-	else
-		[ "$ss" ] && printf "${GREEN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
-	fi
-
-	case_fd(){
-		print_end_line
-		echo " This (re)formats your plugged in USB storage"
-		echo " device with up to three partitions."
-		echo " The process erases all data and partitions"
-		echo " on the device."
-		echo " After formatting, the router will reboot."
-		echo
-		echo " To be on the safe side, remove all other"
-		echo " attached USB devices before continuing."
-		echo
-		echo " Authors: ColinTaylor, thelonelycoder, Zonkd"
-		echo " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
-		echo " https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723"
-		continue_dialog
-		format_disk
-	}
-
-	# rs Reboot scheduler
-	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
-		atii=1
-		rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//')
-		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
-		printf "${GREEN_BG} rs${NC} %-9s%s\\n" "remove" "Reboot scheduler ${GREEN_BG}${rstext}${NC}"
-
-		case_rs(){
-			reboot_scheduler remove
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
-
-		case_rs(){
-			print_end_line
-			echo " This enables the reboot scheduler for your"
-			echo " router."
-			echo " The scheduler is set with a cron job via"
-			echo " init-start, as opposed to the WebUI setting"
-			echo " which uses an internal mechanism to reboot."
-			echo
-			echo " Author: thelonelycoder"
-			continue_dialog
-			reboot_scheduler install
-		}
-	fi
-
-	# sw/swp/swap Swap file
-	unset "swaplocation" "swapsize" "partitionsize" "swtext" "multipleswap"
-	[ -f /jffs/scripts/post-mount ] && swaplocation="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
-	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
-		if [ -f "$swaplocation" ] && [ "$swaplocation" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
-			if grep -qE "^swapon $swaplocation" /jffs/scripts/post-mount; then
-				swapsize=$(du -h "$swaplocation" | awk '{print $1}')
-			else
-				check_swap
-			fi
-		else
-			check_swap
-		fi
-	else
-		check_swap
-	fi
-	if [ "$swtext" ]; then
-		if [ -z "$1" ] || [ "$1" = "menu" ]; then
-			set -- "$swtext"
-		else
-			set -- "$1\\n\\n$swtext"
-		fi
-	fi
-	if [ -f "$swaplocation" ]; then
-		atii=1
-		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC} $swapsize\\n" "manage" "Swap file" "$(echo "${swaplocation#/tmp}" | sed 's|/myswap.swp||')"
-		case_swp(){
-			manage_swap delete
-		}
-	elif [ "$swaplocation" ] && [ "$partitionsize" ]; then
-		atii=1
-		printf "${GREEN_BG}   ${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "Swap" "Partition" "${GREEN_BG}$swaplocation${NC} ${partitionsize}M"
-		case_swp(){
-			show_amtm " $thisScript does not manage swap partitions"
-		}
-	elif [ "$multipleswap" ]; then
-		atii=1
-		printf "${GREEN_BG} sw${NC} %-9s%s ${GREEN_BG}%s${NC}\\n" "delete" "Swap files"
-		case_swp(){
-			manage_swap multidelete
-		}
-	else
-		[ "$ss" ] && printf "${ERR_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
-		case_swp(){
-			manage_swap create
-		}
-	fi
-
-	[ "$ss" ] || [ "$atii" ] && echo
-
-	# i show available scripts to install
-	if [ "$ss" ]; then
-		printf "${GREEN_BG} i ${NC} %-9s%s\\n" "hide" "inactive scripts or tools"
-	else
-		printf "${GREEN_BG} i ${NC} %-9s%s\\n" "install" "scripts or tools"
-	fi
-
-	# u check for updates
-	printf "${GREEN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
-
-	# amtm menu
-	echo
-	echo "    amtm options"
-	[ -f "/jffs/scripts/$thisScript" ] || [ -f "/opt/bin/$thisScript" ] && thisopt="${GREEN_BG} r ${NC} remove"  || thisopt="${GREEN_BG} i ${NC} install"
-	if [ "$su" = 1 ]; then
-		update_amtm
-		printf "${GREEN_BG} e ${NC} %-9s%-21s%${ACORR}s\\n" "exit" "amtm          v$version" " $thisrem"
-	else
-		echo "${GREEN_BG} e ${NC} exit     ${GREEN_BG} t ${NC} theme  $thisopt  ${GREEN_BG} a ${NC} about"
-	fi
-
-	# The notification area. $1 can be passed on as positional parameter
-	[ "$ss" ] && ssi=1 || ssi=
-	unset "ss" "ii" "atii" "upd"
-	if [ "$su" = 1 ]; then
-		su=
-		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
-			if [ "$amtmUpd" -gt 0 ]; then
-				print_end_line
-				if [ "$suUpd" = 1 ]; then
-					printf " Script update(s) are available!\\n"
-					print_end_line
-				fi
-				amtmUpdText="updated from v$version to v$amtmRemotever"
-				[ "$amtmUpd" = 1 ] && echo " $thisScript $amtmRemotever is now available!"
-				if [ "$amtmUpd" = 2 ]; then
-					echo " A minor $thisScript update is available!"
-					amtmUpdText="minor version update applied"
-				fi
-				echo " Do you want to update $thisScript now?"
-				continue_dialog
-				curl -fsL --retry 3 "$amtmRemoteurl" -o "$0" && exec "$0" " $thisScript $amtmUpdText"
-			else
-				set -- " Script update(s) are available!"
-			fi
-		else
-			set -- " All scripts are up to date"
-		fi
-	fi
-	if [ "$1" = menu ]; then
-		print_end_line
-	else
-		print_end_line
-		printf "$1\\n"
-		print_end_line
-	fi
-
-	while true; do
-		printf "${RED_BG} Enter option ${NC} ";read -r selection
-		case "$selection" in
-			1)			case_1;break;;
-			2)			case_2;break;;
-			3)			case_3;break;;
-			4)			case_4;break;;
-			5)			case_5;break;;
-			[Jj]1)		case_j1;break;;
-			[Jj]2)		case_j2;break;;
-			[Jj]3)		case_j3;break;;
-			[Jj]4)		case_j4;break;;
-			[Jj]5)		case_j5;break;;
-			[Jj]6)		case_j6;break;;
-			[Ii])		[ "$ssi" ] && ss= || ss=1
-						show_amtm menu;break;;
-			[Dd][Ii])	case_di;break;;
-			[Ee][Pp])	case_ep;break;;
-			[Pp][Ss])	case_ps;break;;
-			[Uu])		su=1;suUpd=0;show_amtm menu;break;;
-			[Dd][Cc])	case_dc;break;;
-			dcl|DCL)	disk_check log
-						show_amtm menu;break;;
-			[Ff][Dd])	case_fd;break;;
-			fdl|FDL)	format_disk_log;break;;
-			[Rr][Ss])	case_rs;break;;
-			swap|swp|sw)case_swp;break;;
-		[Tt]|[Cc][Tt])	theme_amtm;break;;
-			[Uu][Uu])	update_amtm;break;;
-			[Rr])		remove_amtm;break;;
-			[Aa])		about_amtm;break;;
-			[Ee])		clear
-						ascii_logo
-						printf "   Goodbye\\n\\n"
-						exit 0;break;;
-			11)			exec "$0";break;; # hidden dev option
-			reboot)		print_end_line # hidden, reboot router
-						echo " OK then, rebooting this router, are you sure?"
-						continue_dialog
-						clear
-						ascii_logo
-						printf " $thisScript reboots this router now\\n\\n"
-						sleep 1
-						service reboot >/dev/null 2>&1 &
-						exit 0
-						break;;
-			*)			printf "\\n               input is not an option\\n\\n";;
-		esac
-	done
 }
 
 # asks to install, auto-update, show menu or pass along positional parameter
@@ -2647,6 +2715,10 @@ elif ! cmp -s "$0" "/jffs/scripts/$thisScript"; then
 	"$subshell" "/jffs/scripts/$thisScript" " $thisScript auto-update applied (v$version)"
 elif [ -z "$1" ]; then
 	show_amtm menu
+elif [ "$1" = tpu ]; then
+	su=1;suUpd=0;tpu=1
+	> /tmp/amtm-tpu-check
+	show_amtm >/dev/null 2>&1
 else
 	show_amtm "$1"
 fi
