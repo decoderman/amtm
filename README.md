@@ -2,16 +2,17 @@
 
 A shortcut manager for popular scripts for wireless routers running [Asuswrt-Merlin](https://github.com/RMerl) firmware.
 
-Discuss and read more on the SmallNetBuilders Forum: [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/)
+News and more about amtm at the Diversion website: [Diversion - the Router Adblocker](https://diversion.ch)
+Discussion about amtm on the SmallNetBuilders Forum: [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/)
 
 ### How to install on Asuswrt-Merlin
 Enter this into your favorite SSH terminal:
 
 ```Shell
-/usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
+/usr/sbin/curl -Os https://diversion.ch/amtm/amtm && sh amtm
 ```
 
-[![amtm v2.6](https://i.imgur.com/XjTVUD5.png "amtm v2.6")](https://i.imgur.com/XjTVUD5.png "amtm v2.6")
+[![amtm v2.7](https://i.imgur.com/nIRYEUC.png "amtm v2.7")](https://i.imgur.com/nIRYEUC.png "amtm v2.7")
 
 ### Supported scripts
 
@@ -20,6 +21,7 @@ Enter this into your favorite SSH terminal:
 [Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk and Adamm (deprecated)<br/>
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
 [scribe](https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/) - maintained by cmkelley<br/>
+[x3mRouting](https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/) - maintained by Xentrk<br/>
 
 [connmon](https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/) - maintained by Jack Yaz<br/>
 [ntpMerlin](https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/) - maintained by Jack Yaz<br/>

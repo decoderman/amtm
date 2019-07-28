@@ -4,20 +4,19 @@
 # Set environment PATH to system binaries
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
 
-# Proudly coded by thelonelycoder (aka decoderman@github)
+# Proudly coded by thelonelycoder
 # Copyright (c) 2016-2019 thelonelycoder - All Rights Reserved
 # https://www.snbforums.com/members/thelonelycoder.25480/
-# https://github.com/decoderman
 
 # How to install on Asuswrt-Merlin
 # Enter this into your favorite SSH terminal, without the leading "#":
-# /usr/sbin/curl -Os https://raw.githubusercontent.com/decoderman/amtm/master/amtm && sh amtm
+# /usr/sbin/curl -Os https://diversion.ch/amtm/amtm && sh amtm
 
 # amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
 # https://opensource.org/licenses/GPL-3.0
 
-version=2.6
-release="July 13 2019"
+version=2.7
+release="July 28 2019"
 title="SNBForum Asuswrt-Merlin Terminal Menu"
 thisScript=amtm
 dc_version=2.4
@@ -43,9 +42,8 @@ about_amtm(){
  For updates and discussion visit this thread:
  https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/
 
- Author: thelonelycoder (aka decoderman@github)
+ Author: thelonelycoder
  https://www.snbforums.com/members/thelonelycoder.25480/
- https://github.com/decoderman
  https://diversion.ch/amtm.html
 
  Contributors: Adamm, ColinTaylor
@@ -305,6 +303,48 @@ show_amtm(){
 				show_amtm " scribe installed"
 			else
 				show_amtm " scribe installation failed"
+			fi
+		}
+	fi
+
+	# 6 x3mRouting menu
+	scriptloc=/opt/bin/x3mRouting
+	if [ -f "$scriptloc" ]; then
+		scriptname='x3mRouting Selective Routing'
+		localVother="v$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
+		remoteurl="https://raw.githubusercontent.com/Xentrk/x3mRouting/master/x3mRouting"
+		remoteVother="v$(curl -fsLN --retry 3 "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
+		grepcheck=Xentrk
+		script_check
+		localVother=
+		remoteVother=
+		printf "${GREEN_BG} 6 ${NC} %-9s%-21s%${ACORR}s\\n" "open" "x3mRouting    $localver" " $upd"
+		case_6(){
+			/opt/bin/x3mRouting
+			sleep 2
+			show_amtm menu
+		}
+	else
+		[ "$ss" ] && printf "${ERR_BG} 6 ${NC} %-9s%s\\n" "install" "x3mRouting - Selective Routing"
+		case_6(){
+			print_end_line
+			echo " This installs x3mRouting - Selective Routing for Asuswrt-Merlin"
+			echo " on your router."
+			echo
+			echo " Author: Xentrk"
+			echo " https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/"
+			continue_dialog
+
+			if [ ! -f /opt/bin/opkg ]; then
+				show_amtm " x3mRouting Selective Routing cannot install.\\n Install Entware first."
+			fi
+
+			curl --retry 3 "https://raw.githubusercontent.com/Xentrk/x3mRouting/master/x3mRouting" -o "/opt/bin/x3mRouting" && chmod 755 /opt/bin/x3mRouting && x3mRouting
+			sleep 2
+			if [ -f /opt/bin/x3mRouting ]; then
+				show_amtm " x3mRouting Selective Routing installed"
+			else
+				show_amtm " x3mRouting Selective Routing installation failed"
 			fi
 		}
 	fi
@@ -752,11 +792,23 @@ show_amtm(){
 	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
 		atii=1
 		rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//')
+		rswc=$(echo $rstext | awk '{print $1}' | wc -m)
 		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
-		printf "${GREEN_BG} rs${NC} %-9s%s\\n" "remove" "Reboot scheduler ${GREEN_BG}${rstext}${NC}"
+		if [ "$rswc" = 28 ]; then
+			rstext=$(echo $rstext | awk '{print "daily " $2, $3}')
+		elif [ "$rswc" -ge 20 ]; then
+			dows=$(echo $rstext | awk '{print $1","}')
+			dows="${dows//??,/,}"
+			rstext=$(echo $rstext | awk '{print "'${dows%,}' " $2, $3}')
+		elif [ "$rswc" -gt 8 ]; then
+			dows=$(echo $rstext | awk '{print $1","}')
+			dows="${dows//?,/,}"
+			rstext=$(echo $rstext | awk '{print "'${dows%,}' " $2, $3}')
+		fi
+		printf "${GREEN_BG} rs${NC} %-9s%s\\n" "manage" "Reboot scheduler ${GREEN_BG}${rstext}${NC}"
 
 		case_rs(){
-			reboot_scheduler remove
+			reboot_scheduler manage
 		}
 	else
 		[ "$ss" ] && printf "${ERR_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
@@ -889,6 +941,7 @@ show_amtm(){
 			3)				case_3;break;;
 			4)				case_4;break;;
 			5)				case_5;break;;
+			6)				case_6;break;;
 			[Jj]1)			case_j1;break;;
 			[Jj]2)			case_j2;break;;
 			[Jj]3)			case_j3;break;;
@@ -948,6 +1001,7 @@ theme_reduced_cw(){ RED_LINE='[31m';RED_BG='[97;40m';ERR_BG='[97;41m';GREEN='
 theme_reduced_b(){ RED_LINE='[38;5;209m';RED_BG='[100m';ERR_BG='[100m';GREEN='[38;5;157m';GREEN_BG='[100m';GRAY='[90m';NC='[0m';ACORR=21;}
 theme_reduced_cb(){ RED_LINE='[31m';RED_BG='[100m';ERR_BG='[30;41m';GREEN='[38;5;157m';GREEN_BG='[30;42m';GRAY='[90m';NC='[0m';ACORR=23;}
 theme_basic(){ RED_LINE='[31m';RED_BG=;ERR_BG=;GREEN=;GREEN_BG=;GRAY='[90m';NC='[0m';ACORR=15;}
+remove_when_empty(){ [ "$(sed '/^[[:space:]]*$/d; /#!\/bin\/sh/d' "$1" | wc -c)" = 0 ] && rm "$1";}
 
 install_amtm(){
 	clear
@@ -1011,7 +1065,7 @@ install_amtm(){
 							subshell="exec"
 							rm -f "$0"
 						fi
-						"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed!\\n\\n Start $thisScript with:\\n $message"
+						"$subshell" /jffs/scripts/$thisScript " $title\\n successfully installed.\\n\\n Start $thisScript with:\\n $message"
 					fi
 					break;;
 			[Ee])	clear;ascii_logo "  Goodbye"
@@ -1033,7 +1087,6 @@ add_profile_add(){
 }
 
 remove_amtm(){
-	remove_when_empty(){ [ "$(sed '/^[[:space:]]*$/d; /#!\/bin\/sh/d' "$1" | wc -c)" = 0 ] && rm "$1";}
 	print_end_line
 	echo " Do you want to remove $thisScript now?"
 	echo
@@ -1074,16 +1127,27 @@ remove_amtm(){
 
 update_amtm(){
 	case "$release" in
-		*XX*)	amtmRemoteurl="http://diversion.test/scripts/amtm";;
-		*)		amtmRemoteurl="https://raw.githubusercontent.com/decoderman/amtm/master/amtm";;
+		*XX*)	amtmRemoteurl="http://diversion.test/amtm/amtm";;
+		*)		amtmRemoteurl="https://diversion.ch/amtm/amtm";;
 	esac
-	curl -fsNL --retry 3 "$amtmRemoteurl" | grep -qF "version=" || show_amtm " Update aborted,\\n could not retrieve version"
+	if ! curl -fsNL --retry 3 "$amtmRemoteurl" | grep -qF "version="; then
+		if [ "$su" = 1 ]; then
+			amtmUpdErr=1
+		else
+			show_amtm " Update aborted,\\n could not retrieve version"
+		fi
+	fi
 	amtmRemotever="$(curl -fsNL --retry 3 "$amtmRemoteurl" | grep "^version=" | sed -e 's/version=//')"
 	localmd5="$(md5sum "$0" | awk '{print $1}')"
 	remotemd5="$(curl -fsNL --retry 3 "$amtmRemoteurl" | md5sum | awk '{print $1}')"
 
 	if [ "$su" = 1 ]; then
-		if [ "$version" != "$amtmRemotever" ]; then
+		amtmUpd=
+		if [ "$amtmUpdErr" = 1 ]; then
+			thisrem=" ${ERR_BG}upd err${NC}"
+			amtmUpd=0
+			amtmUpdErr=
+		elif [ "$version" != "$amtmRemotever" ]; then
 			thisrem="${GREEN_BG}-> v$amtmRemotever${NC}"
 			amtmUpd=1
 		elif [ "$localmd5" != "$remotemd5" ]; then
@@ -1520,10 +1584,9 @@ write_dc_file(){
 	# disk-check, check filesystem before partition is mounted
 	# generated by amtm $version
 
-	# Proudly coded by thelonelycoder (aka decoderman@github)
+	# Proudly coded by thelonelycoder
 	# Copyright (c) 2016-2019 thelonelycoder - All Rights Reserved
 	# https://www.snbforums.com/members/thelonelycoder.25480/
-	# https://github.com/decoderman
 
 	# Contributors:
 	# ColinTaylor: https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)
@@ -1682,7 +1745,7 @@ format_disk(){
 		fi
 
 		if [ "$devtfsize" -gt 2000000000000 ]; then
-			show_amtm " Device is over 2TB and cannot be\\n formatted by $thisScript"
+			show_amtm " Device is over 2TB and cannot be\\n formatted by $thisScript. Read here why:\\n https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
 		fi
 
 		print_end_line
@@ -2414,18 +2477,38 @@ reboot_scheduler(){
 		check_jffs_scripts /jffs/scripts/init-start
 		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
 			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow service reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
+			rsct=enabled
+		else
+			sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
+			cru d amtm_RebootScheduler
+			echo "cru a amtm_RebootScheduler \"$rsm $rsh * * $rsdow service reboot\" # Added by $thisScript" >> /jffs/scripts/init-start
+			rsct=changed
 		fi
 		cru a amtm_RebootScheduler "$rsm $rsh * * $rsdow service reboot"
 
-		show_amtm " Reboot scheduler enabled"
+		show_amtm " Reboot scheduler $rsct"
 
-	elif [ "$1" = "remove" ]; then
+	elif [ "$1" = "manage" ]; then
 		print_end_line
-		printf " This removes the reboot scheduler.\\n"
-		continue_dialog
-		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
-		cru d amtm_RebootScheduler
-		show_amtm " Reboot scheduler removed"
+		printf " This manages the reboot scheduler.\\n\\n Reboot scheduler runs as follows:\\n"
+		printf " ${GREEN_BG} $(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6" @ "$3":"$2}' | sed -e 's/"//') ${NC}\\n\\n"
+
+		printf " 1. Change reboot scheduler\\n 2. Remove reboot scheduler\\n\\n"
+		while true; do
+			printf " Enter option [1-2 e=Exit] ";read -r continue
+			case "$continue" in
+				1)		echo
+						echo " Starting over with reboot scheduler..."
+						reboot_scheduler install;break;;
+				2)		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
+						remove_when_empty /jffs/scripts/init-start
+						cru d amtm_RebootScheduler
+						show_amtm " Reboot scheduler removed"
+						break;;
+				[Ee])	show_amtm " Exited reboot scheduler function";break;;
+				*)		printf "\\n input is not an option\\n\\n";;
+			esac
+		done
 	fi
 }
 
