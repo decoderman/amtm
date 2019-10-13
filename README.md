@@ -2,8 +2,9 @@
 
 A shortcut manager for popular scripts for wireless routers running [Asuswrt-Merlin](https://github.com/RMerl) firmware.
 
-News and more about amtm at the Diversion website: [Diversion - the Router Adblocker](https://diversion.ch)
-Discussion about amtm on the SmallNetBuilders Forum: [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/)
+News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).
+
+Discussion about amtm [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
 
 ### How to install on Asuswrt-Merlin
 Enter this into your favorite SSH terminal:
