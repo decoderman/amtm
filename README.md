@@ -2,24 +2,26 @@
 
 A shortcut manager for popular scripts for wireless routers running [Asuswrt-Merlin](https://github.com/RMerl) firmware.
 
-News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).
-
+News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).  
 Discussion about amtm [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
 
-### How to install on Asuswrt-Merlin
-Enter this into your favorite SSH terminal:
+**Note that starting with version 2.7, amtm is now hosted on the Diversion Server, this repository will no longer be updated**.  
+The transition for the built in amtm updater is seamless, no user action is required to use the new Server.
+
+### How to install or reinstall amtm on Asuswrt-Merlin
+Enter the complete command below into your favorite SSH terminal, then press Enter.
 
 ```Shell
 /usr/sbin/curl -Os https://diversion.ch/amtm/amtm && sh amtm
 ```
 
-[![amtm v2.7](https://i.imgur.com/nIRYEUC.png "amtm v2.7")](https://i.imgur.com/nIRYEUC.png "amtm v2.7")
+[![amtm v2.8](https://i.imgur.com/XWGL9vN.png "amtm v2.8")](https://i.imgur.com/XWGL9vN.png "amtm v2.8")
 
 ### Supported scripts
 
 [Diversion](https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/) - maintained by thelonelycoder<br/>
 [Skynet](https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/) - maintained by Adamm<br/>
-[Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk and Adamm (deprecated)<br/>
+[Stubby-Installer](https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/) - maintained by Xentrk and Adamm (partially deprecated due to native support in firmware)<br/>
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
 [scribe](https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/) - maintained by cmkelley<br/>
 [x3mRouting](https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/) - maintained by Xentrk<br/>
@@ -31,7 +33,7 @@ Enter this into your favorite SSH terminal:
 [uiDivStats](https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/) - maintained by Jack Yaz<br/>
 [uiScribe](https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/) - maintained by Jack Yaz<br/>
 
-[DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0 (deprecated)<br/>
+[DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0<br/>
 [Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau<br/>
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic (beta support suspended)<br/>
 
