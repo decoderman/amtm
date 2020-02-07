@@ -10,7 +10,7 @@ Use the install link on this page to install the regular version on Asuswrt-Merl
 See the Asuswrt-Merlin wiki for the [usage of this firmware version](https://github.com/RMerl/asuswrt-merlin/wiki/AMTM).
 
 News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).  
-Discussion about amtm [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
+Discussion about [amtm - the Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
 
 **Note that starting with version 2.7, amtm is now hosted on the Diversion Server, this repository will no longer be updated**.  
 The transition for the built in amtm updater is seamless, no user action is required to use the new Server.
