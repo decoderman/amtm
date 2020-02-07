@@ -1,6 +1,6 @@
-## amtm - the SNBForum Asuswrt-Merlin Terminal Menu
+## amtm - the Asuswrt-Merlin Terminal Menu
 
-A shortcut manager for popular scripts for wireless routers running [Asuswrt-Merlin](https://github.com/RMerl) firmware.
+amtm is a front end that manages popular scripts for wireless routers running [Asuswrt-Merlin](https://github.com/RMerl) firmware.
 
 News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).  
 Discussion about amtm [amtm - the SNBForum Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
