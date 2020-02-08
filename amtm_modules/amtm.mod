@@ -1,24 +1,16 @@
 #!/bin/sh
 #bof
-
-# amtm is free to use under the GNU General Public License version 3 (GPL-3.0)
-# https://opensource.org/licenses/GPL-3.0
-
-# Proudly coded by thelonelycoder
-# Copyright (c) 2016-2066 thelonelycoder - All Rights Reserved
-# https://www.snbforums.com/members/thelonelycoder.25480/
-# https://diversion.ch/amtm.html
-
 version=3.1.1
-release="February 08 2020"
-title="Asuswrt-Merlin Terminal Menu"
-scriptPath=/jffs/scripts/amtm
-add=/jffs/addons/amtm
+release="February 02 2020"
 dc_version=2.8
-case "$release" in
-	*XX*)	amtmURL=http://diversion.test/amtm;;
-	*)		amtmURL=https://diversion.ch/amtm;;
-esac
+title="Asuswrt-Merlin Terminal Menu"
+contributors="Contributors: Adamm, ColinTaylor, Martineau
+ https://www.snbforums.com/members/adamm.19554
+ https://www.snbforums.com/members/colintaylor.27699
+ https://www.snbforums.com/members/martineau.13215"
+
+### Begin updates for /usr/sbin/amtm, use amtmRev= to target releases ###
+### End updates for /usr/sbin/amtm ###
 
 ascii_logo(){
 	echo "              _"
@@ -33,7 +25,8 @@ ascii_logo(){
 about_amtm(){
 	p_e_l
 	echo " amtm, the $title
- Version $version, released on $release
+ Version $version FW, released on $release
+ (Built-in firmware version)
 
  amtm is a front end that manages popular scripts
  for wireless routers running Asuswrt-Merlin firmware.
@@ -46,10 +39,7 @@ about_amtm(){
  https://www.snbforums.com/members/thelonelycoder.25480
  https://diversion.ch/amtm.html
 
- Contributors: Adamm, ColinTaylor, Martineau
- https://www.snbforums.com/members/adamm.19554
- https://www.snbforums.com/members/colintaylor.27699
- https://www.snbforums.com/members/martineau.13215
+ $contributors
 
  amtm License:
  amtm is free to use under the GNU General
@@ -64,11 +54,31 @@ about_amtm(){
 	show_amtm menu
 }
 
+c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
+c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
+c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
+p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
+r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
+s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
+
+g_i_m(){
+	for i in "$1"/*; do
+		if [ -d "$i" ]; then
+			g_i_m "$i"
+		elif [ "${i##*.}" = mod ]; then
+			rdl=re
+			g_m "${i##*/}" new
+		fi
+	done
+	s_p "${add}"
+	rdl=
+}
+
 show_amtm(){
+	amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw
 	c_t
-	[ -d /opt/bin ] && [ ! -L /opt/bin/amtm ] && ln -s "${scriptPath}" /opt/bin
 	clear
-	printf "${R_BG}%-27s%s\\n" " amtm $version" "by thelonelycoder ${NC}"
+	printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
 	printf "${R_BG}%-44s ${NC}\\n\\n" "    The $title"
@@ -134,14 +144,15 @@ show_amtm(){
 			fi
 		else
 			scriptloc=$(echo $i | awk '{print $1}')
+			f2=$(echo $i | awk '{print $2}')
 			if [ -f "$scriptloc" ]; then
-				g_m $(echo $i | awk '{print $2}').mod include
-				$(echo $i | awk '{print $2}')_installed
+				g_m ${f2}.mod include
+				${f2}_installed
 			else
 				f3="$(echo $i | awk '{print $3}')"
 				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
 				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
-				r_m $(echo $i | awk '{print $2}').mod
+				r_m ${f2}.mod
 				case $f3 in
 					1)		case_1(){ g_m diversion.mod include;install_diversion;};;
 					2)		case_2(){ g_m skynet.mod include;install_skynet;};;
@@ -277,7 +288,7 @@ show_amtm(){
 	else
 		[ "$ss" ] || printf "${GN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
 		echo;echo "    amtm options"
-		echo "${GN_BG} e ${NC} exit     ${GN_BG} t ${NC} theme  ${GN_BG} r ${NC} remove  ${GN_BG} a ${NC} about"
+		echo "${GN_BG} e ${NC} exit     ${GN_BG} t ${NC} theme  ${GN_BG} r ${NC} reset  ${GN_BG} a ${NC} about"
 	fi
 
 	[ "$ss" ] && ssi=1 || ssi=
@@ -291,7 +302,7 @@ show_amtm(){
 					printf " Script update(s) available!\\n"
 					p_e_l
 				fi
-				amtmUpdText="updated from v$version to v$amtmRemotever"
+				amtmUpdText=" amtm updated from v$version to v$amtmRemotever"
 				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n\\n"
 				if [ "$amtmUpd" = 2 ]; then
 					printf " ${R}A minor amtm update is available!${NC}\\n\\n"
@@ -300,8 +311,8 @@ show_amtm(){
 				echo " Do you want to update amtm now?"
 				c_d
 				a_m "$amtmUpdText"
-				g_i_m
-				exec "${scriptPath}" " amtm $am"
+				g_i_m "${add}"
+				exec "$0" "$am"
 			else
 				a_m " Script update(s) available!"
 			fi
@@ -313,7 +324,7 @@ show_amtm(){
 			fi
 		fi
 	fi
-	[ "$sfp" = 1 ] && s_p
+	[ "$sfp" = 1 ] && s_p "${add}"
 	sfp=
 
 	if [ "$1" = menu ] && [ -z "$am" ]; then
@@ -359,13 +370,13 @@ show_amtm(){
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
 			[Uu][Uu])			update_amtm;break;;
-			[Rr])				remove_amtm;break;;
+			[Rr])				reset_amtm;break;;
 			[Aa])				about_amtm;break;;
 			[Ee])				clear
 								ascii_logo '  Goodbye'
 								echo
 								exit 0;break;;
-			reboot)				p_e_l 	# hidden, reboot router
+			reboot)				p_e_l   # hidden, reboot router
 								echo " OK then, rebooting this router, are you sure?"
 								c_d
 								clear
@@ -380,30 +391,6 @@ show_amtm(){
 		esac
 	done
 }
-
-a_m(){ [ -z "$am" ] && am=$1 || am="$am\\n$1";}
-c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
-c_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
-c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
-c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
-c_url(){ /usr/sbin/curl -fsNL --retry 2 --connect-timeout 3 -m 8 "$@";}
-d_t_u(){ dos2unix < $1 | cmp -s - $1;[ "$?" = 1 ] && dos2unix $1;}
-p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
-p_r_l(){ echo "${R}_____________________________________________${NC}";}
-p_e_l(){ p_r_l;echo;}
-r_w_e(){ [ "$(sed '/^[[:space:]]*$/d; /#!\/bin\/sh/d' "$1" | wc -c)" = 0 ] && rm "$1";}
-r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
-theme_standard(){ R='[31m';R_BG='[41m';E_BG='[41m';GN='[92m';GN_BG='[42m';B='[94m';GY='[90m';NC='[0m';COR=20;}
-theme_green(){ R='[33m';R_BG='[42m';E_BG='[41m';GN='[92m';GN_BG='[42m';B='[94m';GY='[90m';NC='[0m';COR=20;}
-theme_blue(){ R='[34m';R_BG='[44m';E_BG='[101m';GN='[94m';GN_BG='[104m';B='[38;5;112m';GY='[90m';NC='[0m';COR=21;}
-theme_blue_on_white(){ R='[34m';R_BG='[104m';E_BG='[101m';GN='[94m';GN_BG='[104m';B='[38;5;112m';GY='[90m';NC='[0m';COR=21;}
-theme_high_contrast(){ R='[91m';R_BG='[41m';E_BG='[41m';GN='[32m';GN_BG='[42m';B='[38;5;51m';GY='[90m';NC='[0m';COR=20;}
-theme_reduced(){ R='[31m';R_BG='[100m';E_BG='[100m';GN='[37m';GN_BG='[100m';B='[37m';GY='[90m';NC='[0m';COR=21;}
-theme_reduced_w(){ R='[31m';R_BG='[97;40m';E_BG='[97;40m';GN='[32m';GN_BG='[97;40m';B='[30m';GY='[90m';NC='[0m';COR=23;}
-theme_reduced_cw(){ R='[31m';R_BG='[97;40m';E_BG='[97;41m';GN='[32m';GN_BG='[30;42m';B='[30m';GY='[90m';NC='[0m';COR=23;}
-theme_reduced_b(){ R='[38;5;209m';R_BG='[100m';E_BG='[100m';GN='[38;5;157m';GN_BG='[100m';B='[37m';GY='[90m';NC='[0m';COR=21;}
-theme_reduced_cb(){ R='[31m';R_BG='[100m';E_BG='[30;41m';GN='[38;5;157m';GN_BG='[30;42m';B='[37m';GY='[90m';NC='[0m';COR=23;}
-theme_basic(){ R='[31m';R_BG=;E_BG=;GN=;GN_BG=;B=;GY='[90m';NC='[0m';COR=15;}
 
 s_l_f(){
 	if [ -f "${add}/$1" ]; then
@@ -430,66 +417,6 @@ s_l_f(){
 	else
 		show_amtm " No $1 found"
 	fi
-}
-
-g_m(){
-	[ "$3" ] || set -- "$1" "$2" "${add}"
-	[ "$1" = amtm ] && ftg='File  ' || ftg=Module
-	if [ "$2" = new ]; then
-		[ -z "$dlLoc" ] && a_m "\\n Getting from $(echo $amtmURL | awk -F[/:] '{print $4}')"
-		dlLoc=1
-		c_url "$amtmURL/$1" -o "$3/${1}.new"
-		if [ -s "$3/${1}.new" ]; then
-			if grep -wq '^#bof' "$3/${1}.new" && grep -wq '^#eof' "$3/${1}.new"; then
-				mv -f "$3/${1}.new" "$3/$1"
-				a_m " - $ftg ${GN}$1${NC} ${rdl}downloaded"
-				sfp=1
-			else
-				rm -f "$3/${1}.new"
-				a_m " ! $ftg ${R}$1${NC} is not an amtm file"
-			fi
-		elif [ -f "$3/$1" ]; then
-			rm -f "$3/${1}.new"
-			a_m " ! $ftg ${R}$1${NC} ${rdl}download failed, using existing file"
-		else
-			rm -f "$3/${1}.new"
-			a_m " ! $ftg ${R}$1${NC} ${rdl}download failed"
-		fi
-	fi
-	if [ "$2" = include ]; then
-		if [ -f "$3/$1" ]; then
-			. "$3/$1"
-		else
-			g_m "$1" new "$3"
-			[ -f "$3/$1" ] && . "$3/$1"
-		fi
-	fi
-}
-
-g_i_m(){
-	rdl=re
-	g_m amtm new /jffs/scripts
-	if [ "$(ls -A "${add}")" ]; then
-		for i in "${add}"/*.mod; do
-			[ -f "$i" ] && g_m "${i##*/}" new
-		done
-	fi
-	s_p
-	rdl=
-}
-
-s_p(){
-	for i in "${add}"/*; do
-		if [ -f "$i" ]; then
-			[ ! -w "$i" ] && chmod 0666 "$i"
-			d_t_u "$i"
-		fi
-	done
-	if [ -f "${scriptPath}" ]; then
-		[ ! -x "${scriptPath}" ] && chmod 0755 "${scriptPath}"
-		d_t_u "${scriptPath}"
-	fi
-	[ -L /opt/bin/amtm ] && [ ! -x /opt/bin/amtm ] && chmod 0755 /opt/bin/amtm
 }
 
 script_check(){
@@ -532,237 +459,11 @@ script_check(){
 	unset localVother remoteVother bareLocalver bareRemotever localmd5 remotemd5
 }
 
-theme_amtm(){
+reset_amtm(){
 	p_e_l
-	if [ -z "$1" ]; then
-		printf " All colors in use are shown.\\n Your current theme is: ${R_BG} $theme ${NC}\\n\\n"
-	else
-		printf " Select a theme that works best in your\\n SSH client. All colors in use are shown.\\n\\n"
-	fi
-	themes='standard green blue blue_on_white high_contrast reduced reduced_w reduced_cw reduced_b reduced_cb'
-	i=1
-	for theme in $themes; do
-		ncorr=' '
-		case $theme in
-			blue)			corr1=-1;corr2=-1;;
-			blue_on_white)	corr2=-1;;
-			reduced)		corr2=-1;;
-			reduced_w)		corr2=-3;;
-			reduced_cw)		corr2=-3;;
-			reduced_b)		corr2=+5;;
-			reduced_cb)		corr1=-2;corr2=+3;ncorr=;;
-		esac
-		theme_$theme
-		printf "%-$((COR+2$corr1))s %-$((COR+4))s %-$((COR-6))s\\n" "${R_BG}$ncorr$i. $theme" "${NC}${GN_BG} $theme" "${NC}${B} ${theme:0:10}${NC}"
-		printf "   %-$((COR-1))s %-$((COR+4$corr2))s %-s\\n" "${E_BG} $theme" "${NC}${GN} $theme" "${NC}${GY} ${theme:0:10}${NC}"
-		p_e_l
-		i=$((i+1))
-		unset corr2 corr1 ncorr
-	done
-	theme_basic
-	printf "${R_BG}11. basic         ${NC}${GN_BG} basic${NC}\\n"
-	p_r_l
-	ton=11;noad=
-	if [ -f "$divconf" ]; then
-		printf "\\n12. Let Diversion set theme ($(grep "THEME=" "$divconf" | sed -e 's/THEME=//'))\\n"
-		p_r_l
-		ton=12;noad=12
-	fi
-	printf "\\n The basic and reduced themes use no or fewer\\n colors, service states may not be visible.\\n"
-	theme_standard
-	while true; do
-		if [ -z "$1" ]; then
-			printf "\\n Set new amtm theme: [1-$ton e=Exit] ";read -r continue
-		else
-			printf "\\n Select amtm theme: [1-$ton] ";read -r continue
-		fi
-		case "$continue" in
-			1) theme=standard;break;;
-			2) theme=green;break;;
-			3) theme=blue;break;;
-			4) theme=blue_on_white;break;;
-			5) theme=high_contrast;break;;
-			6) theme=reduced;break;;
-			7) theme=reduced_w;break;;
-			8) theme=reduced_cw;break;;
-			9) theme=reduced_b;break;;
-			10) theme=reduced_cb;break;;
-			11) theme=basic;break;;
-		$noad)	[ -f "${add}"/.amtm_theme ] && rm "${add}"/.amtm_theme
-				theme=
-				show_amtm " amtm now uses the Diversion theme"
-				break;;
-		 [Ee]) 	show_amtm menu;;
-			*)	printf "\\n input is not an option\\n";;
-		esac
-	done
-	echo "theme=$theme" >"${add}"/.amtm_theme
-	[ "$1" ] || show_amtm " changed theme to $theme"
-}
-
-c_t(){
-	divconf=/opt/share/diversion/.conf/diversion.conf
-	if [ -f "${add}"/.amtm_theme ]; then
-		. "${add}"/.amtm_theme
-	else
-		[ -s "$divconf" ] && theme="$(grep "THEME=" "$divconf" | sed -e 's/THEME=//')"
-	fi
-	[ "$theme" ] && theme_$theme || theme_amtm new
-}
-
-update_amtm(){
-	if ! c_url "$amtmURL/amtm" | grep -q "^version="; then
-		if [ "$su" = 1 ]; then
-			updErr=1
-			thisrem=" ${E_BG}upd err${NC}"
-			amtmUpd=0
-		else
-			show_amtm " Update aborted, could not retrieve version"
-		fi
-	else
-		amtmRemotever="$(c_url "$amtmURL/amtm" | grep "^version=" | sed -e 's/version=//')"
-		localmd5="$(md5sum "$0" | awk '{print $1}')"
-		remotemd5="$(c_url "$amtmURL/amtm" | md5sum | awk '{print $1}')"
-
-		if [ "$su" = 1 ]; then
-			if [ "$version" != "$amtmRemotever" ]; then
-				thisrem="${E_BG}-> v$amtmRemotever${NC}"
-				amtmUpd=1
-			elif [ "$localmd5" != "$remotemd5" ]; then
-				thisrem="${E_BG}-> min upd${NC}"
-				amtmUpd=2
-			else
-				thisrem="${GN_BG}v$version${NC}"
-				amtmUpd=0
-			fi
-		else
-			if [ "$version" != "$amtmRemotever" ]; then
-				a_m "updated from v$version to v$amtmRemotever"
-			elif [ "$localmd5" != "$remotemd5" ]; then
-				a_m "minor version update applied"
-			else
-				a_m "force updated to v$amtmRemotever"
-			fi
-			g_i_m
-			exec "${scriptPath}" " amtm $am"
-		fi
-	fi
-}
-
-install_amtm(){
-	amtm_install(){
-		[ -d "${add}" ] && fmd= || fmd=1
-		mkdir -p "${add}"
-
-		if [ ! -d "${add}" ]; then
-			printf "\\n amtm failed to create the directory\\n ${add}\\n Please investigate. Aborting amtm now.\\n\\n"
-			exit 1
-		fi
-
-		mv /jffs/amtm-* "${add}" 2> /dev/null;mv /jffs/.amtm_* "${add}" 2> /dev/null
-
-		c_t
-
-		[ "$(readlink -f "$0")" != "${scriptPath}" ] && cp "$0" "${scriptPath}"
-		[ -f /opt/bin/amtm ] && rm -f /opt/bin/amtm
-		if [ -d /opt/bin ] && [ ! -L /opt/bin/amtm ]; then
-			ln -s "${scriptPath}" /opt/bin
-		fi
-
-		if [ ! -f /jffs/configs/profile.add ]; then
-			echo "alias amtm='${scriptPath}' # added by amtm" >/jffs/configs/profile.add
-		elif ! grep -q "^alias amtm=" /jffs/configs/profile.add; then
-			sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
-			d_t_u /jffs/configs/profile.add
-			c_nl /jffs/configs/profile.add
-			echo "alias amtm='${scriptPath}' # added by amtm" >>/jffs/configs/profile.add
-		fi
-
-		if [ "$1" = migrated ]; then
-			a_m " amtm $1 to v$version"
-		else
-			a_m " amtm $version installed, start command is"
-			a_m " ${GN_BG} amtm ${NC} or ${GN_BG} ${scriptPath} ${NC}\\n"
-			a_m " Initializing amtm for first run"
-		fi
-
-		[ "$fmd" ] && a_m " - Created ${GN}${add}${NC} directory"
-
-		if [ "$(nvram get jffs2_scripts)" != 1 ]; then
-			a_m " - JFFS custom scripts and configs enabled"
-			nvram set jffs2_scripts=1
-			nvram commit
-		fi
-
-		s_p
-		if [ "$0" != "${scriptPath}" ]; then
-			rm -f "$0"
-		fi
-		exec "${scriptPath}" "$am"
-	}
-
-	if [ -f /usr/sbin/amtm ]; then
-		if [ -f "/jffs/configs/profile.add" ]; then
-			sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
-			r_w_e /jffs/configs/profile.add
-			unalias amtm 2> /dev/null
-		fi
-		rm -f "$0"
-		exec /usr/sbin/amtm
-	elif [ -f "${scriptPath}" ]; then
-		amtm_install migrated
-	else
-		clear
-		theme_standard
-		ascii_logo ""
-		printf "%-27s%s\\n" " This is amtm $version" "by thelonelycoder"
-		p_e_l
-		echo " Welcome to amtm"
-		echo " The $title"
-		p_e_l
-		while true; do
-			printf " Install amtm now? [1=Yes e=Exit] ";read -r continue
-			case "$continue" in
-				1)		if [ -z "$(which dos2unix)" ]; then
-							echo
-							echo " This routers firmware is missing"
-							echo " dos2unix. amtm cannot be installed."
-							rm -f "$0"
-							echo
-							exit 0
-
-						elif [ ! -f /usr/sbin/curl ]; then
-							echo
-							echo " Sorry, wrong platform."
-							echo " amtm cannot be installed."
-							rm -f "$0"
-							echo
-							exit 0
-						elif [ ! -d /jffs ]; then
-							echo
-							echo " /jffs partition is not present on this"
-							echo " router. amtm cannot be installed."
-							echo " Please investigate."
-							rm -f "$0"
-							echo
-							exit 0
-						else
-							amtm_install new
-						fi
-						break;;
-				[Ee])	clear;ascii_logo "  Goodbye"
-						rm -f "$0";echo;exit 0;break;;
-				*)		printf "\\n input is not an option\\n\\n";;
-			esac
-		done
-	fi
-}
-
-remove_amtm(){
-	p_e_l
-	echo " Do you want to remove amtm now?"
+	echo " Do you want to reset amtm settings now?"
 	echo
-	echo " Note that removing amtm will not remove or"
+	echo " Note that resetting amtm will not remove or"
 	echo " uninstall any installed SNBForum scripts."
 	echo
 	echo " However, it will remove the Disk check"
@@ -778,39 +479,60 @@ remove_amtm(){
 		r_w_e /jffs/scripts/init-start
 		cru d amtm_RebootScheduler
 	fi
-
-	if [ -f "/jffs/configs/profile.add" ]; then
-		sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
-		r_w_e /jffs/configs/profile.add
-		unalias amtm 2> /dev/null
-	fi
 	rm -rf "${add}"
-	rm -f /opt/bin/amtm "${scriptPath}" "$0"
-
 	clear
-	ascii_logo "  amtm completely removed"
+	ascii_logo "  amtm settings reset"
 	echo
 	echo "   Goodbye!"
 	echo
 	exit 0
 }
 
-if [ ! -d "${add}" ] || [ ! -f "${scriptPath}" ] || [ -f /usr/sbin/amtm ]; then
-	install_amtm
-elif ! cmp -s "$0" "$scriptPath"; then
-	cp -f "$0" "$scriptPath"
-	s_p
-	if [ "$0" != "$scriptPath" ]; then
-		rm -f "$0"
+update_amtm(){
+	urlNOK=
+	if ! c_url "$amtmURL/amtm.mod" | grep -q "^version="; then
+		urlNOK=1
+		f_b_url
 	fi
-	exec "$scriptPath" " amtm $version auto-update applied"
-elif [ -z "$1" ]; then
-	[ "$am" ] && show_amtm "$am" || show_amtm menu
-elif [ "$1" = tpu ]; then
-	su=1;suUpd=0;updErr=;tpu=1
-	> /tmp/amtm-tpu-check
-	show_amtm >/dev/null 2>&1
-else
-	show_amtm "$1"
-fi
+	if [ "$urlNOK" ] && ! c_url "$amtmURL/amtm.mod" | grep -q "^version="; then
+		if [ "$su" = 1 ]; then
+			updErr=1
+			thisrem=" ${E_BG}upd err${NC}"
+			amtmUpd=0
+		else
+			a_m " Update aborted, could not retrieve version"
+			show_amtm menu
+		fi
+	else
+		urlNOK=
+	fi
+	if [ -z "$urlNOK" ]; then
+		amtmRemotever="$(c_url "$amtmURL/amtm.mod" | grep "^version=" | sed -e 's/version=//')"
+		localmd5="$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')"
+		remotemd5="$(c_url "$amtmURL/amtm.mod" | md5sum | awk '{print $1}')"
+
+		if [ "$su" = 1 ]; then
+			if [ "$version" != "$amtmRemotever" ]; then
+				thisrem="${E_BG}-> v$amtmRemotever${NC}"
+				amtmUpd=1
+			elif [ "$localmd5" != "$remotemd5" ]; then
+				thisrem="${E_BG}-> min upd${NC}"
+				amtmUpd=2
+			else
+				thisrem="${GN_BG}v$version${NC}"
+				amtmUpd=0
+			fi
+		else
+			if [ "$version" != "$amtmRemotever" ]; then
+				a_m " amtm updated from v$version to v$amtmRemotever"
+			elif [ "$localmd5" != "$remotemd5" ]; then
+				a_m " amtm minor version update applied"
+			else
+				a_m " amtm force updated to v$amtmRemotever"
+			fi
+			g_i_m "${add}"
+			exec "$0" "$am"
+		fi
+	fi
+}
 #eof

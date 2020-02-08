@@ -1,0 +1,34 @@
+#!/bin/sh
+#bof
+YazFi_installed(){
+	scriptname=YazFi
+	scriptgrep=' YAZFI_VERSION'
+	if [ "$su" = 1 ]; then
+		remoteurl="https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh"
+		grepcheck=jackyaz
+	fi
+	script_check
+	printf "${GN_BG} 4 ${NC} %-9s%-21s%${COR}s\\n" "open" "YazFi         $localver" " $upd"
+	case_4(){
+		/jffs/scripts/YazFi
+		sleep 2
+		show_amtm menu
+	}
+}
+install_YazFi(){
+	p_e_l
+	echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
+	echo " on your router."
+	echo
+	echo " Author: Jack Yaz"
+	echo " https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/"
+	c_d
+	c_url "https://raw.githubusercontent.com/jackyaz/YazFi/master/YazFi.sh" -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
+	sleep 2
+	if [ -f /jffs/scripts/YazFi ]; then
+		show_amtm " YazFi installed"
+	else
+		am=;show_amtm " YazFi installation failed"
+	fi
+}
+#eof

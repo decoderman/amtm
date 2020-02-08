@@ -12,17 +12,17 @@ See the Asuswrt-Merlin wiki for the [usage of this firmware version](https://git
 News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).  
 Discussion about [amtm - the Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
 
-**Note that starting with version 2.7, amtm is now hosted on the Diversion Server, this repository will no longer be updated**.  
+**Note that starting with version 2.7, amtm is now hosted on the Diversion Server**.  
 The transition for the built in amtm updater is seamless, no user action is required to use the new Server.
 
-### How to install or reinstall amtm on Asuswrt-Merlin
+### How to install or reinstall amtm on Asuswrt-Merlin older than 384.15
 Enter the complete command below into your favorite SSH terminal, then press Enter.
 
 ```Shell
 /usr/sbin/curl -Os https://diversion.ch/amtm/amtm && sh amtm
 ```
 
-[![amtm v2.8](https://i.imgur.com/XWGL9vN.png "amtm v2.8")](https://i.imgur.com/XWGL9vN.png "amtm v2.8")
+[![amtm v3.1.1](https://i.imgur.com/3qYg2cL.png "amtm v3.1.1")](https://i.imgur.com/3qYg2cL.png "amtm v3.1.1")
 
 ### Supported scripts
 
@@ -41,7 +41,7 @@ Enter the complete command below into your favorite SSH terminal, then press Ent
 [uiScribe](https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/) - maintained by Jack Yaz<br/>
 
 [DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0<br/>
-[Entware](https://github.com/Entware/entware) - maintained by zyxmon & ryzhovau<br/>
+[Entware](https://github.com/Entware/entware) - maintained by zyxmon, ryzhovau, themiron<br/>
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic (beta support suspended)<br/>
 
 [USB Disk Check at Boot or Hot Plug (improved version)](https://github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)) - maintained by ColinTaylor, latenitetech, thelonelycoder<br/>
@@ -53,14 +53,8 @@ Reboot scheduler via cron job - maintained by thelonelycoder<br/>
 Swap file creation and management - maintained by thelonelycoder<br/>
 amtm themes - maintained by thelonelycoder<br/>
 
-### How to start amtm after installation
-Enter this into your SSH terminal:
-
-```Shell
-/jffs/scripts/amtm
-```
-
-If Entware is installed on the router, start amtm with this command, [Diversion](https://diversion.ch/) installs Entware by default, amtm has an option to do so.
+### How to start amtm after installation or in Asuswrt-Merlin firmware 384.15 and newer
+Enter this into your favorite SSH terminal:
 
 ```Shell
 amtm

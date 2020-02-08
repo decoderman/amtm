@@ -1,0 +1,39 @@
+#!/bin/sh
+#bof
+
+# Diversion and amtm are free to use under the GNU General Public License version 3 (GPL-3.0)
+# https://opensource.org/licenses/GPL-3.0
+
+# Proudly coded by thelonelycoder
+# Copyright (c) 2016-2066 thelonelycoder - All Rights Reserved
+# https://www.snbforums.com/members/thelonelycoder.25480/
+# https://diversion.ch
+
+# Entware mounting script for amtm or when Diversion has been uninstalled but Entware was opted to remain.
+# With verbose logging to Syslog to help track errors for attached USB devices.
+# Script is sourced in /jffs/scripts/post-mount with the following line:
+# . /jffs/addons/diversion/mount-entware.div # Added by amtm or Diversion
+
+mount_entware(){
+	logger -t Entware "Starting Entware services on $1"
+	ln -nsf "${opkgFile%/bin/opkg}" /tmp/opt
+	/opt/etc/init.d/rc.unslung start $0
+}
+
+opkgFile=$(/usr/bin/find $1/entware/bin/opkg 2> /dev/null)
+if [ "$opkgFile" ] && [ ! -d /opt/bin ]; then
+	mount_entware $1
+elif [ "$opkgFile" ] && [ -d /opt/bin ]; then
+	logger -t Entware "Not starting Entware services on $1, Entware is already started"
+else
+	opkgUnknown=$(/usr/bin/find $1/entware*/bin/opkg 2> /dev/null)
+	if [ "$opkgUnknown" ]; then
+		mv "${opkgUnknown%/bin/opkg}" "${opkgUnknown%/entware*/bin/opkg}/entware"
+		logger -t Entware "(Alert) Entware folder ${opkgUnknown%/bin/opkg} renamed to $1/entware"
+		opkgFile=$(/usr/bin/find $1/entware/bin/opkg 2> /dev/null)
+		mount_entware $1
+	else
+		logger -t Entware "(Notice) $1 does not contain Entware, skipping device"
+	fi
+fi
+#eof
