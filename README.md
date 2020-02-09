@@ -49,7 +49,7 @@ amtm also offers an interface for managing a number of other features:
 
 | Other features | Maintainer |
 |----------------|-----------|
-| Entware _(replaces the old entware-setup.sh)_ | zyxmon, ryzhovau, themiron |
+| Entware | zyxmon, ryzhovau, themiron |
 | USB disk check at boot | ColinTaylor, latenitetech, thelonelycoder |
 | Format disk | thelonelycoder, ColinTaylor |
 | Reboot scheduler via cron job | thelonelycoder |
