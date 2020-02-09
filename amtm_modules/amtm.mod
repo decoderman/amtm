@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.1
-release="February 02 2020"
+version=3.1.2
+release="February 09 2020"
 dc_version=2.8
 title="Asuswrt-Merlin Terminal Menu"
 contributors="Contributors: Adamm, ColinTaylor, Martineau
@@ -90,6 +90,7 @@ show_amtm(){
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
 	/opt/bin/x3mRouting x3mRouting 6 x3mRouting¦-¦Selective¦Routing
+	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
@@ -160,6 +161,7 @@ show_amtm(){
 					4)		case_4(){ g_m YazFi.mod include;install_YazFi;};;
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;install_scribe;};;
 					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;install_x3mRouting;};;
+					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;install_unbound_manager;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;install_connmon;};;
 					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;install_ntpmerlin;};;
 					j3)		case_j3(){ g_m scmerlin.mod include;install_scmerlin;};;
@@ -292,7 +294,7 @@ show_amtm(){
 	fi
 
 	[ "$ss" ] && ssi=1 || ssi=
-	unset ss atii upd dlLoc
+	unset ss atii upd
 	if [ "$su" = 1 ]; then
 		su=
 		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
@@ -325,7 +327,7 @@ show_amtm(){
 		fi
 	fi
 	[ "$sfp" = 1 ] && s_p "${add}"
-	sfp=
+	unset sfp dlLoc
 
 	if [ "$1" = menu ] && [ -z "$am" ]; then
 		p_e_l
@@ -349,6 +351,7 @@ show_amtm(){
 			4)					case_4;break;;
 			5)					case_5;break;;
 			6)					case_6;break;;
+			7)					case_7;break;;
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;

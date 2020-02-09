@@ -3,7 +3,7 @@
 disk_check_installed(){
 	atii=1
 	[ -f /jffs/scripts/disk-check ] && mv /jffs/scripts/disk-check "${add}"
-	
+
 	if ! grep -qE "^VERSION=$dc_version" "${add}"/disk-check; then
 		if grep -q "^blkidExclude=" "${add}"/disk-check; then
 			blkidExclude="$(grep "^blkidExclude=" "${add}"/disk-check | sed -e "s/blkidExclude=//;s/'//g")"

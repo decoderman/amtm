@@ -4,15 +4,15 @@ amtm is a front end that manages popular scripts for wireless routers running [A
 
 Starting with Asuswrt-Merlin 384.15, amtm is included in the firmware.
 
-**The file /amtm_fw/amtm is for firmware inclusion only**. 
+**The file /amtm_fw/amtm is for firmware inclusion only**.
 Use the install link on this page to install the regular version on Asuswrt-Merlin firmware older than 384.15.
- 
+
 See the Asuswrt-Merlin wiki for the [usage of this firmware version](https://github.com/RMerl/asuswrt-merlin/wiki/AMTM).
 
-News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).  
+News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).
 Discussion about [amtm - the Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
 
-**Note that starting with version 2.7, amtm is now hosted on the Diversion Server**.  
+**Note that starting with version 2.7, amtm is hosted on the Diversion Server**.
 The transition for the built in amtm updater is seamless, no user action is required to use the new Server.
 
 ### How to install or reinstall amtm on Asuswrt-Merlin older than 384.15
@@ -32,6 +32,7 @@ Enter the complete command below into your favorite SSH terminal, then press Ent
 [YazFi](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) - maintained by Jack Yaz<br/>
 [scribe](https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/) - maintained by cmkelley<br/>
 [x3mRouting](https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/) - maintained by Xentrk<br/>
+[unbound Manager](https://www.snbforums.com/threads/release-unbound_manager-manager-installer-utility-for-unbound-recursive-dns-server.61669/) - maintained by Martineau<br/>
 
 [connmon](https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/) - maintained by Jack Yaz<br/>
 [ntpMerlin](https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/) - maintained by Jack Yaz<br/>
@@ -40,7 +41,7 @@ Enter the complete command below into your favorite SSH terminal, then press Ent
 [uiDivStats](https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/) - maintained by Jack Yaz<br/>
 [uiScribe](https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/) - maintained by Jack Yaz<br/>
 
-[DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0<br/>
+[DNSCrypt](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) - maintained by bigeyes0x0, SomeWhereOverTheRainBow<br/>
 [Entware](https://github.com/Entware/entware) - maintained by zyxmon, ryzhovau, themiron<br/>
 [Pixelserv-tls](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) - maintained by kvic (beta support suspended)<br/>
 
