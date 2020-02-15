@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.1.2
-release="February 09 2020"
+version=3.1.3
+release="February 15 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
@@ -80,7 +80,9 @@ show_amtm(){
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
 	/opt/bin/x3mRouting x3mRouting 6 x3mRouting¦-¦Selective¦Routing
+	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
+	/jffs/scripts/nsrum nsrum 8 nsrum¦-¦NVRAM¦Save/Restore¦Utility
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
@@ -135,14 +137,15 @@ show_amtm(){
 			fi
 		else
 			scriptloc=$(echo $i | awk '{print $1}')
+			f2=$(echo $i | awk '{print $2}')
 			if [ -f "$scriptloc" ]; then
-				g_m $(echo $i | awk '{print $2}').mod include
-				$(echo $i | awk '{print $2}')_installed
+				g_m ${f2}.mod include
+				${f2}_installed
 			else
 				f3="$(echo $i | awk '{print $3}')"
 				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
 				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
-				r_m $(echo $i | awk '{print $2}').mod
+				r_m ${f2}.mod
 				case $f3 in
 					1)		case_1(){ g_m diversion.mod include;install_diversion;};;
 					2)		case_2(){ g_m skynet.mod include;install_skynet;};;
@@ -151,6 +154,7 @@ show_amtm(){
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;install_scribe;};;
 					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;install_x3mRouting;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;install_unbound_manager;};;
+					8)		case_8(){ c_e nsrum;g_m nsrum.mod include;install_nsrum;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;install_connmon;};;
 					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;install_ntpmerlin;};;
 					j3)		case_j3(){ g_m scmerlin.mod include;install_scmerlin;};;
@@ -341,6 +345,7 @@ show_amtm(){
 			5)					case_5;break;;
 			6)					case_6;break;;
 			7)					case_7;break;;
+			8)					case_8;break;;
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;

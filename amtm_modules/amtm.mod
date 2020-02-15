@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.2
-release="February 09 2020"
+version=3.1.3
+release="February 15 2020"
 dc_version=2.8
 title="Asuswrt-Merlin Terminal Menu"
 contributors="Contributors: Adamm, ColinTaylor, Martineau
@@ -75,7 +75,10 @@ g_i_m(){
 }
 
 show_amtm(){
-	amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw
+	case "$release" in
+		*XX*)	amtmURL=http://diversion.test/amtm_fw;;
+		*)		amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;
+	esac
 	c_t
 	clear
 	printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
@@ -90,7 +93,9 @@ show_amtm(){
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
 	/opt/bin/x3mRouting x3mRouting 6 x3mRouting¦-¦Selective¦Routing
+	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
+	/jffs/scripts/nsrum nsrum 8 nsrum¦-¦NVRAM¦Save/Restore¦Utility
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
@@ -162,6 +167,7 @@ show_amtm(){
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;install_scribe;};;
 					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;install_x3mRouting;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;install_unbound_manager;};;
+					8)		case_8(){ c_e nsrum;g_m nsrum.mod include;install_nsrum;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;install_connmon;};;
 					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;install_ntpmerlin;};;
 					j3)		case_j3(){ g_m scmerlin.mod include;install_scmerlin;};;
@@ -352,6 +358,7 @@ show_amtm(){
 			5)					case_5;break;;
 			6)					case_6;break;;
 			7)					case_7;break;;
+			8)					case_8;break;;
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;
