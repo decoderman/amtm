@@ -167,7 +167,7 @@ show_amtm(){
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;install_scribe;};;
 					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;install_x3mRouting;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;install_unbound_manager;};;
-					8)		case_8(){ c_e nsrum;g_m nsrum.mod include;install_nsrum;};;
+					8)		case_8(){ g_m nsrum.mod include;install_nsrum;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;install_connmon;};;
 					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;install_ntpmerlin;};;
 					j3)		case_j3(){ g_m scmerlin.mod include;install_scmerlin;};;
