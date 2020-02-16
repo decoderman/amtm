@@ -132,8 +132,8 @@ manage_swap(){
 							1)		p_e_l
 									echo " Select a Swap file size"
 									echo
-									echo " 1. -->   1 GB"
-									echo " 2. -->   2 GB"
+									echo " 1.  1 GB"
+									echo " 2.  2 GB (recommended)"
 
 									while true; do
 										printf "\\n Enter size [1-2 e=Exit] ";read -r size
@@ -185,6 +185,7 @@ manage_swap(){
 			printf "\\n Delete the Swap file? [1=Yes e=Exit] ";read -r continue
 			case "$continue" in
 				1)		if [ -f "$swl" ]; then
+							sync; echo 3 > /proc/sys/vm/drop_caches
 							swapoff "$swl"
 							rm "$swl"
 							sed -i '\~swapon ~d' /jffs/scripts/post-mount
@@ -225,7 +226,8 @@ manage_swap(){
 			while true; do
 				printf "\\n Enter swap file to delete [1-$((i-1)) e=Exit] ";read -r continue
 				case "$continue" in
-					[$noad])	swapoff -a
+					[$noad])	sync; echo 3 > /proc/sys/vm/drop_caches
+								swapoff -a
 								eval rmswap="\$swapfile$continue"
 								rm "$rmswap"
 								show_amtm menu
