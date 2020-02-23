@@ -1,16 +1,6 @@
 #!/bin/sh
 #bof
-p_e_l
-echo " This installs Entware - the ultimate Software repository"
-echo " on this router."
-echo " Note: If you plan to install Diversion on"
-echo " this router, install Diversion first,"
-echo " it includes the installation of Entware."
-echo
-echo " Author: thelonelycoder"
-p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])r_m entware_setup.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;
-
-install_Entware(){
+setup_Entware(){
 	NAME="amtm Entware installer"
 	c_e_folder(){
 		if [ "$(/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" 2>/dev/null | wc -l)" -gt 1 ]; then
@@ -199,7 +189,7 @@ install_Entware(){
 		printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 		case "$continue" in
 			1)			break;;
-			2)			echo;install_Entware;break;;
+			2)			echo;setup_Entware;break;;
 			[Ee])		r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
 			*)			printf "\\n input is not an option\\n";;
 		esac
@@ -239,5 +229,17 @@ install_Entware(){
 		am=;show_amtm " $entVer install failed"
 	fi
 }
-install_Entware
+
+
+install_Entware(){
+	p_e_l
+	echo " This installs Entware - the ultimate Software repository"
+	echo " on this router."
+	echo " Note: If you plan to install Diversion on"
+	echo " this router, install Diversion first,"
+	echo " it includes the installation of Entware."
+	echo
+	echo " Author: thelonelycoder"
+	p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)setup_Entware;break;;[Ee])r_m entware_setup.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;
+}
 #eof

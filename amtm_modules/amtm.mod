@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.3
-release="February 15 2020"
+version=3.1.4
+release="February 23 2020"
 dc_version=2.8
 title="Asuswrt-Merlin Terminal Menu"
 contributors="Contributors: Adamm, ColinTaylor, Martineau
@@ -9,7 +9,10 @@ contributors="Contributors: Adamm, ColinTaylor, Martineau
  https://www.snbforums.com/members/colintaylor.27699
  https://www.snbforums.com/members/martineau.13215"
 
-### Begin updates for /usr/sbin/amtm, use amtmRev= to target releases ###
+### Begin updates for /usr/sbin/amtm ###
+if [ "$amtmRev" = 1 ]; then
+	g_m amtm_rev1.mod include
+fi
 ### End updates for /usr/sbin/amtm ###
 
 ascii_logo(){
@@ -59,6 +62,7 @@ c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
+s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlins.net/amtm_fw;;esac;}
 s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
 
 g_i_m(){
@@ -75,11 +79,9 @@ g_i_m(){
 }
 
 show_amtm(){
-	case "$release" in
-		*XX*)	amtmURL=http://diversion.test/amtm_fw;;
-		*)		amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;
-	esac
+	s_d_u
 	c_t
+	unset dlok dfc
 	clear
 	printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
 	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
@@ -128,7 +130,7 @@ show_amtm(){
 				r_m install_stubby.mod
 				case_sd(){
 					g_m install_stubby.mod include
-					install_stubby
+					[ -f "${add}"/install_stubby.mod ] && install_stubby
 				}
 			else
 				case_sd(){
@@ -140,7 +142,7 @@ show_amtm(){
 				[ ! -f "${add}"/pixelserv-tls.mod ] && [ "$ss" ] && [ -z "$su" ] && printf "${E_BG} ps${NC} %-9s%s\\n" "use" "pixelserv-tls CA for WebUI"
 				case_ps(){
 					g_m pixelserv-tls.mod include
-					use_ps_ca
+					[ -f "${add}"/pixelserv-tls.mod ] && use_ps_ca
 				}
 			else
 				r_m pixelserv-tls.mod
@@ -153,29 +155,29 @@ show_amtm(){
 			f2=$(echo $i | awk '{print $2}')
 			if [ -f "$scriptloc" ]; then
 				g_m ${f2}.mod include
-				${f2}_installed
+				[ -f "${add}/${f2}.mod" ] && ${f2}_installed
 			else
 				f3="$(echo $i | awk '{print $3}')"
 				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
 				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
 				r_m ${f2}.mod
 				case $f3 in
-					1)		case_1(){ g_m diversion.mod include;install_diversion;};;
-					2)		case_2(){ g_m skynet.mod include;install_skynet;};;
-					3)		case_3(){ g_m FreshJR_QOS.mod include;install_FreshJR_QOS;};;
-					4)		case_4(){ g_m YazFi.mod include;install_YazFi;};;
-					5)		case_5(){ c_e scribe;g_m scribe.mod include;install_scribe;};;
-					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;install_x3mRouting;};;
-					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;install_unbound_manager;};;
-					8)		case_8(){ g_m nsrum.mod include;install_nsrum;};;
-					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;install_connmon;};;
-					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;install_ntpmerlin;};;
-					j3)		case_j3(){ g_m scmerlin.mod include;install_scmerlin;};;
-					j4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;install_spdmerlin;};;
-					j5)		case_j5(){ g_m uiDivStats.mod include;install_uiDivStats;};;
-					j6)		case_j6(){ g_m uiScribe.mod include;install_uiScribe;};;
-					di)		case_di(){ g_m dnscrypt.mod include;install_dnscrypt;};;
-					ep)		case_ep(){ g_m entware_setup.mod include;};;
+					1)		case_1(){ g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
+					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
+					3)		case_3(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
+					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
+					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
+					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
+					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
+					8)		case_8(){ g_m nsrum.mod include;[ "$dlok" = 1 ] && install_nsrum || show_amtm menu;};;
+					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
+					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;[ "$dlok" = 1 ] && install_ntpmerlin || show_amtm menu;};;
+					j3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
+					j4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
+					j5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
+					j6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
+					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
+					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 				esac
 			fi
 		fi
@@ -191,16 +193,16 @@ show_amtm(){
 	if [ -f "${add}"/disk-check ] || [ -f /jffs/scripts/disk-check ] && grep -q "/disk-check # Added by" /jffs/scripts/pre-mount; then
 		g_m disk-check.mod include
 		case_dc(){
-			disk_check manage
+			[ -f "${add}"/disk-check.mod ] && disk_check manage
 			show_amtm menu
 		}
-		disk_check_installed
+		[ -f "${add}"/disk-check.mod ] && disk_check_installed || show_amtm menu
 	else
 		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
 		r_m disk-check.mod
 		case_dc(){
 			g_m disk-check.mod include
-			install_disk_check
+			[ -f "${add}"/disk-check.mod ] && install_disk_check || show_amtm menu
 		}
 	fi
 
@@ -213,23 +215,23 @@ show_amtm(){
 	fi
 	case_fd(){
 		g_m format_disk.mod include
-		format_disk
+		[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
 	}
 
 	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
 		g_m reboot_scheduler.mod include
-		reboot_scheduler_installed
+		[ -f "${add}"/reboot_scheduler.mod ] && reboot_scheduler_installed || show_amtm menu
 	else
 		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
 		r_m reboot_scheduler.mod
 		case_rs(){
 			g_m reboot_scheduler.mod include
-			install_reboot_scheduler
+			[ -f "${add}"/reboot_scheduler.mod ] && install_reboot_scheduler || show_amtm menu
 		}
 	fi
 
 	unset swl swsize swpsize swtxt mpsw
-	gms(){ g_m swap.mod include;}
+	gms(){ g_m swap.mod include;[ "$dlok" = 0 ] && show_amtm menu;}
 	[ -f /jffs/scripts/post-mount ] && swl="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
 		if [ -f "$swl" ] && [ "$swl" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
@@ -314,7 +316,7 @@ show_amtm(){
 				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n\\n"
 				if [ "$amtmUpd" = 2 ]; then
 					printf " ${R}A minor amtm update is available!${NC}\\n\\n"
-					amtmUpdText="minor version update applied"
+					amtmUpdText=" minor version update applied"
 				fi
 				echo " Do you want to update amtm now?"
 				c_d
@@ -333,14 +335,15 @@ show_amtm(){
 		fi
 	fi
 	[ "$sfp" = 1 ] && s_p "${add}"
-	unset sfp dlLoc
+	unset sfp dfc
+	rm -f /tmp/amtm-dl
 
 	if [ "$1" = menu ] && [ -z "$am" ]; then
 		p_e_l
 	else
 		p_e_l
 		if [ "$am" ]; then
-			[ "$1" = menu ] && printf "$am\\n" || printf "$1\\n$am\\n"
+			[ "$1" = menu ] && printf "$(echo "$am" | sed 's/^\\n//')\\n" || printf "$1\\n$am\\n"
 			am=
 		else
 			printf "$1\\n"
@@ -350,6 +353,7 @@ show_amtm(){
 
 	while true; do
 		printf "${R_BG} Enter option ${NC} ";read -r selection
+		s_d_u
 		case "$selection" in
 			1)					case_1;break;;
 			2)					case_2;break;;
@@ -516,6 +520,7 @@ update_amtm(){
 	else
 		urlNOK=
 	fi
+	dfc=
 	if [ -z "$urlNOK" ]; then
 		amtmRemotever="$(c_url "$amtmURL/amtm.mod" | grep "^version=" | sed -e 's/version=//')"
 		localmd5="$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')"
