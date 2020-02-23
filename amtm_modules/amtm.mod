@@ -196,7 +196,7 @@ show_amtm(){
 			[ -f "${add}"/disk-check.mod ] && disk_check manage
 			show_amtm menu
 		}
-		[ -f "${add}"/disk-check.mod ] && disk_check_installed || show_amtm menu
+		disk_check_installed
 	else
 		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
 		r_m disk-check.mod
