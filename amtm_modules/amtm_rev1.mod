@@ -1,6 +1,6 @@
 #!/bin/sh
 #bof
-f_b_url(){ a_m " ! using ${R}fallback server${NC} diversion.ch";amtmURL=http://diversion.test/amtm_fw;dfc=1;g_m "$@";}
+f_b_url(){ a_m " ! using ${R}fallback server${NC} diversion.ch";amtmURL=https://diversion.ch/amtm_fw;dfc=1;g_m "$@";}
 g_m(){
 	[ "$1" = amtm.mod ] && set -- "$1" "$2" "${add}/a_fw"
 	[ "$3" ] || set -- "$1" "$2" "${add}"
