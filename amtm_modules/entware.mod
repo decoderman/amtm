@@ -11,24 +11,39 @@ check_ps_version(){
 entware_installed(){
 	atii=1
 	if [ "$su" = 1 ]; then
-		opkg update >/dev/null
-		opkg list-upgradable >/tmp/amtm-entware-check
+		opkg update >/tmp/amtm-entware-check 2>&1
 		if [ -s /tmp/amtm-entware-check ]; then
-			suUpd=1
-			if [ "$tpu" ]; then
-				[ "$tpu" ] && echo "<br>Entware package updates:<br>" >>/tmp/amtm-tpu-check
-			else
-				printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
-				while read line; do
-					printf "- %-22s%-10s%${COR}s\\n" "$(echo $line | awk '{print $1}')" " $(echo $line | awk '{print $3}')" " $(echo $line | awk '{print "'${E_BG}'-> " $5 "'${NC}'"}')"
-					[ "$tpu" ] && echo "&nbsp;- $(echo $line | awk '{print $1}') v$(echo $line | awk '{print $3}') -> v$(echo $line | awk '{print $5}')<br>" >>/tmp/amtm-tpu-check
-				done </tmp/amtm-entware-check
-				echo
+			if grep -q 'pdated list' /tmp/amtm-entware-check; then
+				rm /tmp/amtm-entware-check
+				opkg list-upgradable >/tmp/amtm-entware-check
+				if [ -s /tmp/amtm-entware-check ]; then
+					suUpd=1
+					if [ "$tpu" ]; then
+						[ "$tpu" ] && echo "<br>Entware package updates:<br>" >>/tmp/amtm-tpu-check
+					else
+						printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
+						while read line; do
+							printf "- %-22s%-10s%${COR}s\\n" "$(echo $line | awk '{print $1}')" " $(echo $line | awk '{print $3}')" " $(echo $line | awk '{print "'${E_BG}'-> " $5 "'${NC}'"}')"
+							[ "$tpu" ] && echo "&nbsp;- $(echo $line | awk '{print $1}') v$(echo $line | awk '{print $3}') -> v$(echo $line | awk '{print $5}')<br>" >>/tmp/amtm-tpu-check
+						done </tmp/amtm-entware-check
+						echo
+					fi
+				else
+					printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
+				fi
+
+			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
+				printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
+				if grep -q 'bin.entware.net' /opt/etc/opkg.conf; then
+					a_m " ! Entware: ${R}bin.entware.net${NC} unreachable"
+				elif grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
+					a_m " ! Entware: ${R}pkg.entware.net${NC} and\\n   ${R}maurerr.github.io${NC} unreachable"
+				else
+					a_m " ! Entware: ${R}pkg.entware.net${NC} unreachable"
+				fi
 			fi
-		else
-			printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
 		fi
-		rm /tmp/amtm-entware-check
+		rm -f /tmp/amtm-entware-check
 	else
 		printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi

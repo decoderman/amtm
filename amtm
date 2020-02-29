@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.1.4
-release="February 23 2020"
+version=3.1.5
+release="February 29 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
@@ -314,7 +314,7 @@ show_amtm(){
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
-				a_m " Update aborted, could not retrieve version"
+				a_m "\\n Update(s) aborted, could not retrieve version"
 			else
 				a_m " All scripts are up to date"
 			fi
@@ -537,6 +537,7 @@ script_check(){
 		else
 			upd=" ${E_BG}upd err${NC}"
 			updErr=1
+			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
 	else
 		localver=
@@ -628,8 +629,9 @@ update_amtm(){
 			updErr=1
 			thisrem=" ${E_BG}upd err${NC}"
 			amtmUpd=0
+			a_m " ! amtm: ${R}$(echo $amtmURL | awk -F[/:] '{print $4}')${NC} unreachable"
 		else
-			show_amtm " Update aborted, could not retrieve version"
+			show_amtm " ! amtm: ${R}$(echo $amtmURL | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
 	else
 		amtmRemotever="$(c_url "$amtmURL/amtm" | grep "^version=" | sed -e 's/version=//')"
@@ -814,7 +816,10 @@ elif ! cmp -s "$0" "$scriptPath"; then
 	if [ "$0" != "$scriptPath" ]; then
 		rm -f "$0"
 	fi
-	exec "$scriptPath" " amtm $version auto-update applied"
+	c_t
+	a_m "$version auto-update applied"
+	g_i_m
+	exec "${scriptPath}" " amtm $am"
 elif [ -z "$1" ]; then
 	[ "$am" ] && show_amtm "$am" || show_amtm menu
 elif [ "$1" = tpu ]; then

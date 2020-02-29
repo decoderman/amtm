@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.4
-release="February 23 2020"
+version=3.1.5
+release="February 29 2020"
 dc_version=2.8
 title="Asuswrt-Merlin Terminal Menu"
 contributors="Contributors: Adamm, ColinTaylor, Martineau
@@ -11,7 +11,7 @@ contributors="Contributors: Adamm, ColinTaylor, Martineau
 
 ### Begin updates for /usr/sbin/amtm ###
 if [ "$amtmRev" = 1 ]; then
-	g_m amtm_rev1.mod include
+	c_t;g_m amtm_rev1.mod include
 fi
 ### End updates for /usr/sbin/amtm ###
 
@@ -196,7 +196,11 @@ show_amtm(){
 			[ -f "${add}"/disk-check.mod ] && disk_check manage
 			show_amtm menu
 		}
-		disk_check_installed
+		if [ -f "${add}"/disk-check.mod ]; then
+			disk_check_installed
+		else
+			[ "$ss" ] && [ -z "$su" ] && show_amtm menu
+		fi
 	else
 		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
 		r_m disk-check.mod
@@ -328,7 +332,7 @@ show_amtm(){
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
-				a_m " Update aborted, could not retrieve version"
+				a_m "\\n Update(s) aborted, could not retrieve version"
 			else
 				a_m " All scripts are up to date"
 			fi
@@ -466,6 +470,7 @@ script_check(){
 		else
 			upd=" ${E_BG}upd err${NC}"
 			updErr=1
+			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
 	else
 		localver=
@@ -513,9 +518,9 @@ update_amtm(){
 			updErr=1
 			thisrem=" ${E_BG}upd err${NC}"
 			amtmUpd=0
+			a_m " ! amtm: ${R}$(echo $amtmURL | awk -F[/:] '{print $4}')${NC} unreachable"
 		else
-			a_m " Update aborted, could not retrieve version"
-			show_amtm menu
+			show_amtm " ! amtm: ${R}$(echo $amtmURL | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
 	else
 		urlNOK=

@@ -38,6 +38,7 @@ diversion_installed(){
 		else
 			upd=" ${E_BG}upd err${NC}"
 			updErr=1
+			a_m " ! Diversion: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
 	else
 		localver=
