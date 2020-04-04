@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.1.5
-release="February 29 2020"
+version=3.1.6
+release="April 04 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
@@ -353,12 +353,12 @@ show_amtm(){
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]6)				case_j6;break;;
-			[Ii])				[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
+			[Ii])				c_ntp;[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
 			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
-			[Uu])				su=1;suUpd=0;updErr=;show_amtm menu;break;;
+			[Uu])				c_ntp;su=1;suUpd=0;updErr=;show_amtm menu;break;;
 			[Dd][Cc])			case_dc;break;;
 			dcl|DCL)			s_l_f amtm-disk-check.log;break;;
 			[Ff][Dd])			case_fd;break;;
@@ -367,7 +367,7 @@ show_amtm(){
 			[Ss][Ww])			case_swp;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
-			[Uu][Uu])			update_amtm;break;;
+			[Uu][Uu])			c_ntp;update_amtm;break;;
 			[Rr])				remove_amtm;break;;
 			[Aa])				about_amtm;break;;
 			[Ee])				clear
@@ -393,6 +393,7 @@ show_amtm(){
 a_m(){ [ -z "$am" ] && am=$1 || am="$am\\n$1";}
 c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
 c_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
+c_ntp(){ [ "$(nvram get ntp_ready)" = "0" ] && show_amtm " NTP not ready, check that router time is synced";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 c_url(){ /usr/sbin/curl -fsNL --retry 2 --connect-timeout 3 -m 8 "$@";}
@@ -670,6 +671,10 @@ install_amtm(){
 
 		if [ ! -d "${add}" ]; then
 			printf "\\n amtm failed to create the directory\\n ${add}\\n Please investigate. Aborting amtm now.\\n\\n"
+			exit 1
+		fi
+		if [ "$(nvram get ntp_ready)" = "0" ]; then
+			printf "\\n NTP not ready, check that the router time\\n is synced.\\n Aborting amtm now.\\n\\n"
 			exit 1
 		fi
 

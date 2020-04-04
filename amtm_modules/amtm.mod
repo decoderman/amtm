@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.5
-release="February 29 2020"
+version=3.1.6
+release="April 04 2020"
 dc_version=2.8
 title="Asuswrt-Merlin Terminal Menu"
 contributors="Contributors: Adamm, ColinTaylor, Martineau
@@ -10,8 +10,11 @@ contributors="Contributors: Adamm, ColinTaylor, Martineau
  https://www.snbforums.com/members/martineau.13215"
 
 ### Begin updates for /usr/sbin/amtm ###
+r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
 if [ "$amtmRev" = 1 ]; then
 	c_t;g_m amtm_rev1.mod include
+elif [ "$amtmRev" -ge 2 ]; then
+	r_m amtm_rev1.mod
 fi
 ### End updates for /usr/sbin/amtm ###
 
@@ -58,10 +61,10 @@ about_amtm(){
 }
 
 c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
+c_ntp(){ [ "$(nvram get ntp_ready)" = "0" ] && show_amtm " NTP not ready, check that router time is synced";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
-r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
 s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}
 s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
 
@@ -373,12 +376,12 @@ show_amtm(){
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]6)				case_j6;break;;
-			[Ii])				[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
+			[Ii])				c_ntp;[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
 			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
-			[Uu])				su=1;suUpd=0;updErr=;show_amtm menu;break;;
+			[Uu])				c_ntp;su=1;suUpd=0;updErr=;show_amtm menu;break;;
 			[Dd][Cc])			case_dc;break;;
 			dcl|DCL)			s_l_f amtm-disk-check.log;break;;
 			[Ff][Dd])			case_fd;break;;
@@ -387,7 +390,7 @@ show_amtm(){
 			[Ss][Ww])			case_swp;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
-			[Uu][Uu])			update_amtm;break;;
+			[Uu][Uu])			c_ntp;update_amtm;break;;
 			[Rr])				reset_amtm;break;;
 			[Aa])				about_amtm;break;;
 			[Ee])				clear

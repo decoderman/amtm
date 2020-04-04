@@ -34,6 +34,7 @@ g_m(){
 	if [ "$2" = include ]; then
 		if [ -f "$3/$1" ]; then
 			. "$3/$1"
+			dlok=1
 		else
 			g_m "$1" new "$3"
 			[ -f "$3/$1" ] && . "$3/$1" || dlok=0
