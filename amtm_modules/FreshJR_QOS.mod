@@ -4,7 +4,7 @@ FreshJR_QOS_installed(){
 	scriptname='FreshJR QOS'
 	localVother="v$(grep "^version=" /jffs/scripts/FreshJR_QOS | sed -e 's/version=//')"
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh"
+		remoteurl="https://raw.githubusercontent.com/dave14305/FreshJR_QOS/master/FreshJR_QOS.sh"
 		remoteVother="v$(c_url "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 		grepcheck=FreshJR
 	fi
