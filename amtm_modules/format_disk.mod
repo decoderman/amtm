@@ -4,6 +4,7 @@ format_disk(){
 	p_e_l
 	echo " This (re)formats your plugged in USB storage"
 	echo " device with up to three partitions."
+	echo
 	echo " The process erases all data and partitions"
 	echo " on the device."
 	echo " After formatting, the router will reboot."
@@ -52,7 +53,7 @@ format_disk(){
 
 		sdh=
 		if [ "$i" = 1 ]; then
-			am=;show_amtm " No compatible device(s) found to format"
+			am=;show_amtm " No compatible plugged in USB storage\\n device(s) found to format"
 		fi
 
 		[ "$i" = 2 ] && devNo=1-1 || devNo="1-$((i-1))"

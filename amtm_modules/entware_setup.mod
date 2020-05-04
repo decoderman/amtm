@@ -16,6 +16,7 @@ setup_Entware(){
 		echo " Checking /jffs/scripts entries"
 
 		c_j_s /jffs/scripts/post-mount
+		t_f /jffs/scripts/post-mount
 		if ! grep -q ". /jffs/addons/diversion/mount-entware.div" /jffs/scripts/post-mount; then
 			# remove old entries if found
 			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
@@ -27,6 +28,7 @@ setup_Entware(){
 		fi
 
 		c_j_s /jffs/scripts/services-stop
+		t_f /jffs/scripts/services-stop
 		if ! grep -q "/opt/etc/init.d/rc.unslung stop" /jffs/scripts/services-stop; then
 			echo "/opt/etc/init.d/rc.unslung stop # Added by amtm" >>/jffs/scripts/services-stop
 			echo " services-stop entry added"
@@ -82,6 +84,7 @@ setup_Entware(){
 		*)			am=;show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
 	esac
 
+	p_e_l
 	echo " Running pre-install checks"
 
 	if [ -L /tmp/opt ]; then
@@ -164,7 +167,7 @@ setup_Entware(){
 	if [ "$(uname -m)" = "aarch64" ]; then
 		p_e_l
 		printf " Select Entware version\\n\\n"
-		printf " This router can run 32bit or 64bit Entware.\\n\\n"
+		printf " This router can run 32-bit or 64-bit Entware.\\n\\n"
 		printf " 1. install 64-bit Entware (recommended)\\n"
 		printf " 2. install 32-bit Entware\\n"
 		while true; do
@@ -195,7 +198,7 @@ setup_Entware(){
 		esac
 	done
 
-	echo
+	p_e_l
 	cd /tmp
 
 	entPath="$entDev/entware"
@@ -235,9 +238,10 @@ install_Entware(){
 	p_e_l
 	echo " This installs Entware - the ultimate Software repository"
 	echo " on this router."
-	echo " Note: If you plan to install Diversion on"
-	echo " this router, install Diversion first,"
-	echo " it includes the installation of Entware."
+	echo
+	echo " If you plan to install Diversion on this"
+	echo " router, install Diversion first."
+	echo " It includes the installation of Entware."
 	echo
 	echo " Author: thelonelycoder"
 	p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)setup_Entware;break;;[Ee])r_m entware_setup.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;

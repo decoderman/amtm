@@ -8,6 +8,15 @@ ntpmerlin_installed(){
 		grepcheck=jackyaz
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$ntpMerlinUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$ntpMerlinUpate${NC}"
+		if [ "$ntpMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^ntpMerlin.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver ntpMerlinUpate ntpMerlinMD5
+		fi
+	fi
 	printf "${GN_BG} j2${NC} %-9s%-21s%${COR}s\\n" "open" "ntpMerlin     $localver" " $upd"
 	case_j2(){
 		/jffs/scripts/ntpmerlin

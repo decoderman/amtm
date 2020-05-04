@@ -2,7 +2,8 @@
 #bof
 disk_check_installed(){
 	atii=1
-	[ -f /jffs/scripts/disk-check ] && mv /jffs/scripts/disk-check "${add}"
+	[ -f /jffs/scripts/disk-check ] && rm /jffs/scripts/disk-check
+	[ -f "${add}"/disk-check.mod ] && rm "${add}"/disk-check.mod
 
 	if ! grep -qE "^VERSION=$dc_version" "${add}"/disk-check; then
 		if grep -q "^blkidExclude=" "${add}"/disk-check; then
@@ -14,6 +15,10 @@ disk_check_installed(){
 	fi
 	[ -f "${add}"/amtm-disk-check.log ] && dcltext="${GN_BG}dcl${NC} show log" || dcltext=
 	[ -z "$su" ] && printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"
+	case_dc(){
+		[ -f "${add}"/disk_check.mod ] && disk_check manage
+		show_amtm menu
+	}
 }
 install_disk_check(){
 	p_e_l

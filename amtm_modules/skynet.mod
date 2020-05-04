@@ -9,6 +9,15 @@ skynet_installed(){
 		grepcheck=Adamm
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$SkynetUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$SkynetUpate${NC}"
+		if [ "$SkynetMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^Skynet.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver SkynetUpate SkynetMD5
+		fi
+	fi
 	printf "${GN_BG} 2 ${NC} %-9s%-21s%${COR}s\\n" "open" "Skynet        $localver" " $upd"
 	case_2(){
 		/jffs/scripts/firewall

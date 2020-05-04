@@ -8,6 +8,15 @@ YazFi_installed(){
 		grepcheck=jackyaz
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$YazFiUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$YazFiUpate${NC}"
+		if [ "$YazFiMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^YazFi.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver YazFiUpate YazFiMD5
+		fi
+	fi
 	printf "${GN_BG} 4 ${NC} %-9s%-21s%${COR}s\\n" "open" "YazFi         $localver" " $upd"
 	case_4(){
 		/jffs/scripts/YazFi

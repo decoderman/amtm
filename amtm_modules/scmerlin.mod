@@ -8,6 +8,15 @@ scmerlin_installed(){
 		grepcheck=jackyaz
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$scMerlinUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$scMerlinUpate${NC}"
+		if [ "$scMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^scMerlin.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver scMerlinUpate scMerlinMD5
+		fi
+	fi
 	printf "${GN_BG} j3${NC} %-9s%-21s%${COR}s\\n" "open" "scMerlin      $localver" " $upd"
 	case_j3(){
 		trap trap_ctrl 2

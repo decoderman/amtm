@@ -9,6 +9,15 @@ x3mRouting_installed(){
 		grepcheck=Xentrk
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$x3mRouting_Selective_RoutingUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$x3mRouting_Selective_RoutingUpate${NC}"
+		if [ "$x3mRouting_Selective_RoutingMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^x3mRouting_Selective_Routing.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver x3mRouting_Selective_RoutingUpate x3mRouting_Selective_RoutingMD5
+		fi
+	fi
 	printf "${GN_BG} 6 ${NC} %-9s%-21s%${COR}s\\n" "open" "x3mRouting    $localver" " $upd"
 	case_6(){
 		/opt/bin/x3mRouting

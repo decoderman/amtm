@@ -22,16 +22,19 @@ entware_installed(){
 						[ "$tpu" ] && echo "<br>Entware package updates:<br>" >>/tmp/amtm-tpu-check
 					else
 						printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
+						i=0
 						while read line; do
+							i=$((i+1))
 							printf "- %-22s%-10s%${COR}s\\n" "$(echo $line | awk '{print $1}')" " $(echo $line | awk '{print $3}')" " $(echo $line | awk '{print "'${E_BG}'-> " $5 "'${NC}'"}')"
 							[ "$tpu" ] && echo "&nbsp;- $(echo $line | awk '{print $1}') v$(echo $line | awk '{print $3}') -> v$(echo $line | awk '{print $5}')<br>" >>/tmp/amtm-tpu-check
 						done </tmp/amtm-entware-check
 						echo
+						echo "EntwareUpate=\"$i\"">>"${add}"/availUpd.txt
+						echo "EntwareMD5=\"$(md5sum /opt/lib/opkg/status | awk '{print $1}')\"">>"${add}"/availUpd.txt
 					fi
 				else
 					printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
 				fi
-
 			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
 				printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
 				if grep -q 'bin.entware.net' /opt/etc/opkg.conf; then
@@ -45,7 +48,17 @@ entware_installed(){
 		fi
 		rm -f /tmp/amtm-entware-check
 	else
-		printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
+		entUpd=
+		if [ "$EntwareUpate" ]; then
+			entUpd=1
+			[ "$EntwareUpate" -lt 10 ] && EntwareUpate="$EntwareUpate p" || EntwareUpate="${EntwareUpate}p"
+			if [ "$EntwareMD5" != "$(md5sum /opt/lib/opkg/status | awk '{print $1}')" ]; then
+				sed -i '/^Entware.*/d' "${add}"/availUpd.txt
+				unset EntwareUpate EntwareMD5 entUpd
+			fi
+		fi
+		[ "$entUpd" = 1 ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpate avail${NC}"
+		[ -z "$entUpd" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi
 	case_ep(){
 		p_e_l
@@ -78,15 +91,17 @@ entware_installed(){
 						opkg upgrade
 						echo "${NC}"
 
-						[ -f /opt/bin/pixelserv-tls ] && check_ps_version
-						pstext=
-						if [ -f /opt/bin/pixelserv-tls ] && [ "$oldpsv" != "$psVersion" ]; then
-							[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
-							[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
-							echo "${GY}"
-							/opt/etc/init.d/S80pixelserv-tls restart $0
-							echo "${NC}"
-							pstext=",\\n pixelserv-tls $psVersion restarted"
+						if [ -f /opt/bin/pixelserv-tls ]; then
+							check_ps_version
+							pstext=
+							if [ "$oldpsv" != "$psVersion" ] || ! grep -q 'Diversion' /opt/etc/init.d/S80pixelserv-tls; then
+								[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
+								[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
+								echo "${GY}"
+								/opt/etc/init.d/S80pixelserv-tls restart $0
+								echo "${NC}"
+								pstext=",\\n pixelserv-tls $psVersion restarted"
+							fi
 						fi
 						show_amtm " Entware packages updated and upgraded${pstext}";break;;
 				2)		if [ ! -f /opt/bin/column ];then

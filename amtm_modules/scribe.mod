@@ -8,6 +8,15 @@ scribe_installed(){
 		grepcheck=cynicastic
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$scribeUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$scribeUpate${NC}"
+		if [ "$scribeMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^scribe.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver scribeUpate scribeMD5
+		fi
+	fi
 	printf "${GN_BG} 5 ${NC} %-9s%-21s%${COR}s\\n" "open" "scribe        $localver" " $upd"
 	case_5(){
 		/jffs/scripts/scribe

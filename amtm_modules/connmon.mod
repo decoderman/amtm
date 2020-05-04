@@ -8,6 +8,15 @@ connmon_installed(){
 		grepcheck=jackyaz
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$connmonUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$connmonUpate${NC}"
+		if [ "$connmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^connmon.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver connmonUpate connmonMD5
+		fi
+	fi
 	printf "${GN_BG} j1${NC} %-9s%-21s%${COR}s\\n" "open" "connmon       $localver" " $upd"
 	case_j1(){
 		/jffs/scripts/connmon

@@ -9,6 +9,15 @@ stubby_installed(){
 		grepcheck=Xentrk
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$Stubby_DNSUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$Stubby_DNSUpate${NC}"
+		if [ "$Stubby_DNSMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^Stubby_DNS.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver Stubby_DNSUpate Stubby_DNSMD5
+		fi
+	fi
 	printf "${GN_BG} sd${NC} %-9s%-21s%${COR}s\\n" "open" "Stubby DNS    $localver" " $upd"
 	case_sd(){
 		/jffs/scripts/install_stubby.sh

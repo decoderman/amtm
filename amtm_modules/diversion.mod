@@ -14,35 +14,50 @@ diversion_installed(){
 			*XX*) 	remoteurl="http://diversion.test/diversion";;
 			*) 		remoteurl="https://diversion.ch/diversion";;
 		esac
+		aUpd=
 		if c_url "$remoteurl/diversion.info" | grep -q "^S_VERSION=\|^S_M_VERSION="; then
 			remotever="$(c_url "$remoteurl/diversion.info" | grep "^S_VERSION=\|^S_M_VERSION=" | sed -e 's/.*_VERSION=//')"
 			S_VERSION=$(echo $remotever | awk '{print $1}')
 			S_M_VERSION=$(echo $remotever | awk '{print $2}')
+			localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 			[ "$S_M_VERSION" ] && remotever="v${S_VERSION}.$S_M_VERSION" || remotever="v$S_VERSION"
 			upd="${GN_BG}v$divver${NC}"
 			if [ "$localver" != "$remotever" ]; then
 				localver="v$divver"
 				upd="${E_BG}-> $remotever${NC}"
+				aUpd="-> $remotever"
 				suUpd=1
 			else
-				localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 				remotemd5="$(c_url "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
 					localver="v$divver"
 					upd="${E_BG}-> min upd${NC}"
+					aUpd="-> min upd"
 					suUpd=1
 				else
 					localver=
 				fi
+			fi
+			if [ "$aUpd" ]; then
+				echo "DiversionUpate=\"$aUpd\"">>"${add}"/availUpd.txt
+				echo "DiversionMD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"
 			updErr=1
 			a_m " ! Diversion: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
+	elif [ "$DiversionUpate" ]; then
+		upd="${E_BG}$DiversionUpate${NC}"
+		if [ "$DiversionMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^Diversion.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$localver"
+			unset localver DiversionUpate DiversionMD5
+		fi
 	else
 		localver=
 	fi
+
 	printf "${GN_BG} 1 ${NC} %-9s%-21s%${COR}s\\n" "open" "Diversion     $localver" " $upd"
 	case_1(){
 		trap trap_ctrl 2

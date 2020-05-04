@@ -9,6 +9,15 @@ nsrum_installed(){
 		grepcheck=Xentrk
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$NVRAM_Save_Restore_UtilityUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$NVRAM_Save_Restore_UtilityUpate${NC}"
+		if [ "$NVRAM_Save_Restore_UtilityMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^NVRAM_Save_Restore_Utility.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver NVRAM_Save_Restore_UtilityUpate NVRAM_Save_Restore_UtilityMD5
+		fi
+	fi
 	printf "${GN_BG} 8 ${NC} %-9s%-21s%${COR}s\\n" "open" "nsrum         $localver" " $upd"
 	case_8(){
 		/jffs/scripts/nsrum

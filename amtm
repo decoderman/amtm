@@ -9,16 +9,13 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.1.6
-release="April 04 2020"
+version=3.1.7
+release="May 04 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
-dc_version=2.8
-case "$release" in
-	*XX*)	amtmURL=http://diversion.test/amtm;;
-	*)		amtmURL=https://diversion.ch/amtm;;
-esac
+dc_version=2.9
+led_version=1.0
 
 ascii_logo(){
 	echo "              _"
@@ -46,10 +43,11 @@ about_amtm(){
  https://www.snbforums.com/members/thelonelycoder.25480
  https://diversion.ch/amtm.html
 
- Contributors: Adamm, ColinTaylor, Martineau
+ Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald
  https://www.snbforums.com/members/adamm.19554
  https://www.snbforums.com/members/colintaylor.27699
  https://www.snbforums.com/members/martineau.13215
+ https://www.snbforums.com/members/stuart-macdonald.68945
 
  amtm License:
  amtm is free to use under the GNU General
@@ -65,7 +63,10 @@ about_amtm(){
 }
 
 show_amtm(){
+	s_d_u
 	c_t
+	[ "$su" = 1 ] && [ "$theme" = solarized ] && COR=30
+	[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt || rm -f "${add}"/availUpd.txt
 	[ -d /opt/bin ] && [ ! -L /opt/bin/amtm ] && ln -s "${scriptPath}" /opt/bin
 	dlok=
 	clear
@@ -96,8 +97,13 @@ show_amtm(){
 	stubby
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
+	tpucheck
 	pixelserv-tls
-	spacer'
+	spacer
+	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
+	fdisk
+	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
+	rscheduler'
 
 	IFS='
 	'
@@ -123,6 +129,13 @@ show_amtm(){
 					show_amtm " Stubby DNS is not available to install. This\\n router supports native DoT, use that instead"
 				}
 			fi
+		elif [ "$i" = tpucheck ]; then
+			if [ "$tpu" ]; then
+				[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
+				exit 0
+			fi
+			[ "$dlok" ] && tps=1 || tps=
+			[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
 		elif [ "$i" = pixelserv-tls ]; then
 			if [ -f /opt/bin/pixelserv-tls ]; then
 				[ ! -f "${add}"/pixelserv-tls.mod ] && [ "$ss" ] && [ -z "$su" ] && printf "${E_BG} ps${NC} %-9s%s\\n" "use" "pixelserv-tls CA for WebUI"
@@ -136,6 +149,30 @@ show_amtm(){
 					show_amtm " No pixelserv-tls beta versions are available\\n at thist time from its author kvic"
 				}
 			fi
+		elif [ "$i" = fdisk ]; then
+			if [ -f "${add}"/amtm-format-disk.log ]; then
+				atii=1
+				[ "$su" ] || printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
+			else
+				[ "$ss" ] && [ -z "$su" ] && printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
+				r_m format_disk.mod
+			fi
+			case_fd(){
+				g_m format_disk.mod include
+				[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
+			}
+		elif [ "$i" = rscheduler ]; then
+			if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+				g_m reboot_scheduler.mod include
+				[ -f "${add}"/reboot_scheduler.mod ] && reboot_scheduler_installed || show_amtm menu
+			else
+				[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
+				r_m reboot_scheduler.mod
+				case_rs(){
+					g_m reboot_scheduler.mod include
+					[ -f "${add}"/reboot_scheduler.mod ] && install_reboot_scheduler || show_amtm menu
+				}
+			fi
 		else
 			scriptloc=$(echo $i | awk '{print $1}')
 			f2=$(echo $i | awk '{print $2}')
@@ -146,6 +183,10 @@ show_amtm(){
 				f3="$(echo $i | awk '{print $3}')"
 				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
 				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
+				if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
+					sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
+					[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
+				fi
 				r_m ${f2}.mod
 				case $f3 in
 					1)		case_1(){ g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
@@ -164,59 +205,15 @@ show_amtm(){
 					j6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
+					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
+					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};
 				esac
 			fi
 		fi
 	done
 	set +f
-	unset IFS
 
-	if [ "$tpu" ]; then
-		[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
-		exit 0
-	fi
-
-	if [ -f "${add}"/disk-check ] || [ -f /jffs/scripts/disk-check ] && grep -q "/disk-check # Added by" /jffs/scripts/pre-mount; then
-		g_m disk-check.mod include
-		case_dc(){
-			[ -f "${add}"/disk-check.mod ] && disk_check manage
-			show_amtm menu
-		}
-		disk_check_installed
-	else
-		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} dc${NC} %-9s%s\\n" "install" "Disk check script"
-		r_m disk-check.mod
-		case_dc(){
-			g_m disk-check.mod include
-			[ -f "${add}"/disk-check.mod ] && install_disk_check || show_amtm menu
-		}
-	fi
-
-	if [ -f "${add}"/amtm-format-disk.log ]; then
-		atii=1
-		[ "$su" ] || printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
-	else
-		[ "$ss" ] && [ -z "$su" ] && printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
-		r_m format_disk.mod
-	fi
-	case_fd(){
-		g_m format_disk.mod include
-		[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
-	}
-
-	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
-		g_m reboot_scheduler.mod include
-		[ -f "${add}"/reboot_scheduler.mod ] && reboot_scheduler_installed || show_amtm menu
-	else
-		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
-		r_m reboot_scheduler.mod
-		case_rs(){
-			g_m reboot_scheduler.mod include
-			[ -f "${add}"/reboot_scheduler.mod ] && install_reboot_scheduler || show_amtm menu
-		}
-	fi
-
-	unset swl swsize swpsize swtxt mpsw
+	unset IFS swl swsize swpsize swtxt mpsw
 	gms(){ g_m swap.mod include;[ "$dlok" = 0 ] && show_amtm menu;}
 	[ -f /jffs/scripts/post-mount ] && swl="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
@@ -273,17 +270,23 @@ show_amtm(){
 
 	if [ "$su" = 1 ]; then
 		update_amtm
-		corr1=
+		unset corr1 corr2
 		if [ "$amtmUpd" = 0 ]; then
 			vversion="${GN_BG} uu ${NC} force update"
 			corr1=-2
 		else
+			[ "$theme" = solarized ] && corr2=+1
 			vversion="        v$version"
 		fi
-		printf "${GN_BG} m ${NC} %-9s%-21s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
+		printf "${GN_BG} m ${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
 	else
 		[ "$ss" ] || printf "${GN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
-		echo;echo "    amtm options"
+		echo
+		if [ "$amtmUpate" ]; then
+			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          v$version" "${E_BG}$amtmUpate${NC}"
+		else
+			echo "    amtm options"
+		fi
 		echo "${GN_BG} e ${NC} exit     ${GN_BG} t ${NC} theme  ${GN_BG} r ${NC} remove  ${GN_BG} a ${NC} about"
 	fi
 
@@ -295,28 +298,41 @@ show_amtm(){
 			if [ "$amtmUpd" -gt 0 ]; then
 				p_e_l
 				if [ "$suUpd" = 1 ]; then
-					printf " Script update(s) available!\\n"
+					printf " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update.\\n"
 					p_e_l
 				fi
 				amtmUpdText="updated from v$version to v$amtmRemotever"
-				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n\\n"
+				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n"
 				if [ "$amtmUpd" = 2 ]; then
-					printf " ${R}A minor amtm update is available!${NC}\\n\\n"
-					amtmUpdText="minor version update applied"
+					printf " ${R}A minor amtm update is available!${NC}\\n"
+					amtmUpdText="minor version update applied."
 				fi
-				echo " Do you want to update amtm now?"
-				c_d
+				echo
+				while true; do
+					printf " Update amtm now? [1=Yes e=Exit] ";read -r continue
+					case "$continue" in
+						1)		break;;
+						[Ee])	show_amtm menu;break;;
+						*)		printf "\\n input is not an option\\n\\n";;
+					esac
+				done
 				a_m "$amtmUpdText"
 				g_i_m
+				[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
+				if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "$0" | awk '{print $1}')" ]; then
+					sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+					unset amtmUpate amtmMD5
+				fi
+				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n Note: For ${GN}third-party${NC} script updates use\\n their own update function."
 				exec "${scriptPath}" " amtm $am"
 			else
-				a_m " Script update(s) available!"
+				a_m " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
 				a_m "\\n Update(s) aborted, could not retrieve version"
 			else
-				a_m " All scripts are up to date"
+				a_m " Everything's up to date ($(date +"%b %d %Y %R"))"
 			fi
 		fi
 	fi
@@ -338,6 +354,7 @@ show_amtm(){
 
 	while true; do
 		printf "${R_BG} Enter option ${NC} ";read -r selection
+		s_d_u
 		case "$selection" in
 			1)					case_1;break;;
 			2)					case_2;break;;
@@ -358,16 +375,17 @@ show_amtm(){
 			[Dd][Ii])			case_di;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
-			[Uu])				c_ntp;su=1;suUpd=0;updErr=;show_amtm menu;break;;
+			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
 			[Dd][Cc])			case_dc;break;;
 			dcl|DCL)			s_l_f amtm-disk-check.log;break;;
 			[Ff][Dd])			case_fd;break;;
 			fdl|FDL)			s_l_f amtm-format-disk.log;break;;
+			[Ll][Cc])			case_lc;break;;
 			[Rr][Ss])			case_rs;break;;
 			[Ss][Ww])			case_swp;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
-			[Uu][Uu])			c_ntp;update_amtm;break;;
+			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;
 			[Rr])				remove_amtm;break;;
 			[Aa])				about_amtm;break;;
 			[Ee])				clear
@@ -393,7 +411,7 @@ show_amtm(){
 a_m(){ [ -z "$am" ] && am=$1 || am="$am\\n$1";}
 c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
 c_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
-c_ntp(){ [ "$(nvram get ntp_ready)" = "0" ] && show_amtm " NTP not ready, check that router time is synced";}
+c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 c_url(){ /usr/sbin/curl -fsNL --retry 2 --connect-timeout 3 -m 8 "$@";}
@@ -403,6 +421,8 @@ p_r_l(){ echo "${R}_____________________________________________${NC}";}
 p_e_l(){ p_r_l;echo;}
 r_w_e(){ [ "$(sed '/^[[:space:]]*$/d; /#!\/bin\/sh/d' "$1" | wc -c)" = 0 ] && rm "$1";}
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
+s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm;devEnv=1;;*)amtmURL=https://diversion.ch/amtm;;esac;}
+t_f(){ sed -i '/^[[:space:]]*$/d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
 theme_standard(){ R='[31m';R_BG='[41m';E_BG='[41m';GN='[92m';GN_BG='[42m';B='[94m';GY='[90m';NC='[0m';COR=20;}
 theme_green(){ R='[33m';R_BG='[42m';E_BG='[41m';GN='[92m';GN_BG='[42m';B='[94m';GY='[90m';NC='[0m';COR=20;}
 theme_blue(){ R='[34m';R_BG='[44m';E_BG='[101m';GN='[94m';GN_BG='[104m';B='[38;5;112m';GY='[90m';NC='[0m';COR=21;}
@@ -513,28 +533,34 @@ script_check(){
 	if [ "$su" = 1 ]; then
 		if c_url "$remoteurl" | grep -qF -m1 "$grepcheck"; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(c_url "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
-			upd="${GN_BG}no upd${NC}"
 			bareLocalver=$(echo $localver | sed 's/[^0-9]*//g')
 			bareRemotever=$(echo $remotever | sed 's/[^0-9]*//g')
+			localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 			upd="${GN_BG}$localver${NC}"
 			if [ "$bareLocalver" -gt "$bareRemotever" ]; then
 				upd="${E_BG}<- $remotever${NC}"
+				tpUpd="<- $remotever"
 				[ "$tpu" ] && echo "- $scriptname $localver <- $remotever <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
 			elif [ "$bareLocalver" -lt "$bareRemotever" ]; then
 				upd="${E_BG}-> $remotever${NC}"
+				tpUpd="-> $remotever"
 				[ "$tpu" ] && echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
 			else
-				localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 				remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
 					upd="${E_BG}-> min upd${NC}"
+					tpUpd="-> min upd"
 					[ "$tpu" ] && echo "- $scriptname $localver minor update available <br>" >>/tmp/amtm-tpu-check
 					suUpd=1
 				else
 					localver=
 				fi
+			fi
+			if [ -z "$tpu" ] && [ "$tpUpd" ]; then
+				echo "$(echo $scriptname | sed -e 's/ /_/g;s/\//_/g')Upate=\"$tpUpd\"">>"${add}"/availUpd.txt
+				echo "$(echo $scriptname | sed -e 's/ /_/g;s/\//_/g')MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"
@@ -542,9 +568,10 @@ script_check(){
 			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC} unreachable"
 		fi
 	else
+		lvtpu=$localver
 		localver=
 	fi
-	unset localVother remoteVother bareLocalver bareRemotever localmd5 remotemd5
+	unset tpUpd localVother remoteVother bareLocalver bareRemotever localmd5 remotemd5
 }
 
 theme_amtm(){
@@ -645,13 +672,19 @@ update_amtm(){
 		if [ "$su" = 1 ]; then
 			if [ "$version" != "$amtmRemotever" ]; then
 				thisrem="${E_BG}-> v$amtmRemotever${NC}"
+				thisUpd="-> v$amtmRemotever"
 				amtmUpd=1
 			elif [ "$localmd5" != "$remotemd5" ]; then
 				thisrem="${E_BG}-> min upd${NC}"
+				thisUpd="-> min upd"
 				amtmUpd=2
 			else
 				thisrem="${GN_BG}v$version${NC}"
 				amtmUpd=0
+			fi
+			if [ "$amtmUpd" -gt 0 ]; then
+				echo "amtmUpate=\"$thisUpd\"">>"${add}"/availUpd.txt
+				echo "amtmMD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
 		else
 			if [ "$version" != "$amtmRemotever" ]; then
@@ -662,6 +695,12 @@ update_amtm(){
 				a_m "force updated to v$amtmRemotever"
 			fi
 			g_i_m
+			[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
+			if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "$0" | awk '{print $1}')" ]; then
+				sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+				unset amtmUpate amtmMD5
+			fi
+			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n Note: For ${GN}third-party${NC} script updates use\\n their own update function."
 			exec "${scriptPath}" " amtm $am"
 		fi
 	fi
@@ -676,7 +715,7 @@ install_amtm(){
 			printf "\\n amtm failed to create the directory\\n ${add}\\n Please investigate. Aborting amtm now.\\n\\n"
 			exit 1
 		fi
-		if [ "$(nvram get ntp_ready)" = "0" ]; then
+		if [ "$(nvram get ntp_ready)" = 0 ]; then
 			printf "\\n NTP not ready, check that the router time\\n is synced.\\n Aborting amtm now.\\n\\n"
 			exit 1
 		fi
@@ -723,7 +762,7 @@ install_amtm(){
 		exec "${scriptPath}" "$am"
 	}
 
-	if [ -f /usr/sbin/amtm ]; then
+	if [ -f /usr/sbin/amtm ] && [ -z "$devEnv" ]; then
 		if [ -f "/jffs/configs/profile.add" ]; then
 			sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
 			r_w_e /jffs/configs/profile.add
@@ -784,26 +823,35 @@ remove_amtm(){
 	echo " Do you want to remove amtm now?"
 	echo
 	echo " Note that removing amtm will not remove or"
-	echo " uninstall any installed SNBForum scripts."
+	echo " uninstall any third-party SNBForum scripts."
 	echo
-	echo " However, it will remove the Disk check"
-	echo " script and log, the Format disk log and the"
-	echo " reboot scheduler when found."
+	echo " However, when found it will remove the Disk"
+	echo " check script and log, the Format disk log,"
+	echo " the Reboot scheduler and the LED control."
 	c_d
-	if [ -f "${add}"/disk-check ]; then
-		sed -i '\~disk-check ~d' /jffs/scripts/pre-mount
+	if [ -f /jffs/scripts/pre-mount ] && grep -q "disk-check # Added by amtm" /jffs/scripts/pre-mount; then
+		sed -i '\~disk-check # Added by amtm~d' /jffs/scripts/pre-mount
 		r_w_e /jffs/scripts/pre-mount
 	fi
-	if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
+	if [ -f /jffs/scripts/init-start ] && grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
 		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
 		r_w_e /jffs/scripts/init-start
 		cru d amtm_RebootScheduler
+	fi
+	if [ -f "${add}"/ledcontrol ]; then
+		"${add}"/ledcontrol -on -p >/dev/null 2>&1
+		rm "${add}"/ledcontrol*
+	fi
+	if [ -f /jffs/scripts/services-start ] && grep -q "${add}/ledcontrol.*" /jffs/scripts/services-start; then
+		sed -i "\~${add}/ledcontrol.*~d" /jffs/scripts/services-start
+		r_w_e /jffs/scripts/services-start
+		cru d amtm_LEDcontrol_on
+		cru d amtm_LEDcontrol_off
 	fi
 
 	if [ -f "/jffs/configs/profile.add" ]; then
 		sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
 		r_w_e /jffs/configs/profile.add
-		unalias amtm 2> /dev/null
 	fi
 	rm -rf "${add}"
 	rm -f /opt/bin/amtm "${scriptPath}" "$0"
@@ -816,7 +864,8 @@ remove_amtm(){
 	exit 0
 }
 
-if [ ! -d "${add}" ] || [ ! -f "${scriptPath}" ] || [ -f /usr/sbin/amtm ]; then
+s_d_u
+if [ ! -d "${add}" ] || [ ! -f "${scriptPath}" ] || [ -f /usr/sbin/amtm -a -z "$devEnv" ]; then
 	install_amtm
 elif ! cmp -s "$0" "$scriptPath"; then
 	cp -f "$0" "$scriptPath"
@@ -827,6 +876,12 @@ elif ! cmp -s "$0" "$scriptPath"; then
 	c_t
 	a_m "$version auto-update applied"
 	g_i_m
+	[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
+	if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "$0" | awk '{print $1}')" ]; then
+		sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+		unset amtmUpate amtmMD5
+	fi
+	[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n Note: For ${GN}third-party${NC} script updates use\\n their own update function."
 	exec "${scriptPath}" " amtm $am"
 elif [ -z "$1" ]; then
 	[ "$am" ] && show_amtm "$am" || show_amtm menu

@@ -8,6 +8,15 @@ uiDivStats_installed(){
 		grepcheck=jackyaz
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$uiDivStatsUpate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$uiDivStatsUpate${NC}"
+		if [ "$uiDivStatsMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^uiDivStats.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver uiDivStatsUpate uiDivStatsMD5
+		fi
+	fi
 	printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
 	case_j5(){
 		/jffs/scripts/uiDivStats

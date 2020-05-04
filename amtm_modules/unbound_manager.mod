@@ -11,6 +11,17 @@ unbound_manager_installed(){
 		grepcheck=Martineau
 	fi
 	script_check
+	if [ -z "$su" -a -z "$tpu" ] && [ "$unbound_ManagerUpate" ]; then
+		umtext='unbound Mgr'
+		localver="$lvtpu"
+		upd="${E_BG}$unbound_ManagerUpate${NC}"
+		if [ "$unbound_ManagerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^unbound_Manager.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver unbound_ManagerUpate unbound_ManagerMD5
+			umtext=$scriptname
+		fi
+	fi
 	[ "$suUpd" = 1 ] && umtext='unbound Mgr'
 	printf "${GN_BG} 7 ${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
 	case_7(){

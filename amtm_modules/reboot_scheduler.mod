@@ -128,8 +128,7 @@ reboot_scheduler(){
 		done
 
 		c_j_s /jffs/scripts/init-start
-		trim_file(){ sed -i '/^[[:space:]]*$/d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
-		trim_file /jffs/scripts/init-start
+		t_f /jffs/scripts/init-start
 		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
 			echo "cru a amtm_RebootScheduler \"$rsm $rsh $rsdom * $rsdow service reboot\" # Added by amtm" >> /jffs/scripts/init-start
 			rsct=enabled
