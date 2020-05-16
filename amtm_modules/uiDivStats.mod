@@ -1,10 +1,11 @@
 #!/bin/sh
 #bof
+[ -z "$devEnv" ] && branch=master || branch=develop
 uiDivStats_installed(){
 	scriptname=uiDivStats
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
+		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/$branch/uiDivStats.sh"
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -34,7 +35,8 @@ install_uiDivStats(){
 	c_d
 
 	if [ -f /opt/bin/diversion ]; then
-		c_url "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
+		c_url "https://raw.githubusercontent.com/jackyaz/uiDivStats/$branch/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
+
 		sleep 2
 	else
 		am=;show_amtm " uiDivStats installation failed,\\n Diversion is not installed"

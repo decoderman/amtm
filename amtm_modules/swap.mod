@@ -6,7 +6,7 @@ check_swap(){
 			[ -f /jffs/scripts/post-mount ] && sed -i '\~swapon ~d' /jffs/scripts/post-mount
 			c_j_s /jffs/scripts/post-mount
 			t_f /jffs/scripts/post-mount
-			sed -i "2i swapon $swl # Added by amtm" /jffs/scripts/post-mount
+			sed -i "1a swapon $swl # Added by amtm" /jffs/scripts/post-mount
 			swapon "$swl" 2> /dev/null
 			swsize=$(du -h "$swl" | awk '{print $1}')
 		fi
@@ -167,7 +167,7 @@ manage_swap(){
 									nvram commit
 									c_j_s /jffs/scripts/post-mount
 									t_f /jffs/scripts/post-mount
-									sed -i "2i swapon $swapDevice/myswap.swp # Added by amtm" /jffs/scripts/post-mount
+									sed -i "1a swapon $swapDevice/myswap.swp # Added by amtm" /jffs/scripts/post-mount
 									show_amtm " Swap file created and activated at:\\n $swapDevice/myswap.swp";break;;
 							[Ee])	show_amtm menu;break;;
 							*)		printf "\\n input is not an option\\n";;

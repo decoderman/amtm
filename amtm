@@ -10,7 +10,7 @@
 # https://diversion.ch/amtm.html
 
 version=3.1.7
-release="May 04 2020"
+release="May 16 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm

@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
 version=3.1.7
-release="May 04 2020"
+release="May 16 2020"
 dc_version=2.9
 led_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -13,7 +13,7 @@ contributors="Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
-s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}
+s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;devEnv=1;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}
 s_d_u
 if [ "$amtmRev" = 1 ]; then
 	g_m amtm_rev1.mod include

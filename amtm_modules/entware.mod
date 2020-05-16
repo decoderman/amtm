@@ -57,6 +57,10 @@ entware_installed(){
 				unset EntwareUpate EntwareMD5 entUpd
 			fi
 		fi
+		if [ ! -L /opt/bin/entware-services ]; then
+			ln -nsf /opt/etc/init.d/rc.unslung /opt/bin/entware-services
+			a_m " entware-services symlink set for rc.unslung"
+		fi
 		[ "$entUpd" = 1 ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpate avail${NC}"
 		[ -z "$entUpd" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi
