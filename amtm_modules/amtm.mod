@@ -211,7 +211,7 @@ show_amtm(){
 			else
 				f3="$(echo $i | awk '{print $3}')"
 				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
-				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
+				[ "$ss" ] && [ "$scriptloc" != /opt/bin/x3mRouting ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
 				if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
 					sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
 					[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
