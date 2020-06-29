@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
 version=3.1.7
-release="May 16 2020"
+release="June 29 2020"
 dc_version=2.9
 led_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -109,6 +109,7 @@ show_amtm(){
 	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
+	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
 	/opt/bin/x3mRouting x3mRouting 6 x3mRouting¦-¦Selective¦Routing
 	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
@@ -351,7 +352,7 @@ show_amtm(){
 					sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 					unset amtmUpate amtmMD5
 				fi
-				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n Note: For ${GN}third-party${NC} script updates use\\n their own update function."
+				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
 				exec "$0" " amtm $am"
 			else
 				a_m " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
@@ -607,7 +608,7 @@ update_amtm(){
 				sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 				unset amtmUpate amtmMD5
 			fi
-			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n Note: For ${GN}third-party${NC} script updates use\\n their own update function."
+			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
 			exec "$0" " amtm $am"
 		fi
 	fi

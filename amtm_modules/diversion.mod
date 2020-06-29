@@ -22,11 +22,21 @@ diversion_installed(){
 			localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 			[ "$S_M_VERSION" ] && remotever="v${S_VERSION}.$S_M_VERSION" || remotever="v$S_VERSION"
 			upd="${GN_BG}v$divver${NC}"
+			webUiOn=no
+			if [ -d /www/user/diversion ] && [ -f /opt/share/diversion/.conf/webui-vars.js ]; then
+				. /opt/share/diversion/file/helper.div
+				webUiOn=yes
+			fi
+
 			if [ "$localver" != "$remotever" ]; then
 				localver="v$divver"
 				upd="${E_BG}-> $remotever${NC}"
 				aUpd="-> $remotever"
 				suUpd=1
+				if [ "$webUiOn" = yes ]; then
+					webui_set Diversion_update $(echo $remotever | sed 's/v//')
+					webui_set Diversion_S_VERSION $S_VERSION
+				fi
 			else
 				remotemd5="$(c_url "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
@@ -34,8 +44,13 @@ diversion_installed(){
 					upd="${E_BG}-> min upd${NC}"
 					aUpd="-> min upd"
 					suUpd=1
+					[ "$webUiOn" = yes ] && webui_set Diversion_update min-upd
 				else
 					localver=
+					if [ "$webUiOn" = yes ] && [ "$(webui_get Diversion_update)" ]; then
+						webui_del Diversion_update
+						webui_del Diversion_S_VERSION
+					fi
 				fi
 			fi
 			if [ "$aUpd" ]; then
