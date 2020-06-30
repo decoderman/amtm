@@ -2,11 +2,16 @@
 #bof
 x3mRouting_installed(){
 	if [ -f /opt/bin/x3mMenu ]; then
-		scriptloc=/opt/bin/x3mMenu
 		scriptname='x3mRouting Selective Routing'
 		localVother="v$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		if [ "$su" = 1 ]; then
-			remoteurl="https://raw.githubusercontent.com/Xentrk/x3mRouting/x3mRouting-NG/x3mRouting_Menu.sh"
+			newVer=https://raw.githubusercontent.com/Xentrk/x3mRouting/master/x3mRouting_Menu.sh
+			if /usr/sbin/curl -fsNL --retry 1 --connect-timeout 2 -m 5 "$newVer" | grep "^VERSION=">/dev/null 2>&1; then
+				branch=master
+			else
+				branch=x3mRouting-NG
+			fi
+			remoteurl="https://raw.githubusercontent.com/Xentrk/x3mRouting/$branch/x3mRouting_Menu.sh"
 			remoteVother="v$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
 			grepcheck=Xentrk
 		fi
@@ -27,7 +32,6 @@ x3mRouting_installed(){
 			show_amtm menu
 		}
 	else
-		scriptloc=/opt/bin/x3mRouting
 		scriptname='x3mRouting Selective Routing'
 		localVother="v$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 		if [ "$su" = 1 ]; then

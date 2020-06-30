@@ -10,7 +10,7 @@
 # https://diversion.ch/amtm.html
 
 version=3.1.7
-release="June 29 2020"
+release="June 30 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
@@ -81,8 +81,7 @@ show_amtm(){
 	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
-	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
-	/opt/bin/x3mRouting x3mRouting 6 x3mRouting¦-¦Selective¦Routing
+	x3mRouting
 	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
 	/jffs/scripts/nsrum nsrum 8 nsrum¦-¦NVRAM¦Save/Restore¦Utility
@@ -113,6 +112,20 @@ show_amtm(){
 		if [ "$i" = spacer ]; then
 			[ "$atii" ] || [ "$ss" ] && echo
 			atii=
+		elif [ "$i" = x3mRouting ]; then
+			if [ -f /opt/bin/x3mMenu ] || [ -f /opt/bin/x3mRouting ]; then
+				[ -f /opt/bin/x3mMenu ] && scriptloc=/opt/bin/x3mMenu || scriptloc=/opt/bin/x3mRouting
+				g_m x3mRouting.mod include
+				[ -f "${add}/x3mRouting.mod" ] && x3mRouting_installed
+			else
+				[ "$ss" ] && printf "${E_BG} 6 ${NC} %-9s%s\\n" "install" "x3mRouting - Selective Routing"
+				r_m x3mRouting.mod
+				case_6(){
+					c_e x3mRouting
+					g_m x3mRouting.mod include
+					[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu
+				}
+			fi
 		elif [ "$i" = stubby ]; then
 			scriptloc=/jffs/scripts/install_stubby.sh
 			if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
@@ -195,7 +208,6 @@ show_amtm(){
 					3)		case_3(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
 					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
-					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
 					8)		case_8(){ g_m nsrum.mod include;[ "$dlok" = 1 ] && install_nsrum || show_amtm menu;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
