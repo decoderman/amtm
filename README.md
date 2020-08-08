@@ -30,8 +30,8 @@ Enter the complete command below into your favorite SSH terminal, then press Ent
 |--------|------------|------|
 | Diversion | thelonelycoder | [Link](https://www.snbforums.com/threads/diversion-the-router-ad-blocker.48538/) |
 | Skynet | Adamm | [Link](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/) |
-| FlexQoS | dave14305 | [Link](https://www.snbforums.com/threads/fork-flexqos-flexible-qos-enhancement-script-for-adaptive-qos.64882/) deprecated |
-| FreshJR Adaptive QOS | FreshJR | [Link](https://www.snbforums.com/threads/release-freshjr-adaptive-qos-improvements-custom-rules-and-inner-workings.36836/) |
+| FlexQoS | dave14305 | [Link](https://www.snbforums.com/threads/fork-flexqos-flexible-qos-enhancement-script-for-adaptive-qos.64882/) |
+| FreshJR Adaptive QOS | FreshJR | [Link](https://www.snbforums.com/threads/release-freshjr-adaptive-qos-improvements-custom-rules-and-inner-workings.36836/) deprecated |
 | YazFi | Jack Yaz | [Link](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) |
 | scribe | cmkelley | [Link](https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/) |
 | x3mRouting | Xentrk | [Link](https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/) |
