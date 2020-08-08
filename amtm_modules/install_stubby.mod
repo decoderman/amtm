@@ -31,19 +31,19 @@ install_stubby(){
 	echo " on your router."
 	echo
 	echo " Authors: Xentrk, Adamm"
-	echo " https://www.snbforums.com/threads/stubby-installer-asuswrt-merlin.49469/"
+	echo " https://www.snbforums.com/threads/49469"
 	c_d
 
 	if [ -d "/jffs/dnscrypt" ] || [ -f /opt/sbin/dnscrypt-proxy ]; then
 		am=;show_amtm " Stubby DNS install failed. It is not\\n compatible with dnscrypt installer which\\n is installed on this router"
-	fi
-
-	c_url "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
-	sleep 2
-	if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-		show_amtm " Stubby DNS installed"
 	else
-		am=;show_amtm" Stubby DNS installation failed"
+		c_url "https://raw.githubusercontent.com/Xentrk/Stubby-Installer-Asuswrt-Merlin/master/install_stubby.sh" -o "/jffs/scripts/install_stubby.sh" && chmod 755 /jffs/scripts/install_stubby.sh && sh /jffs/scripts/install_stubby.sh
+		sleep 2
+		if [ -f /jffs/scripts/install_stubby.sh ]; then
+			show_amtm " Stubby DNS installed"
+		else
+			am=;show_amtm" Stubby DNS installation failed"
+		fi
 	fi
 }
 #eof

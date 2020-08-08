@@ -42,7 +42,7 @@ install_unbound_manager(){
 	echo " on your router."
 	echo
 	echo " Author: Martineau"
-	echo " https://www.snbforums.com/threads/release-unbound_manager-management-installer-utility-for-unbound-recursive-dns-server.61669/"
+	echo " https://www.snbforums.com/threads/61669"
 	echo
 	echo " Contributors: rgnldo, dave14305, SomeWhereOverTheRainbow, Cam, Xentrk, thelonelycoder"
 	c_d

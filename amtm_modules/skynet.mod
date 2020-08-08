@@ -31,20 +31,19 @@ install_skynet(){
 	echo " on your router."
 	echo
 	echo " Author: Adamm"
-	echo " https://www.snbforums.com/threads/release-skynet-router-firewall-security-enhancements.16798/"
+	echo " https://www.snbforums.com/threads/16798"
 	c_d
 
 	if ! ipset -v | grep -qF "v6"; then
 		am=;show_amtm " Skynet install failed,\\n IPSet version on router not supported:\\n\\n$(ipset -v | sed -e 's/^/ /')"
-	fi
-
-	c_url "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
-	sleep 2
-	if [ -f /jffs/scripts/firewall ] && grep -qE "sh /jffs/scripts/firewall .* # Skynet" /jffs/scripts/firewall-start 2> /dev/null; then
-		show_amtm " Skynet installed"
 	else
-		rm -f /jffs/scripts/firewall
-		am=;show_amtm " Skynet installation failed"
+		c_url "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
+		sleep 2
+		if [ -f /jffs/scripts/firewall ]; then
+			show_amtm " Skynet installed"
+		else
+			am=;show_amtm " Skynet installation failed"
+		fi
 	fi
 }
 #eof

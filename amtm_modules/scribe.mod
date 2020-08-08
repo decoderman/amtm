@@ -30,11 +30,11 @@ install_scribe(){
 	echo " on your router."
 	echo
 	echo " Author: cmkelley"
-	echo " https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/"
+	echo " https://www.snbforums.com/threads/55853"
 	c_d
 	c_url "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
 	sleep 2
-	if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+	if [ -f /jffs/scripts/scribe ]; then
 		show_amtm " scribe installed"
 	else
 		am=;show_amtm " scribe installation failed"

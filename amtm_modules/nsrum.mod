@@ -31,7 +31,7 @@ install_nsrum(){
 	echo " on your router."
 	echo
 	echo " Author: Xentrk"
-	echo " https://www.snbforums.com/threads/release-nvram-save-restore-utility.61722/"
+	echo " https://www.snbforums.com/threads/61722"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/Xentrk/nvram-save-restore-utility/master/nsrum" -o "/jffs/scripts/nsrum" && sleep 5 && chmod 755 /jffs/scripts/nsrum && sh /jffs/scripts/nsrum

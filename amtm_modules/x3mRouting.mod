@@ -63,27 +63,15 @@ install_x3mRouting(){
 	echo " on your router."
 	echo
 	echo " Author: Xentrk"
-	echo " https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/"
+	echo " https://www.snbforums.com/threads/57793"
 	c_d
 
-	newVer=https://raw.githubusercontent.com/Xentrk/x3mRouting/master/x3mRouting_Menu.sh
-	newURL=https://raw.githubusercontent.com/Xentrk/x3mRouting/master/Install_x3mRouting.sh
-	if /usr/sbin/curl -fsNL --retry 1 --connect-timeout 2 -m 5 "$newVer" | grep "^VERSION=">/dev/null 2>&1; then
-		sh -c "$(curl -sL $newURL)"
-		sleep 2
-		if [ -f /opt/bin/x3mMenu ]; then
-			show_amtm " x3mRouting Selective Routing installed"
-		else
-			am=;show_amtm " x3mRouting Selective Routing installation failed"
-		fi
+	sh -c "$(curl -sL https://raw.githubusercontent.com/Xentrk/x3mRouting/master/Install_x3mRouting.sh)"
+	sleep 2
+	if [ -f /opt/bin/x3mMenu ]; then
+		show_amtm " x3mRouting Selective Routing installed"
 	else
-		c_url "https://raw.githubusercontent.com/Xentrk/x3mRouting/master/x3mRouting" -o "/opt/bin/x3mRouting" && chmod 755 /opt/bin/x3mRouting && x3mRouting
-		sleep 2
-		if [ -f /opt/bin/x3mRouting ]; then
-			show_amtm " x3mRouting Selective Routing installed"
-		else
-			am=;show_amtm " x3mRouting Selective Routing installation failed"
-		fi
+		am=;show_amtm " x3mRouting Selective Routing installation failed"
 	fi
 }
 #eof

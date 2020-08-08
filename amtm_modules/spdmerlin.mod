@@ -30,7 +30,7 @@ install_spdmerlin(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/spdmerlin-automated-speedtests-with-graphs.55904/"
+	echo " https://www.snbforums.com/threads/55904"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh" -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install

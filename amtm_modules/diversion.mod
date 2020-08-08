@@ -92,8 +92,9 @@ install_diversion(){
 	echo " on your router."
 	echo
 	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/threads/diversion-the-router-adblocker.48538/"
+	echo " https://www.snbforums.com/threads/48538"
 	c_d
+
 	case "$release" in
 		*XX*) 	remoteurl="http://diversion.test/install";;
 		*) 		remoteurl="https://diversion.ch/install";;

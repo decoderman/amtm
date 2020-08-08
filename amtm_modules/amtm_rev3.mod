@@ -1,5 +1,6 @@
 #!/bin/sh
 #bof
+c_url(){ /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
 theme_solarized(){ R='[38;2;220;50;47m';R_BG='[48;2;220;50;47m';E_BG='[48;2;220;50;47m';GN='[38;2;133;153;0m';GN_BG='[48;2;7;54;66m';B='[38;2;38;139;210m';GY='[38;2;88;110;117m';NC='[0m';COR=32;}
 theme_amtm(){
 	p_e_l

@@ -1,5 +1,6 @@
 #!/bin/sh
 #bof
+c_url(){ /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
 f_b_url(){ a_m " ! using ${R}fallback server${NC} diversion.ch";amtmURL=https://diversion.ch/amtm_fw;dfc=1;g_m "$@";}
 g_m(){
 	[ "$1" = amtm.mod ] && set -- "$1" "$2" "${add}/a_fw"

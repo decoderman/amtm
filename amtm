@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.1.7
-release="June 30 2020"
+version=3.1.8
+release="August 08 2020"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
@@ -77,7 +77,8 @@ show_amtm(){
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
-	/jffs/scripts/FreshJR_QOS FreshJR_QOS 3 FreshJR¦-¦Adaptive¦QOS
+	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement
+	FreshJR_QOS
 	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
@@ -112,6 +113,24 @@ show_amtm(){
 		if [ "$i" = spacer ]; then
 			[ "$atii" ] || [ "$ss" ] && echo
 			atii=
+		elif [ "$i" = FreshJR_QOS ]; then
+			if [ -f /jffs/scripts/FreshJR_QOS ]; then
+				g_m FreshJR_QOS.mod include
+				[ -f "${add}/FreshJR_QOS.mod" ] && FreshJR_QOS_installed
+			else
+				r_m FreshJR_QOS.mod
+				if [ ! -f /jffs/addons/flexqos/flexqos.sh ]; then
+					[ "$ss" ] && printf "${E_BG} 3d${NC} %-9s%s\\n" "install" "FreshJR QOS - Adaptive QOS (deprecated)"
+					case_3d(){
+						g_m FreshJR_QOS.mod include
+						[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu
+					}
+				else
+					case_3d(){
+						show_amtm " FreshJR QOS is not available to install.\\n Its successor FlexQoS is already installed."
+					}
+				fi
+			fi
 		elif [ "$i" = x3mRouting ]; then
 			if [ -f /opt/bin/x3mMenu ] || [ -f /opt/bin/x3mRouting ]; then
 				[ -f /opt/bin/x3mMenu ] && scriptloc=/opt/bin/x3mMenu || scriptloc=/opt/bin/x3mRouting
@@ -205,7 +224,7 @@ show_amtm(){
 				case $f3 in
 					1)		case_1(){ g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
 					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
-					3)		case_3(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
+					3)		case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
 					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
@@ -226,7 +245,7 @@ show_amtm(){
 	done
 	set +f
 
-	unset IFS swl swsize swpsize swtxt mpsw
+	unset IFS swl swsize swpsize swtxt mpsw awmUpd
 	gms(){ g_m swap.mod include;[ "$dlok" = 0 ] && show_amtm menu;}
 	[ -f /jffs/scripts/post-mount ] && swl="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
@@ -282,6 +301,36 @@ show_amtm(){
 	fi
 
 	if [ "$su" = 1 ]; then
+		if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-5]')" ]; then
+			awmWSI=$(nvram get webs_state_info)
+			awmBuildno=$(nvram get buildno)
+			awmInstalled="$awmBuildno.$(nvram get extendno)"
+			if [ "$awmWSI" ]; then
+				awmStable="${awmWSI:5:3}.${awmWSI:9:2}.${awmWSI:12:2}"
+				awmBaseVer="${awmWSI:5:3}.${awmWSI:9:2}"
+				version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
+				if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
+					availRel="release avail.";stcol=${E_BG};awmUpd=1
+				elif [ "$awmBaseVer" = "$awmBuildno" ]; then
+					if echo "$(nvram get extendno)" | grep -q 'alpha\|beta'; then
+						availRel="release avail.";stcol=${E_BG};awmUpd=1
+					elif [ "$(version_check $awmStable)" -gt "$(version_check $awmInstalled)" ]; then
+						availRel="release avail.";stcol=${E_BG};awmUpd=1
+					else
+						availRel=firmware;stcol=${GN_BG}
+					fi
+				else
+					availRel=firmware;stcol=${GN_BG}
+					[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
+					awmStable=$awmInstalled
+				fi
+			else
+				availRel=firmware;stcol=${GN_BG}
+				[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
+				awmStable=$awmInstalled
+			fi
+			printf "${GN_BG}awm${NC} %-15s%-15s%${COR}s\\n\\n" "Asuswrt-Merlin" "$availRel" " ${stcol}$awmStable${NC}"
+		fi
 		update_amtm
 		unset corr1 corr2
 		if [ "$amtmUpd" = 0 ]; then
@@ -307,11 +356,17 @@ show_amtm(){
 	unset ss atii upd
 	if [ "$su" = 1 ]; then
 		su=
-		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+		if [ "$suUpd" = 1 -o "$awmUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+			tpText="${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
+			[ "$awmUpd" = 1 ] && awmText="${R}Asuswrt-Merlin firmware update available!${NC}\\n See https://asuswrt-merlin.net/download"
 			if [ "$amtmUpd" -gt 0 ]; then
 				p_e_l
 				if [ "$suUpd" = 1 ]; then
-					printf " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update.\\n"
+					printf " $tpText\\n"
+					p_e_l
+				fi
+				if [ "$awmUpd" = 1 ]; then
+					printf " $awmText\\n"
 					p_e_l
 				fi
 				amtmUpdText="updated from v$version to v$amtmRemotever"
@@ -336,10 +391,12 @@ show_amtm(){
 					sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 					unset amtmUpate amtmMD5
 				fi
-				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
+				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
 				exec "${scriptPath}" " amtm $am"
 			else
-				a_m " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
+				[ "$suUpd" = 1 ] && a_m " $tpText"
+				[ "$suUpd" = 1 ] && [ "$awmUpd" = 1 ] && a_m " "
+				[ "$awmUpd" = 1 ] && a_m " $awmText"
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
@@ -372,6 +429,7 @@ show_amtm(){
 			1)					case_1;break;;
 			2)					case_2;break;;
 			3)					case_3;break;;
+			3d)					case_3d;break;;
 			4)					case_4;break;;
 			5)					case_5;break;;
 			6)					case_6;break;;
@@ -427,7 +485,7 @@ c_nl(){ [ -n "$(tail -c2 "$1")" ] && echo >> "$1";}
 c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
-c_url(){ /usr/sbin/curl -fsNL --retry 2 --connect-timeout 3 -m 8 "$@";}
+c_url(){ /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
 d_t_u(){ dos2unix < $1 | cmp -s - $1;[ "$?" = 1 ] && dos2unix $1;}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
 p_r_l(){ echo "${R}_____________________________________________${NC}";}
@@ -713,7 +771,7 @@ update_amtm(){
 				sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 				unset amtmUpate amtmMD5
 			fi
-			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
+			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
 			exec "${scriptPath}" " amtm $am"
 		fi
 	fi
@@ -894,7 +952,7 @@ elif ! cmp -s "$0" "$scriptPath"; then
 		sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 		unset amtmUpate amtmMD5
 	fi
-	[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
+	[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
 	exec "${scriptPath}" " amtm $am"
 elif [ -z "$1" ]; then
 	[ "$am" ] && show_amtm "$am" || show_amtm menu

@@ -30,12 +30,12 @@ install_connmon(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/"
+	echo " https://www.snbforums.com/threads/56163"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh" -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
 	sleep 2
-	if [ -f /jffs/scripts/connmon ] && grep -q 'connmon startup' /jffs/scripts/services-start 2> /dev/null; then
+	if [ -f /jffs/scripts/connmon ]; then
 		show_amtm " connmon installed"
 	else
 		am=;show_amtm " connmon installation failed"

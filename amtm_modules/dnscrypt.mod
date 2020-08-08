@@ -73,7 +73,7 @@ install_dnscrypt(){
 	echo " on your router."
 	echo
 	echo " Authors: bigeyes0x0, SomeWhereOverTheRainBow"
-	echo " https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/"
+	echo " https://www.snbforums.com/threads/36071"
 
 	c_d
 
@@ -91,11 +91,10 @@ install_dnscrypt(){
 
 	mkdir -p /jffs/dnscrypt
 	c_url "https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer" -o "/jffs/dnscrypt/installer" && chmod 0755 /jffs/dnscrypt/installer
-
 	/jffs/dnscrypt/installer
 
 	sleep 5
-	if [ -f /jffs/dnscrypt/manager ] && [ -f /jffs/dnscrypt/installer ] && grep -q 'manager init-start' /jffs/scripts/init-start 2> /dev/null; then
+	if [ -f /jffs/dnscrypt/manager ]; then
 		show_amtm " dnscrypt installer installed"
 	else
 		rm -rf /jffs/dnscrypt

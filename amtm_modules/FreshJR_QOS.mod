@@ -18,8 +18,8 @@ FreshJR_QOS_installed(){
 			unset localver FreshJR_QOSUpate FreshJR_QOSMD5
 		fi
 	fi
-	printf "${GN_BG} 3 ${NC} %-9s%-21s%${COR}s\\n" "open" "FreshJR QOS   $localver" " $upd"
-	case_3(){
+	printf "${GN_BG} 3d${NC} %-9s%-21s%${COR}s\\n" "open" "FreshJR QOS   $localver" " $upd"
+	case_3d(){
 		/jffs/scripts/FreshJR_QOS -menu
 		sleep 1
 		show_amtm menu
@@ -31,7 +31,11 @@ install_FreshJR_QOS(){
 	echo " on your router."
 	echo
 	echo " Author: FreshJR"
-	echo " https://www.snbforums.com/threads/release-freshjr-adaptive-qos-improvements-custom-rules-and-inner-workings.36836/"
+	echo " https://www.snbforums.com/threads/36836"
+	echo
+	echo " Note that FreshJR QOS is no longer actively developed."
+	echo " Use its successor by dave14305 instead:"
+	echo " FlexQoS - Flexible QoS Enhancement Script for Adaptive QoS instead."
 	c_d
 
 	c_url "https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh" -o /jffs/scripts/FreshJR_QOS --create-dirs
@@ -40,7 +44,7 @@ install_FreshJR_QOS(){
 
 	p_e_t "return to amtm menu"
 
-	if [ -f "/jffs/scripts/FreshJR_QOS" ] && grep -q -x '/jffs/scripts/FreshJR_QOS -start $1 & ' /jffs/scripts/firewall-start; then
+	if [ -f "/jffs/scripts/FreshJR_QOS" ]; then
 		show_amtm " FreshJR Adaptive QOS installed"
 	else
 		am=;show_amtm " FreshJR Adaptive QOS installation failed"

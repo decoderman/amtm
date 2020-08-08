@@ -30,12 +30,12 @@ install_ntpmerlin(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/ntpmerlin-installer-for-kvic-ntp-daemon.55756/"
+	echo " https://www.snbforums.com/threads/55756"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh" -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
 	sleep 2
-	if [ -f /jffs/scripts/ntpmerlin ] && grep -q 'ntpmerlin startup' /jffs/scripts/services-start 2> /dev/null; then
+	if [ -f /jffs/scripts/ntpmerlin ]; then
 		show_amtm " ntpMerlin installed"
 	else
 		am=;show_amtm " ntpMerlin installation failed"

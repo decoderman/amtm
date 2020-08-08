@@ -30,13 +30,13 @@ install_uiScribe(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/"
+	echo " https://www.snbforums.com/threads/57040"
 	c_d
 
 	if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
 		c_url "https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh" -o "/jffs/scripts/uiScribe" && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
 		sleep 2
-		if [ -f /jffs/scripts/uiScribe ] && grep -q 'uiScribe startup' /jffs/scripts/services-start 2> /dev/null; then
+		if [ -f /jffs/scripts/uiScribe ]; then
 			show_amtm " uiScribe installed"
 		else
 			am=;show_amtm " uiScribe installation failed"

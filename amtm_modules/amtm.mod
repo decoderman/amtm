@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.7
-release="June 30 2020"
+version=3.1.8
+release="August 08 2020"
 dc_version=2.9
 led_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -25,6 +25,11 @@ if [ "$amtmRev" -le 3 ]; then
 elif [ "$amtmRev" -gt 3 ]; then
 	r_m amtm_rev3.mod
 fi
+if [ "$amtmRev" = 4 ]; then
+	g_m amtm_rev4.mod include
+elif [ "$amtmRev" -gt 4 ]; then
+	r_m amtm_rev4.mod
+fi
 # End updates for /usr/sbin/amtm
 
 ascii_logo(){
@@ -41,7 +46,7 @@ about_amtm(){
 	p_e_l
 	echo " amtm, the $title
  Version $version FW, released on $release
- (Built-in firmware version)
+ (Built-in firmware version, revision: $amtmRev)
 
  amtm is a front end that manages popular scripts
  for wireless routers running Asuswrt-Merlin firmware.
@@ -105,7 +110,8 @@ show_amtm(){
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
-	/jffs/scripts/FreshJR_QOS FreshJR_QOS 3 FreshJR¦-¦Adaptive¦QOS
+	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement
+	FreshJR_QOS
 	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
@@ -140,6 +146,24 @@ show_amtm(){
 		if [ "$i" = spacer ]; then
 			[ "$atii" ] || [ "$ss" ] && echo
 			atii=
+		elif [ "$i" = FreshJR_QOS ]; then
+			if [ -f /jffs/scripts/FreshJR_QOS ]; then
+				g_m FreshJR_QOS.mod include
+				[ -f "${add}/FreshJR_QOS.mod" ] && FreshJR_QOS_installed
+			else
+				r_m FreshJR_QOS.mod
+				if [ ! -f /jffs/addons/flexqos/flexqos.sh ]; then
+					[ "$ss" ] && printf "${E_BG} 3d${NC} %-9s%s\\n" "install" "FreshJR QOS - Adaptive QOS (deprecated)"
+					case_3d(){
+						g_m FreshJR_QOS.mod include
+						[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu
+					}
+				else
+					case_3d(){
+						show_amtm " FreshJR QOS is not available to install.\\n Its successor FlexQoS is already installed."
+					}
+				fi
+			fi
 		elif [ "$i" = x3mRouting ]; then
 			if [ -f /opt/bin/x3mMenu ] || [ -f /opt/bin/x3mRouting ]; then
 				[ -f /opt/bin/x3mMenu ] && scriptloc=/opt/bin/x3mMenu || scriptloc=/opt/bin/x3mRouting
@@ -233,7 +257,7 @@ show_amtm(){
 				case $f3 in
 					1)		case_1(){ g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
 					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
-					3)		case_3(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
+					3)		case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
 					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
@@ -254,7 +278,7 @@ show_amtm(){
 	done
 	set +f
 
-	unset IFS swl swsize swpsize swtxt mpsw
+	unset IFS swl swsize swpsize swtxt mpsw awmUpd
 	gms(){ g_m swap.mod include;[ "$dlok" = 0 ] && show_amtm menu;}
 	[ -f /jffs/scripts/post-mount ] && swl="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
@@ -310,6 +334,36 @@ show_amtm(){
 	fi
 
 	if [ "$su" = 1 ]; then
+		if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-5]')" ]; then
+			awmWSI=$(nvram get webs_state_info)
+			awmBuildno=$(nvram get buildno)
+			awmInstalled="$awmBuildno.$(nvram get extendno)"
+			if [ "$awmWSI" ]; then
+				awmStable="${awmWSI:5:3}.${awmWSI:9:2}.${awmWSI:12:2}"
+				awmBaseVer="${awmWSI:5:3}.${awmWSI:9:2}"
+				version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
+				if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
+					availRel="release avail.";stcol=${E_BG};awmUpd=1
+				elif [ "$awmBaseVer" = "$awmBuildno" ]; then
+					if echo "$(nvram get extendno)" | grep -q 'alpha\|beta'; then
+						availRel="release avail.";stcol=${E_BG};awmUpd=1
+					elif [ "$(version_check $awmStable)" -gt "$(version_check $awmInstalled)" ]; then
+						availRel="release avail.";stcol=${E_BG};awmUpd=1
+					else
+						availRel=firmware;stcol=${GN_BG}
+					fi
+				else
+					availRel=firmware;stcol=${GN_BG}
+					[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
+					awmStable=$awmInstalled
+				fi
+			else
+				availRel=firmware;stcol=${GN_BG}
+				[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
+				awmStable=$awmInstalled
+			fi
+			printf "${GN_BG}awm${NC} %-15s%-15s%${COR}s\\n\\n" "Asuswrt-Merlin" "$availRel" " ${stcol}$awmStable${NC}"
+		fi
 		update_amtm
 		unset corr1 corr2
 		if [ "$amtmUpd" = 0 ]; then
@@ -335,18 +389,24 @@ show_amtm(){
 	unset ss atii upd
 	if [ "$su" = 1 ]; then
 		su=
-		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+		if [ "$suUpd" = 1 -o "$awmUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+			tpText="${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
+			[ "$awmUpd" = 1 ] && awmText="${R}Asuswrt-Merlin firmware update available!${NC}\\n See https://asuswrt-merlin.net/download"
 			if [ "$amtmUpd" -gt 0 ]; then
 				p_e_l
 				if [ "$suUpd" = 1 ]; then
-					printf " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update.\\n"
+					printf " $tpText\\n"
+					p_e_l
+				fi
+				if [ "$awmUpd" = 1 ]; then
+					printf " $awmText\\n"
 					p_e_l
 				fi
 				amtmUpdText="updated from v$version to v$amtmRemotever"
 				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n"
 				if [ "$amtmUpd" = 2 ]; then
 					printf " ${R}A minor amtm update is available!${NC}\\n"
-					amtmUpdText="minor version update applied"
+					amtmUpdText="minor version update applied."
 				fi
 				echo
 				while true; do
@@ -364,10 +424,12 @@ show_amtm(){
 					sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 					unset amtmUpate amtmMD5
 				fi
-				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
+				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
 				exec "$0" " amtm $am"
 			else
-				a_m " ${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
+				[ "$suUpd" = 1 ] && a_m " $tpText"
+				[ "$suUpd" = 1 ] && [ "$awmUpd" = 1 ] && a_m " "
+				[ "$awmUpd" = 1 ] && a_m " $awmText"
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
@@ -401,6 +463,7 @@ show_amtm(){
 			1)					case_1;break;;
 			2)					case_2;break;;
 			3)					case_3;break;;
+			3d)					case_3d;break;;
 			4)					case_4;break;;
 			5)					case_5;break;;
 			6)					case_6;break;;
@@ -412,6 +475,7 @@ show_amtm(){
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]6)				case_j6;break;;
+			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
 			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
@@ -620,7 +684,7 @@ update_amtm(){
 				sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 				unset amtmUpate amtmMD5
 			fi
-			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script${NC} updates use their\\n own update function."
+			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
 			exec "$0" " amtm $am"
 		fi
 	fi

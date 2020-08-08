@@ -1,11 +1,10 @@
 #!/bin/sh
 #bof
-[ -z "$devEnv" ] && branch=master || branch=develop
 uiDivStats_installed(){
 	scriptname=uiDivStats
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/$branch/uiDivStats.sh"
+		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -31,17 +30,16 @@ install_uiDivStats(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/"
+	echo " https://www.snbforums.com/threads/56393"
 	c_d
 
 	if [ -f /opt/bin/diversion ]; then
-		c_url "https://raw.githubusercontent.com/jackyaz/uiDivStats/$branch/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
-
+		c_url "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
 		sleep 2
 	else
 		am=;show_amtm " uiDivStats installation failed,\\n Diversion is not installed"
 	fi
-	if [ -f /jffs/scripts/uiDivStats ] && grep -q 'uiDivStats startup' /jffs/scripts/services-start 2> /dev/null; then
+	if [ -f /jffs/scripts/uiDivStats ]; then
 		show_amtm " uiDivStats installed"
 	else
 		am=;show_amtm " uiDivStats installation failed"
