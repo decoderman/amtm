@@ -34,7 +34,7 @@ install_skynet(){
 	echo " https://www.snbforums.com/threads/16798"
 	c_d
 
-	if ! ipset -v | grep -qF "v6"; then
+	if ! ipset -v | grep -qE 'v6|v7'; then
 		am=;show_amtm " Skynet install failed,\\n IPSet version on router not supported:\\n\\n$(ipset -v | sed -e 's/^/ /')"
 	else
 		c_url "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
