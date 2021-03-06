@@ -45,6 +45,7 @@ Enter the complete command below into your favorite SSH terminal, then press Ent
 | Stubby DNS | Xentrk and Adamm | _deprecated_ |
 | DNSCrypt | bigeyes0x0, SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) |
 | Pixelserv-tls | kvic | [Link](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) |
+| NVRAM Save/Restore Utility | Xentrk, John9527 & others | [Link](https://www.snbforums.com/threads/release-nvram-save-restore-utility.61722/) |
 | YazDHCP | Jack Yaz | [Link](https://www.snbforums.com/threads/yazdhcp-feature-expansion-of-dhcp-assignments-increasing-limit-on-the-number-of-dhcp-reservations.69247/) |
 | Vnstat | dev_null | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
 
