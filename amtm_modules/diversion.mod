@@ -92,7 +92,7 @@ install_diversion(){
 	echo " on your router."
 	echo
 	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/threads/48538"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	case "$release" in

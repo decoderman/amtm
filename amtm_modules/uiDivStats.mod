@@ -30,7 +30,7 @@ install_uiDivStats(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/56393"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	if [ -f /opt/bin/diversion ]; then

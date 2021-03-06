@@ -30,7 +30,7 @@ install_connmon(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/56163"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh" -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install

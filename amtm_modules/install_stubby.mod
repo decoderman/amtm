@@ -31,7 +31,7 @@ install_stubby(){
 	echo " on your router."
 	echo
 	echo " Authors: Xentrk, Adamm"
-	echo " https://www.snbforums.com/threads/49469"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	if [ -d "/jffs/dnscrypt" ] || [ -f /opt/sbin/dnscrypt-proxy ]; then

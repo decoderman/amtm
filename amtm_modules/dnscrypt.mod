@@ -73,7 +73,7 @@ install_dnscrypt(){
 	echo " on your router."
 	echo
 	echo " Authors: bigeyes0x0, SomeWhereOverTheRainBow"
-	echo " https://www.snbforums.com/threads/36071"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 
 	c_d
 

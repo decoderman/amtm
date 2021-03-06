@@ -36,7 +36,7 @@ install_scmerlin(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/threads/56277"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/jackyaz/scmerlin/master/scmerlin.sh" -o "/jffs/scripts/scmerlin" && chmod 0755 /jffs/scripts/scmerlin && /jffs/scripts/scmerlin install

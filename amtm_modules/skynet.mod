@@ -31,7 +31,7 @@ install_skynet(){
 	echo " on your router."
 	echo
 	echo " Author: Adamm"
-	echo " https://www.snbforums.com/threads/16798"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	if ! ipset -v | grep -qE 'v6|v7'; then

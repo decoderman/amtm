@@ -30,7 +30,7 @@ install_scribe(){
 	echo " on your router."
 	echo
 	echo " Author: cmkelley"
-	echo " https://www.snbforums.com/threads/55853"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 	c_url "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
 	sleep 2

@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=3.1.8
-release="August 08 2020"
+version=3.1.9
+release="March 06 2021"
 dc_version=2.9
 led_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -51,8 +51,8 @@ about_amtm(){
  amtm is a front end that manages popular scripts
  for wireless routers running Asuswrt-Merlin firmware.
 
- For updates and discussion visit this thread:
- https://www.snbforums.com/threads/amtm-the-asuswrt-merlin-terminal-menu.42415/
+ For updates and discussion visit:
+ https://www.snbforums.com/forums/asuswrt-merlin-addons.60/
 
  Proudly coded by thelonelycoder:
  Copyright (c) 2016-2066 thelonelycoder - All Rights Reserved
@@ -127,6 +127,9 @@ show_amtm(){
 	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
+	spacer
+	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
+	/jffs/scripts/dn-vnstat Vnstat vn Vnstat¦-¦Data¦use¦monitoring
 	spacer
 	stubby
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
@@ -268,6 +271,8 @@ show_amtm(){
 					j4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
 					j5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
 					j6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
+					j7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
+					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
@@ -334,13 +339,18 @@ show_amtm(){
 	fi
 
 	if [ "$su" = 1 ]; then
-		if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-5]')" ]; then
+		if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
 			awmWSI=$(nvram get webs_state_info)
+			if [ "$awmWSI" ]; then
+				if echo $awmWSI | grep -q 3004_; then
+					awmWSI=$(echo $awmWSI | sed 's/3004_//')
+				fi
+				awmStable=$(echo $awmWSI | sed 's/_/./g')
+			fi
 			awmBuildno=$(nvram get buildno)
 			awmInstalled="$awmBuildno.$(nvram get extendno)"
 			if [ "$awmWSI" ]; then
-				awmStable="${awmWSI:5:3}.${awmWSI:9:2}.${awmWSI:12:2}"
-				awmBaseVer="${awmWSI:5:3}.${awmWSI:9:2}"
+				awmBaseVer="${awmStable:0:5}"
 				version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
 				if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
 					availRel="release avail.";stcol=${E_BG};awmUpd=1
@@ -475,6 +485,8 @@ show_amtm(){
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]6)				case_j6;break;;
+			[Jj]7)				case_j7;break;;
+			[Vv][Nn])			case_vn;break;;
 			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
 			[Ss][Dd])			case_sd;break;;

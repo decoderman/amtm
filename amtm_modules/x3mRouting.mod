@@ -63,7 +63,7 @@ install_x3mRouting(){
 	echo " on your router."
 	echo
 	echo " Author: Xentrk"
-	echo " https://www.snbforums.com/threads/57793"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	sh -c "$(curl -sL https://raw.githubusercontent.com/Xentrk/x3mRouting/master/Install_x3mRouting.sh)"

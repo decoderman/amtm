@@ -73,18 +73,19 @@ entware_installed(){
 		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
-				1)		p_e_l
-						echo " This updates and upgrades Entware packages"
+				1)		
 						if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
+							p_e_l
+							echo " This updates and upgrades Entware packages"
 							echo
 							echo " Note: Stubby DNS Privacy Daemon is installed"
 							echo " on this router."
 							echo " It's recommended to update Entware packages"
 							echo " selectively through the Stubby DNS menu to"
 							echo " prevent overwriting configuration files."
+							c_d
 						fi
-						c_d
-
+						
 						if [ -f /opt/bin/pixelserv-tls ]; then
 							check_ps_version
 							oldpsv=$psVersion
@@ -108,7 +109,7 @@ entware_installed(){
 							fi
 						fi
 						show_amtm " Entware packages updated and upgraded${pstext}";break;;
-				2)		if [ ! -f /opt/bin/column ];then
+				2)		if [ ! -f /opt/bin/column ]; then
 							echo
 							echo " Installing missing Entware package 'column'"
 							echo " for a better file presentation."
@@ -132,7 +133,7 @@ entware_installed(){
 						rm /tmp/column.txt
 						[ -f /opt/bin/diversion ] && echo "diversion" >/tmp/column.txt
 						ls -l /opt/bin | awk '/scripts/ {print $9}' >>/tmp/column.txt
-						if [ -s /tmp/column.txt ];then
+						if [ -s /tmp/column.txt ]; then
 							sort /tmp/column.txt -o /tmp/column.txt
 							sed -i 's/^/ /;s/firewall/firewall (Skynet)/' /tmp/column.txt
 							echo "${R_BG} Non-Entware Scripts installed in /opt/bin/ ($(wc -l < /tmp/column.txt)) ${NC}"
@@ -144,7 +145,7 @@ entware_installed(){
 						echo "${GN}";column -or /tmp/column.txt;echo "${NC}"
 
 						ls -l /opt/sbin | awk '/scripts/ {print $9}' | sed 's/^/ /' >/tmp/column.txt
-						if [ -s /tmp/column.txt ];then
+						if [ -s /tmp/column.txt ]; then
 							echo "${R_BG} Non-Entware Scripts installed in /opt/sbin/ ($(wc -l < /tmp/column.txt)) ${NC}"
 							echo "${B}";column -or /tmp/column.txt;echo "${NC}"
 						fi

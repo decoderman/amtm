@@ -42,7 +42,7 @@ install_unbound_manager(){
 	echo " on your router."
 	echo
 	echo " Author: Martineau"
-	echo " https://www.snbforums.com/threads/61669"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	echo
 	echo " Contributors: rgnldo, dave14305, SomeWhereOverTheRainbow, Cam, Xentrk, thelonelycoder"
 	c_d

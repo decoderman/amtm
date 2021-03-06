@@ -31,7 +31,7 @@ install_FlexQoS(){
 	echo " on your router."
 	echo
 	echo " Author: dave14305"
-	echo " https://www.snbforums.com/threads/64882"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/dave14305/FlexQoS/master/flexqos.sh" -o /jffs/addons/flexqos/flexqos.sh --create-dirs && chmod +x /jffs/addons/flexqos/flexqos.sh && sh /jffs/addons/flexqos/flexqos.sh -install

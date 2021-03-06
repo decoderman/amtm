@@ -31,7 +31,7 @@ install_FreshJR_QOS(){
 	echo " on your router."
 	echo
 	echo " Author: FreshJR"
-	echo " https://www.snbforums.com/threads/36836"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
 	echo
 	echo " Note that FreshJR QOS is no longer actively developed."
 	echo " Use its successor by dave14305 instead:"
