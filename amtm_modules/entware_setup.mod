@@ -74,16 +74,13 @@ setup_Entware(){
 	case "$(uname -m)" in
 		mips)		PART_TYPES='ext2|ext3'
 					INST_URL='http://pkg.entware.net/binaries/mipsel/installer/installer.sh'
-					entVer="Entware (mipsel)"
-					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io';;
+					entVer="Entware (mipsel)";;
 		armv7l)		PART_TYPES='ext2|ext3|ext4'
 					INST_URL='http://bin.entware.net/armv7sf-k2.6/installer/generic.sh'
-					entVer="Entware (armv7)"
-					availEntVer=armv7;;
+					entVer="Entware (armv7)";;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
 					INST_URL='http://bin.entware.net/aarch64-k3.10/installer/generic.sh'
-					entVer="Entware (aarch64)"
-					availEntVer='armv8\|aarch64';;
+					entVer="Entware (aarch64)";;
 		*)			am=;show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
 	esac
 
@@ -138,16 +135,11 @@ setup_Entware(){
 	i=1;noad=
 	for mounted in $(/bin/mount | grep -E "$PART_TYPES" | cut -d" " -f3); do
 		echo " $i. ${GN}$mounted${NC}"
-		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
-			echo "    --> $mounted/entware"
-			echo "        Existing installation"
-			eval existing$i="$i"
-		fi
 		eval mounts$i="$mounted"
 		noad="${noad}${i} "
 		i=$((i+1))
 	done
-echo $existing1
+
 	if [ "$i" = 1 ]; then
 		r_m entware_setup.mod
 		am=;show_amtm " No compatible device(s) found to install\\n Entware on. A USB storage device formatted\\n with one of these file systems is required:\\n $(echo $PART_TYPES | sed -e 's/|/, /g')\\n Use Format disk (fd) to format FAT or NTFS\\n formatted devices to ext*"
@@ -171,18 +163,7 @@ echo $existing1
 	check_device "$entDev"
 
 	echo " Device checks passed"
-	
-	echo " $device"
 
-	if [ "$device" = "$existing$device" ]; then
-	echo OK
-	else
-	echo NOK
-	fi
-	
-	exit
-	
-	
 	if [ "$(uname -m)" = "aarch64" ]; then
 		p_e_l
 		printf " Select Entware version\\n\\n"
