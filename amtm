@@ -9,12 +9,12 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.1.9
-release="March 06 2021"
+version=3.2.0
+release="July 11 2021"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
-dc_version=2.9
+dc_version=3.0
 led_version=1.0
 
 ascii_logo(){

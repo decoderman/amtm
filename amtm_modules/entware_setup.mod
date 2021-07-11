@@ -46,6 +46,12 @@ setup_Entware(){
 		[ ! -x /jffs/addons/diversion/mount-entware.div ] && chmod 0755 /jffs/addons/diversion/mount-entware.div
 	}
 
+	check_entware_https(){
+		if [ -f /opt/etc/opkg.conf ] && grep -q 'http:' /opt/etc/opkg.conf; then
+			sed -i 's/http:/https:/g' /opt/etc/opkg.conf
+		fi
+	}
+
 	check_device(){
 
 		check_device_nok(){
@@ -73,14 +79,17 @@ setup_Entware(){
 
 	case "$(uname -m)" in
 		mips)		PART_TYPES='ext2|ext3'
-					INST_URL='http://pkg.entware.net/binaries/mipsel/installer/installer.sh'
-					entVer="Entware (mipsel)";;
+					INST_URL='https://pkg.entware.net/binaries/mipsel/installer/installer.sh'
+					entVer="Entware (mipsel)"
+					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io';;
 		armv7l)		PART_TYPES='ext2|ext3|ext4'
-					INST_URL='http://bin.entware.net/armv7sf-k2.6/installer/generic.sh'
-					entVer="Entware (armv7)";;
+					INST_URL='https://bin.entware.net/armv7sf-k2.6/installer/generic.sh'
+					entVer="Entware (armv7)"
+					availEntVer=armv7;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
-					INST_URL='http://bin.entware.net/aarch64-k3.10/installer/generic.sh'
-					entVer="Entware (aarch64)";;
+					INST_URL='https://bin.entware.net/aarch64-k3.10/installer/generic.sh'
+					entVer="Entware (aarch64)"
+					availEntVer='armv8\|aarch64';;
 		*)			am=;show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
 	esac
 
@@ -132,9 +141,14 @@ setup_Entware(){
 	echo " Select device to install Entware to"
 	echo
 
-	i=1;noad=
+	i=1;noad=;usePreviousEntware=
 	for mounted in $(/bin/mount | grep -E "$PART_TYPES" | cut -d" " -f3); do
 		echo " $i. ${GN}$mounted${NC}"
+		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
+			echo "    Found compatible previous Entware"
+			echo "    installation on this device."
+			echo
+		fi
 		eval mounts$i="$mounted"
 		noad="${noad}${i} "
 		i=$((i+1))
@@ -142,7 +156,7 @@ setup_Entware(){
 
 	if [ "$i" = 1 ]; then
 		r_m entware_setup.mod
-		am=;show_amtm " No compatible device(s) found to install\\n Entware on. A USB storage device formatted\\n with one of these file systems is required:\\n $(echo $PART_TYPES | sed -e 's/|/, /g')\\n Use Format disk (fd) to format FAT or NTFS\\n formatted devices to ext*"
+		am=;show_amtm " No compatible device(s) found to install\\n Entware on.\\n\\n A USB storage device formatted with one of\\n these file systems is required:\\n $(echo $PART_TYPES | sed -e 's/|/, /g')\\n\\n Use Format disk (fd) in amtm to format\\n devices to ext*"
 	fi
 
 	[ "$i" = 2 ] && devNo=1-1 || devNo="1-$((i-1))"
@@ -164,7 +178,31 @@ setup_Entware(){
 
 	echo " Device checks passed"
 
-	if [ "$(uname -m)" = "aarch64" ]; then
+	if [ -f "$entDev/entware/bin/opkg" ] && grep -q "$availEntVer" "$entDev/entware/etc/opkg.conf"; then
+		p_e_l
+		echo " This device contains a compatible Entware"
+		echo " installation, select what to do."
+		echo
+		echo " ${GN_BG} $entDev ${NC}"
+		echo
+		printf " 1. Reuse previous Entware installation.\\n"
+		printf "    This requires rebooting this router\\n"
+		printf "    after completion.\\n"
+		printf " 2. New Entware installation\\n"
+		printf " 3. Return to device selection\\n"
+		while true; do
+			printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
+			case "$continue" in
+				1)			usePreviousEntware=1;break;;
+				2)			break;;
+				3)			echo;setup_Entware;break;;
+				[Ee])		r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
+				*)			printf "\\n input is not an option\\n";;
+			esac
+		done
+	fi
+
+	if [ -z "$usePreviousEntware" ] && [ "$(uname -m)" = "aarch64" ]; then
 		p_e_l
 		printf " Select Entware version\\n\\n"
 		printf " This router can run 32-bit or 64-bit Entware.\\n\\n"
@@ -173,9 +211,9 @@ setup_Entware(){
 		while true; do
 			printf "\\n Enter your selection [1-2] ";read -r eversion
 			case "$eversion" in
-				1)	INST_URL='http://bin.entware.net/aarch64-k3.10/installer/generic.sh'
+				1)	INST_URL='https://bin.entware.net/aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)";break;;
-				2)	INST_URL='http://bin.entware.net/armv7sf-k3.2/installer/generic.sh'
+				2)	INST_URL='https://bin.entware.net/armv7sf-k3.2/installer/generic.sh'
 					entVer="Entware (armv7)";break;;
 				*) 	printf "\\n input is not an option\\n";;
 			esac
@@ -183,7 +221,12 @@ setup_Entware(){
 	fi
 
 	p_e_l
-	echo " amtm is now ready to install Entware to"
+	if [ "$usePreviousEntware" ]; then
+		echo " amtm is now ready to use the previous"
+		echo " Entware installation on"
+	else
+		echo " amtm is now ready to install Entware to"
+	fi
 	echo
 	echo " ${GN_BG} $entDev ${NC}"
 	echo
@@ -202,30 +245,58 @@ setup_Entware(){
 	cd /tmp
 
 	entPath="$entDev/entware"
-	[ -d "$entPath" ] && rm -rf "$entPath"
+	[ -z "$usePreviousEntware" ] && [ -d "$entPath" ] && rm -rf "$entPath"
 
-	echo " Creating install directory at $entPath"
+	if [ "$usePreviousEntware" ]; then
+		echo " Relinking Entware symlink to $entPath"
+	else
+		echo " Creating install directory at $entPath"
+	fi
 
 	mkdir -p "$entPath"
 
 	ln -sf "$entPath" /tmp/opt
 
-	echo
-	echo " Installing $entVer, using external script"
-	echo "${GY}"
-	wget --timeout=10 --tries=3 --retry-connrefused -qO - "$INST_URL" | sh
-	echo "${NC}"
+	if [ -z "$usePreviousEntware" ]; then
+		echo
+		echo " Installing $entVer, using external script"
+		echo "${GY}"
+		wget --timeout=10 --tries=3 --retry-connrefused -qO - "$INST_URL" | sh
+		echo "${NC}"
+	fi
 
 	if [ -f /opt/bin/opkg ]; then
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="Entware (${ENTURL##*/})"
 		[ -z "$entVersion" ] && entVersion=$entVer
+		check_entware_https
 		c_e_folder
 		cd
 		write_jffsfile
 		sleep 2
 		r_m entware_setup.mod
-		am=;show_amtm " $entVersion install successful"
+
+		if [ "$usePreviousEntware" ]; then
+			p_e_l
+			echo " This router needs to reboot now so it can use"
+			echo " the previous Entware installation."
+			echo
+			echo " Note that you may have to reinstall already"
+			echo " installed third party (amtm) apps that reside"
+			echo " in Entware after the reboot."
+			echo " In the case of Diversion, all you need to do is open"
+			echo " Diversion in amtm so it can do a self check."
+			p_e_t "continue"
+			clear
+			ascii_logo '  Goodbye!'
+			echo
+			printf " amtm reboots this router now\\n\\n"
+			sleep 1
+			service reboot >/dev/null 2>&1 &
+			exit 0
+		else
+			am=;show_amtm " $entVersion install successful"
+		fi
 	else
 		cd
 		r_m entware_setup.mod
@@ -233,14 +304,13 @@ setup_Entware(){
 	fi
 }
 
-
 install_Entware(){
 	p_e_l
 	echo " This installs Entware - the ultimate Software repository"
 	echo " on this router."
 	echo
-	echo " If you plan to install Diversion on this"
-	echo " router, install Diversion first."
+	echo " Note if you plan to install Diversion on"
+	echo " this router, install Diversion first."
 	echo " It includes the installation of Entware."
 	echo
 	echo " Author: thelonelycoder"

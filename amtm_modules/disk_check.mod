@@ -5,20 +5,33 @@ disk_check_installed(){
 	[ -f /jffs/scripts/disk-check ] && rm /jffs/scripts/disk-check
 	[ -f "${add}"/disk-check.mod ] && rm "${add}"/disk-check.mod
 
-	if ! grep -qE "^VERSION=$dc_version" "${add}"/disk-check; then
-		if grep -q "^blkidExclude=" "${add}"/disk-check; then
-			blkidExclude="$(grep "^blkidExclude=" "${add}"/disk-check | sed -e "s/blkidExclude=//;s/'//g")"
-			[ "$blkidExclude" = "''" ] && blkidExclude=
+	if [ -f /jffs/scripts/pre-mount ]; then
+		if ! grep -q "^. ${add}/disk-check" /jffs/scripts/pre-mount; then
+			disk_check install
 		fi
-		disk_check install
-		a_m " - Disk check script updated to v$dc_version"
+
+		if ! grep -qE "^VERSION=$dc_version" "${add}"/disk-check; then
+			if grep -q "^blkidExclude=" "${add}"/disk-check; then
+				blkidExclude="$(grep "^blkidExclude=" "${add}"/disk-check | sed -e "s/blkidExclude=//;s/'//g")"
+				[ "$blkidExclude" = "''" ] && blkidExclude=
+			fi
+			disk_check install
+			a_m " - Disk check script updated to v$dc_version"
+		fi
+		[ -f "${add}"/amtm-disk-check.log ] && dcltext="${GN_BG}dcl${NC} show log" || dcltext=
+		[ -z "$su" ] && printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"
+		case_dc(){
+			[ -f "${add}"/disk_check.mod ] && disk_check manage
+			show_amtm menu
+		}
+	else
+		rm -f "${add}"/disk-check
+		rm -f "${add}"/amtm-disk-check.log
+		blkidExclude=
+		case_dc(){
+			g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu
+		}
 	fi
-	[ -f "${add}"/amtm-disk-check.log ] && dcltext="${GN_BG}dcl${NC} show log" || dcltext=
-	[ -z "$su" ] && printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"
-	case_dc(){
-		[ -f "${add}"/disk_check.mod ] && disk_check manage
-		show_amtm menu
-	}
 }
 install_disk_check(){
 	p_e_l

@@ -100,7 +100,7 @@ manage_swap(){
 					echo " Listing compatible device(s) for a Swap file"
 					echo
 					i=1;noad=
-					for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4|tfat|exfat" | cut -d" " -f3); do
+					for mounted in $(/bin/mount | grep -E "ext2|ext3|ext4" | cut -d" " -f3); do
 						echo " $i. ${GN_BG}$mounted${NC}"
 						eval mounts$i=\"$mounted\"
 						noad="${noad}${i} "

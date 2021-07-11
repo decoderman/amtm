@@ -75,7 +75,7 @@ format_disk(){
 			devtfsize=$(cat /proc/partitions | grep "$(echo ${devtf##*/})$" | awk '{print $3 * 1024}')
 		fi
 
-		if [ "$devtfsize" -gt 2000000000000 ]; then
+		if [ "$devtfsize" -gt 2199023255552 ]; then
 			am=;show_amtm " Device is over 2TB and cannot be\\n formatted by amtm. Read here why:\\n https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
 		fi
 
@@ -639,6 +639,7 @@ format_disk(){
 		printf " to take effect.\\n"
 		p_e_t continue
 		sleep 1
+		r_m format_disk.mod
 		service reboot >/dev/null 2>&1 &
 		exit 0
 	else

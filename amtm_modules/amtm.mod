@@ -1,8 +1,8 @@
 #!/bin/sh
 #bof
-version=3.1.9
-release="March 06 2021"
-dc_version=2.9
+version=3.2.0
+release="July 11 2021"
+dc_version=3.0
 led_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
 contributors="Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald
