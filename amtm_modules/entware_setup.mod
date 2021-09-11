@@ -83,9 +83,17 @@ setup_Entware(){
 					entVer="Entware (mipsel)"
 					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io';;
 		armv7l)		PART_TYPES='ext2|ext3|ext4'
-					INST_URL='https://bin.entware.net/armv7sf-k2.6/installer/generic.sh'
-					entVer="Entware (armv7)"
-					availEntVer=armv7;;
+					version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
+					if [ "$(version_check $(uname -r))" -ge "$(version_check 3.2)" ]; then
+						INST_URL='https://bin.entware.net/armv7sf-k3.2/installer/generic.sh'
+						entVer="Entware (armv7sf-k3.2)"
+						availEntVer=armv7
+					else
+						INST_URL='https://bin.entware.net/armv7sf-k2.6/installer/generic.sh'
+						entVer="Entware (armv7sf-k2.6)"
+						availEntVer=armv7
+					fi
+					;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
 					INST_URL='https://bin.entware.net/aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)"
@@ -214,7 +222,7 @@ setup_Entware(){
 				1)	INST_URL='https://bin.entware.net/aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)";break;;
 				2)	INST_URL='https://bin.entware.net/armv7sf-k3.2/installer/generic.sh'
-					entVer="Entware (armv7)";break;;
+					entVer="Entware (armv7sf-k3.2)";break;;
 				*) 	printf "\\n input is not an option\\n";;
 			esac
 		done
@@ -225,7 +233,8 @@ setup_Entware(){
 		echo " amtm is now ready to use the previous"
 		echo " Entware installation on"
 	else
-		echo " amtm is now ready to install Entware to"
+		echo " amtm is now ready to install"
+		echo " $entVer to"
 	fi
 	echo
 	echo " ${GN_BG} $entDev ${NC}"

@@ -10,7 +10,7 @@ check_ps_version(){
 }
 
 entware_installed(){
-	
+
 	check_entware_https(){
 		if [ -f /opt/etc/opkg.conf ] && grep -q 'http:' /opt/etc/opkg.conf; then
 			sed -i 's/http:/https:/g' /opt/etc/opkg.conf
@@ -79,8 +79,8 @@ entware_installed(){
 		entVersion=
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="Entware ${ENTURL##*/}"
-		
-		if [ "$entVersion" ]; then 
+
+		if [ "$entVersion" ]; then
 			printf " This router runs ${GN}$entVersion${NC}\\n See available packages list here:\\n $ENTURL/Packages.html\\n"
 			[ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ] && printf " with updates from ${GN}maurerr.github.io${NC}\\n See available packages list here:\\n https://maurerr.github.io/packages/\\n\\n" || printf "\\n"
 		fi
@@ -89,7 +89,7 @@ entware_installed(){
 		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
-				1)		check_entware_https
+				1)		/usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && check_entware_https
 						if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
 							p_e_l
 							echo " This updates and upgrades Entware packages"
@@ -101,7 +101,7 @@ entware_installed(){
 							echo " prevent overwriting configuration files."
 							c_d
 						fi
-						
+
 						if [ -f /opt/bin/pixelserv-tls ]; then
 							check_ps_version
 							oldpsv=$psVersion
@@ -125,7 +125,7 @@ entware_installed(){
 							fi
 						fi
 						show_amtm " Entware packages updated and upgraded${pstext}";break;;
-				2)		check_entware_https
+				2)		/usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && check_entware_https
 						if [ ! -f /opt/bin/column ]; then
 							echo
 							echo " Installing required Entware package 'column'"
