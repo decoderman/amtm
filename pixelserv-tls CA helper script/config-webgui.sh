@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-_scriptver=v0.2.1
+_scriptver=v0.2.2
 
 # DESCRIPTION
 #
@@ -13,6 +13,7 @@ _scriptver=v0.2.1
 #
 # HISTORY
 #
+# Nov 6 2021   Simplified supported models.
 # March 6 2020 Modification by thelonelycoder.
 #              Added GT-AC2900 and RT-AX86U, added stop point for errors.
 # May 2 2020   Modification by thelonelycoder.
@@ -30,131 +31,131 @@ p_e_l(){ echo "_____________________________________________";echo;}
 p_e_t(){ printf "\\n Press Enter to Exit ";read -r;echo;exit 1;}
 issue_config_webgui() {
 
-  [[ "$(/bin/ps | grep -v grep | grep -o pixelserv-tls)" = ""  || ! -x /opt/bin/pixelserv-tls ]] && \
-      p_e_l && \
-	  echo "You do not appear to have pixelserv-tls installed or running." &&  \
-	  p_e_t
+	[[ "$(/bin/ps | grep -v grep | grep -o pixelserv-tls)" = ""  || ! -x /opt/bin/pixelserv-tls ]] && \
+		p_e_l && \
+		echo "You do not appear to have pixelserv-tls installed or running." &&  \
+		p_e_t
 
-  _model=$(nvram get model | grep 'RT-AC56\|RT-AC68\|DSL-AC68U\|RT-AC87\|RT-AC3100\|RT-AC88\|RT-AC3200\|RT-AC5300\|RT-AC86U\|RT-AX88U\|RT-AC88U\|RT-AX56U\|RT-AX58U\|RT-AX3000\|GT-AC2900\|RT-AX86U')
-  _ddns=$(nvram get ddns_hostname_x)
-  _le_en=$(nvram get le_enable)
+	_model=$(nvram get model | grep 'RT-AC56\|-AC68\|RT-AC87\|RT-AC3100\|RT-AC88\|RT-AC3200\|RT-AC5300\|RT-AC86U\|-AX\|RT-AC88U\|GT-AC2900')
+	_ddns=$(nvram get ddns_hostname_x)
+	_le_en=$(nvram get le_enable)
 
-  if [ "$_model" = "" ]; then
-    p_e_l
+	if [ "$_model" = "" ]; then
+	p_e_l
 	echo "This feature is currently not supported on your model ($(nvram get model))."
-    echo "Please contact @thelonelycoder for assistance."
-    p_e_t
-  fi
+	echo "Please contact @thelonelycoder for assistance."
+	p_e_t
+	fi
 
-  [ "${_ddns}" = "" ] && \
-  echo "Note that you do not appear to have DDNS configured or working."
-  echo ""
-  echo "Use your Pixelserv CA to issue a certificate to domain:"
-  echo ""
-  echo "  a. router.asus.com"
-  [ "${_ddns}" != "" ] && \
-  echo "  b. ${_ddns}"
-  echo ""
-  [ "${_ddns}" != "" ] && \
-  echo "Note that (a) works from LAN and VPN. It's recommended."
-  echo "(b) additionally works for access from WAN."
-  echo ""
-  echo ""
-  echo -n "Type a" && [ "${_ddns}" != "" ] && echo -n ", b"
-  echo -n " to proceed or anything else to quit: "
+	[ "${_ddns}" = "" ] && \
+	echo "Note that you do not appear to have DDNS configured or working."
+	echo ""
+	echo "Use your Pixelserv CA to issue a certificate to domain:"
+	echo ""
+	echo "  a. router.asus.com"
+	[ "${_ddns}" != "" ] && \
+	echo "  b. ${_ddns}"
+	echo ""
+	[ "${_ddns}" != "" ] && \
+	echo "Note that (a) works from LAN and VPN. It's recommended."
+	echo "(b) additionally works for access from WAN."
+	echo ""
+	echo ""
+	echo -n "Type a" && [ "${_ddns}" != "" ] && echo -n ", b"
+	echo -n " to proceed or anything else to quit: "
 
-  read ans
+	read ans
 
-  echo ""
+	echo ""
 
-  _domain=""
-  [ "$ans" = "a" ] && _domain="router.asus.com"
-  [ "$ans" = "b" ] && [ "$_ddns" != "" ] && _domain=${_ddns}
+	_domain=""
+	[ "$ans" = "a" ] && _domain="router.asus.com"
+	[ "$ans" = "b" ] && [ "$_ddns" != "" ] && _domain=${_ddns}
 
-  [ "$_domain" = "" ] && exit 0
+	[ "$_domain" = "" ] && exit 0
 
-  echo -n ${_domain} > /tmp/pixelcerts && sleep 1
-  [ ! -f /opt/var/cache/pixelserv/${_domain} ] && \
-    p_e_l && \
+	echo -n ${_domain} > /tmp/pixelcerts && sleep 1
+	[ ! -f /opt/var/cache/pixelserv/${_domain} ] && \
+	p_e_l && \
 	echo "Failed to issue a cert to ${_domain}." && \
-    echo "You may re-run this script to try again or contact me for assistance." && \
-      p_e_t
+	echo "You may re-run this script to try again or contact me for assistance." && \
+	p_e_t
 
-  echo "*****"
-  echo "A new cert has been issued by your Pixelserv CA to domain: ${_domain}"
-  echo ""
-  echo "This script is about to config and restart WebGUI."
-  echo ""
-  echo "Please type 'yes' to proceed or anything else to quit."
-  echo ""
+	echo "*****"
+	echo "A new cert has been issued by your Pixelserv CA to domain: ${_domain}"
+	echo ""
+	echo "This script is about to config and restart WebGUI."
+	echo ""
+	echo "Please type 'yes' to proceed or anything else to quit."
+	echo ""
 
-  read ans
+	read ans
 
-  echo ""
+	echo ""
 
-  [ "$ans" != "yes" ] && exit 0
+	[ "$ans" != "yes" ] && exit 0
 
-  _certbk=no
-  [ -f /etc/cert.pem ] && cp /etc/cert.pem /jffs/cert.pem-bk && \
-    [ -f /etc/key.pem ] && cp /etc/key.pem /jffs/key.pem-bk && _certbk=yes && \
-      rm /etc/key.pem && rm /etc/cert.pem
+	_certbk=no
+	[ -f /etc/cert.pem ] && cp /etc/cert.pem /jffs/cert.pem-bk && \
+	[ -f /etc/key.pem ] && cp /etc/key.pem /jffs/key.pem-bk && _certbk=yes && \
+		rm /etc/key.pem && rm /etc/cert.pem
 
-  cp -f /opt/var/cache/pixelserv/${_domain} /etc/cert.pem
-  cp -f /opt/var/cache/pixelserv/${_domain} /etc/key.pem
-  for p in "/jffs/ssl" "/jffs/.cert"; do
-    [ -d "$p" ] && \
-      cp /opt/var/cache/pixelserv/${_domain} ${p}/cert.pem && \
-      cp /opt/var/cache/pixelserv/${_domain} ${p}/key.pem
-  done
-  nvram set le_enable=2
-  nvram set https_crt_save=1
-  nvram set https_crt_file=""
-  service restart_httpd 1>&2 > /dev/null
-  nvram commit
+	cp -f /opt/var/cache/pixelserv/${_domain} /etc/cert.pem
+	cp -f /opt/var/cache/pixelserv/${_domain} /etc/key.pem
+	for p in "/jffs/ssl" "/jffs/.cert"; do
+	[ -d "$p" ] && \
+		cp /opt/var/cache/pixelserv/${_domain} ${p}/cert.pem && \
+		cp /opt/var/cache/pixelserv/${_domain} ${p}/key.pem
+	done
+	nvram set le_enable=2
+	nvram set https_crt_save=1
+	nvram set https_crt_file=""
+	service restart_httpd 1>&2 > /dev/null
+	nvram commit
 
-  echo "*****"
-  echo "Configured new cert and restarted WebGUI. Please keep this terminal open."
-  echo "Now try to access WebGUI from a test client."
-  echo ""
-  echo "If you see a padlock, congrats or else you may revert the change."
-  echo ""
-  echo "Type 'revert' to restore or anything else to quit and enjoy the new cert."
-  echo ""
+	echo "*****"
+	echo "Configured new cert and restarted WebGUI. Please keep this terminal open."
+	echo "Now try to access WebGUI from a test client."
+	echo ""
+	echo "If you see a padlock, congrats or else you may revert the change."
+	echo ""
+	echo "Type 'revert' to restore or anything else to quit and enjoy the new cert."
+	echo ""
 
-  read ans
+	read ans
 
-  echo ""
+	echo ""
 
-  if [ "$ans" != "revert" ]; then
-     echo ""
-     echo "Congratulations. All done. Happy pixelserv'ing!"
-     echo ""
-     [ "$_certbk" = "yes" ] && \
-       echo "This script has backup of original WebGUI cert under /jffs." && \
-       echo "You may safely delete them by issuing the following:" && \
-       echo "" && \
-       echo "       rm -i /jffs/cert.pem-bk" && \
-       echo "       rm -i /jffs/key.pem-bk" && \
-       echo ""
-     exit 0
-  fi
+	if [ "$ans" != "revert" ]; then
+		echo ""
+		echo "Congratulations. All done. Happy pixelserv'ing!"
+		echo ""
+		[ "$_certbk" = "yes" ] && \
+			echo "This script has backup of original WebGUI cert under /jffs." && \
+			echo "You may safely delete them by issuing the following:" && \
+			echo "" && \
+			echo "       rm -i /jffs/cert.pem-bk" && \
+			echo "       rm -i /jffs/key.pem-bk" && \
+		echo ""
+		exit 0
+	fi
 
-  echo -n "Reverting..."
+	echo -n "Reverting..."
 
-  mv -f /jffs/cert.pem-bk /etc/cert.pem
-  mv -f /jffs/key.pem-bk /etc/key.pem
-  [ -d /jffs/ssl ] && \
-    cp -f /etc/cert.pem /jffs/ssl && \
-      cp -f /etc/key.pem /jffs/ssl
-  [ "${_le_en}" = "" ] && nvram unset le_enable
-  [ "${_le_en}" != "" ] && nvram set le_enable=${_le_en}
-  nvram set https_crt_save=1
-  nvram set https_crt_file=""
-  service restart_httpd 1>&2 > /dev/null
-  nvram commit
+	mv -f /jffs/cert.pem-bk /etc/cert.pem
+	mv -f /jffs/key.pem-bk /etc/key.pem
+	[ -d /jffs/ssl ] && \
+	cp -f /etc/cert.pem /jffs/ssl && \
+	  cp -f /etc/key.pem /jffs/ssl
+	[ "${_le_en}" = "" ] && nvram unset le_enable
+	[ "${_le_en}" != "" ] && nvram set le_enable=${_le_en}
+	nvram set https_crt_save=1
+	nvram set https_crt_file=""
+	service restart_httpd 1>&2 > /dev/null
+	nvram commit
 
-  echo "done. All good as before."
-  exit 0
+	echo "done. All good as before."
+	exit 0
 }
 
 cat <<EOF
