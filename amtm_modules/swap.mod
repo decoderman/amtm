@@ -139,7 +139,7 @@ manage_swap(){
 									echo " 10.  10 GB"
 
 									while true; do
-										printf "\\n Enter size [1-2 e=Exit] ";read -r size
+										printf "\\n Enter size [1, 2, 5, 10 e=Exit] ";read -r size
 										case "$size" in
 											1)	swsize=1048576; break;;
 											2)	swsize=2097152; break;;
