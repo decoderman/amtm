@@ -22,32 +22,40 @@ Enter the complete command below into your favorite SSH terminal, then press Ent
 /usr/sbin/curl -Os https://diversion.ch/amtm/amtm && sh amtm
 ```
 
+### How to start amtm after installation or in Asuswrt-Merlin firmware 384.15 and newer
+Enter this into your favorite SSH terminal:
+
+```Shell
+amtm
+```
+
 [![amtm v3.1.8](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.1")](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.8")
 
 ### Supported scripts
 
 | Script | Maintainer | Infos |
 |--------|------------|------|
-| Diversion | thelonelycoder | [Link](https://www.snbforums.com/threads/diversion-the-router-ad-blocker.48538/) |
-| Skynet | Adamm | [Link](https://www.snbforums.com/threads/skynet-asus-firewall-addition-dynamic-malware-country-manual-ip-blocking.16798/) |
-| FlexQoS | dave14305 | [Link](https://www.snbforums.com/threads/fork-flexqos-flexible-qos-enhancement-script-for-adaptive-qos.64882/) |
+| Diversion | thelonelycoder | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480) |
+| Skynet | Adamm | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=14) |
+| FlexQoS | dave14305 | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901) |
 | FreshJR Adaptive QOS | FreshJR | [Link](https://www.snbforums.com/threads/release-freshjr-adaptive-qos-improvements-custom-rules-and-inner-workings.36836/) deprecated |
-| YazFi | Jack Yaz | [Link](https://www.snbforums.com/threads/yazfi-enhanced-asuswrt-merlin-guest-wifi-inc-ssid-vpn-client.45924/) |
-| scribe | cmkelley | [Link](https://www.snbforums.com/threads/scribe-syslog-ng-and-logrotate-installer.55853/) |
-| x3mRouting | Xentrk | [Link](https://www.snbforums.com/threads/x3mrouting-selective-routing-for-asuswrt-merlin-firmware.57793/) |
-| unbound Manager | Martineau | [Link](https://www.snbforums.com/threads/release-unbound_manager-manager-installer-utility-for-unbound-recursive-dns-server.61669/) |
-| connmon |Jack Yaz | [Link](https://www.snbforums.com/threads/connmon-internet-connection-monitoring.56163/) |
-| ntpMerlin | Jack Yaz | [Link](https://www.snbforums.com/threads/ntpmerlin-ntp-daemon-for-asuswrt-merlin.55756/) |
-| scMerlin | Jack Yaz | [Link](https://www.snbforums.com/threads/scmerlin-service-and-script-control-menu-for-asuswrt-merlin.56277/) |
-| spdMerlin | Jack Yaz | [Link](https://www.snbforums.com/threads/spdmerlin-automated-speedtests-with-graphs.55904/) |
-| uiDivStats | Jack Yaz | [Link](https://www.snbforums.com/threads/uidivstats-webui-for-diversion-statistics.56393/) |
-| uiScribe | Jack Yaz | [Link](https://www.snbforums.com/threads/uiscribe-custom-system-log-page-for-scribed-logs.57040/) |
+| YazFi | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009) |
+| scribe | cmkelley | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7) |
+| x3mRouting | Xentrk | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=9) |
+| unbound Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=5) |
+| connmon |Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009) |
+| ntpMerlin | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22&starter_id=53009) |
+| scMerlin | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=23&starter_id=53009) |
+| spdMerlin | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=19&starter_id=53009) |
+| uiDivStats | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009) |
+| uiScribe | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=24&starter_id=53009) |
 | Stubby DNS | Xentrk and Adamm | _deprecated_ |
-| DNSCrypt | bigeyes0x0, SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/threads/release-dnscrypt-installer-for-asuswrt.36071/) |
-| Pixelserv-tls | kvic | [Link](https://www.snbforums.com/threads/pixelserv-a-better-one-pixel-webserver-for-adblock.26114/) |
-| NVRAM Save/Restore Utility | Xentrk, John9527 & others | [Link](https://www.snbforums.com/threads/release-nvram-save-restore-utility.61722/) |
-| YazDHCP | Jack Yaz | [Link](https://www.snbforums.com/threads/yazdhcp-feature-expansion-of-dhcp-assignments-increasing-limit-on-the-number-of-dhcp-reservations.69247/) |
+| DNSCrypt | bigeyes0x0, SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179) |
+| Pixelserv-tls | kvic | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=17) |
+| NVRAM Save/Restore Utility | Xentrk, John9527 & others | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=28) |
+| YazDHCP | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009) |
 | Vnstat | dev_null | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
+| WireGuard Session Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215) |
 
 amtm also offers an interface for managing a number of other features:
 
@@ -60,10 +68,3 @@ amtm also offers an interface for managing a number of other features:
 | Reboot scheduler via cron job | thelonelycoder |
 | Swap file creation and management | thelonelycoder |
 | amtm themes | thelonelycoder |
-
-### How to start amtm after installation or in Asuswrt-Merlin firmware 384.15 and newer
-Enter this into your favorite SSH terminal:
-
-```Shell
-amtm
-```
