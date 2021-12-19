@@ -56,6 +56,7 @@ diversion_installed(){
 			if [ "$aUpd" ]; then
 				echo "DiversionUpate=\"$aUpd\"">>"${add}"/availUpd.txt
 				echo "DiversionMD5=\"$localmd5\"">>"${add}"/availUpd.txt
+				[ "$updcheck" ] && echo "- Diversion $localver $aUpd" >>/tmp/amtm-tpu-check
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"

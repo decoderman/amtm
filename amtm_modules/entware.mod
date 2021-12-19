@@ -27,7 +27,7 @@ entware_installed(){
 				if [ -s /tmp/amtm-entware-check ]; then
 					suUpd=1
 					if [ "$tpu" ]; then
-						[ "$tpu" ] && echo "<br>Entware package updates:<br>" >>/tmp/amtm-tpu-check
+						[ "$tpu" ] && echo "- Entware, $(wc -l </tmp/amtm-entware-check) new package(s) available<br>" >>/tmp/amtm-tpu-check
 					else
 						printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
 						i=0

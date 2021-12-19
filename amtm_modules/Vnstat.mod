@@ -17,7 +17,7 @@ Vnstat_installed(){
 			unset localver VnstatUpate VnstatMD5
 		fi
 	fi
-	printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "Vnstat        $localver" " $upd"
+	printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "vnStat        $localver" " $upd"
 	case_vn(){
 		/jffs/scripts/dn-vnstat
 		sleep 2
@@ -26,7 +26,7 @@ Vnstat_installed(){
 }
 install_Vnstat(){
 	p_e_l
-	echo " This installs Vnstat - data use monitoring with email function"
+	echo " This installs vnStat - data use monitoring with email function"
 	echo " on your router."
 	echo
 	echo " Author: dev_null"
@@ -37,9 +37,9 @@ install_Vnstat(){
 
 	sleep 2
 	if [ -f /jffs/scripts/dn-vnstat ]; then
-		show_amtm " Vnstat installed"
+		show_amtm " vnStat installed"
 	else
-		am=;show_amtm " Vnstat installation failed"
+		am=;show_amtm " vnStat installation failed"
 	fi
 }
 #eof

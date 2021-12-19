@@ -1,19 +1,14 @@
 #!/bin/sh
 #bof
-version=3.2.0
-release="July 11 2021"
+version=3.2.1
+release="December 19 2021"
 dc_version=3.0
-led_version=1.0
+led_version=2.0
 title="Asuswrt-Merlin Terminal Menu"
-contributors="Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald
- https://www.snbforums.com/members/adamm.19554
- https://www.snbforums.com/members/colintaylor.27699
- https://www.snbforums.com/members/martineau.13215
- https://www.snbforums.com/members/stuart-macdonald.68945"
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
-s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;devEnv=1;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}
+s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}
 s_d_u
 if [ "$amtmRev" = 1 ]; then
 	g_m amtm_rev1.mod include
@@ -29,6 +24,11 @@ if [ "$amtmRev" = 4 ]; then
 	g_m amtm_rev4.mod include
 elif [ "$amtmRev" -gt 4 ]; then
 	r_m amtm_rev4.mod
+fi
+if [ "$amtmRev" = 5 ]; then
+	g_m amtm_rev5.mod include
+elif [ "$amtmRev" -gt 5 ]; then
+	r_m amtm_rev5.mod
 fi
 # End updates for /usr/sbin/amtm
 
@@ -59,7 +59,11 @@ about_amtm(){
  https://www.snbforums.com/members/thelonelycoder.25480
  https://diversion.ch/amtm.html
 
- $contributors
+ Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald
+ https://www.snbforums.com/members/adamm.19554
+ https://www.snbforums.com/members/colintaylor.27699
+ https://www.snbforums.com/members/martineau.13215
+ https://www.snbforums.com/members/stuart-macdonald.68945
 
  amtm License:
  amtm is free to use under the GNU General
@@ -129,14 +133,16 @@ show_amtm(){
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
 	spacer
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
-	/jffs/scripts/dn-vnstat Vnstat vn Vnstat¦-¦Data¦use¦monitoring
+	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
 	spacer
 	stubby
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
+	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
 	pixelserv-tls
 	spacer
+	/jffs/addons/amtm/mail/email.conf email em email¦settings
 	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
 	fdisk
 	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
@@ -201,6 +207,14 @@ show_amtm(){
 		elif [ "$i" = tpucheck ]; then
 			if [ "$tpu" ]; then
 				[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
+				if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
+					sed -i 's:<br>::g' /tmp/amtm-tpu-check
+					[ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ] && echo "No updates available." >/tmp/amtm-tpu-check
+					updcheck=
+					exec >/dev/tty
+					cat /tmp/amtm-tpu-check
+					rm /tmp/amtm-tpu-check
+				fi
 				exit 0
 			fi
 			[ "$dlok" ] && tps=1 || tps=
@@ -274,9 +288,11 @@ show_amtm(){
 					j7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
 					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
+					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
-					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};
+					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
+					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
 				esac
 			fi
 		fi
@@ -339,41 +355,7 @@ show_amtm(){
 	fi
 
 	if [ "$su" = 1 ]; then
-		if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
-			awmWSI=$(nvram get webs_state_info)
-			if [ "$awmWSI" ]; then
-				if echo $awmWSI | grep -q 3004_; then
-					awmWSI=$(echo $awmWSI | sed 's/3004_//')
-				fi
-				awmStable=$(echo $awmWSI | sed 's/_/./g')
-			fi
-			awmBuildno=$(nvram get buildno)
-			awmInstalled="$awmBuildno.$(nvram get extendno)"
-			if [ "$awmWSI" ]; then
-				awmBaseVer="${awmStable:0:5}"
-				version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
-				if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
-					availRel="release avail.";stcol=${E_BG};awmUpd=1
-				elif [ "$awmBaseVer" = "$awmBuildno" ]; then
-					if echo "$(nvram get extendno)" | grep -q 'alpha\|beta'; then
-						availRel="release avail.";stcol=${E_BG};awmUpd=1
-					elif [ "$(version_check $awmStable)" -gt "$(version_check $awmInstalled)" ]; then
-						availRel="release avail.";stcol=${E_BG};awmUpd=1
-					else
-						availRel=firmware;stcol=${GN_BG}
-					fi
-				else
-					availRel=firmware;stcol=${GN_BG}
-					[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
-					awmStable=$awmInstalled
-				fi
-			else
-				availRel=firmware;stcol=${GN_BG}
-				[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
-				awmStable=$awmInstalled
-			fi
-			printf "${GN_BG}awm${NC} %-15s%-15s%${COR}s\\n\\n" "Asuswrt-Merlin" "$availRel" " ${stcol}$awmStable${NC}"
-		fi
+		update_firmware
 		update_amtm
 		unset corr1 corr2
 		if [ "$amtmUpd" = 0 ]; then
@@ -491,6 +473,7 @@ show_amtm(){
 			[Ii])				c_ntp;[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
 			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
+			[Ww][Gg])			case_wg;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
 			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
@@ -501,6 +484,7 @@ show_amtm(){
 			[Ll][Cc])			c_ntp;case_lc;break;;
 			[Rr][Ss])			c_ntp;case_rs;break;;
 			[Ss][Ww])			case_swp;break;;
+			[Ee][Mm])			case_em;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
 			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;
@@ -681,6 +665,7 @@ update_amtm(){
 			if [ "$amtmUpd" -gt 0 ]; then
 				echo "amtmUpate=\"$thisUpd\"">>"${add}"/availUpd.txt
 				echo "amtmMD5=\"$localmd5\"">>"${add}"/availUpd.txt
+				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 			fi
 		else
 			if [ "$version" != "$amtmRemotever" ]; then
@@ -699,6 +684,45 @@ update_amtm(){
 			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
 			exec "$0" " amtm $am"
 		fi
+	fi
+}
+
+update_firmware(){
+	if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
+		awmWSI=$(nvram get webs_state_info)
+		if [ "$awmWSI" ]; then
+			if echo $awmWSI | grep -q 3004_; then
+				awmWSI=$(echo $awmWSI | sed 's/3004_//')
+			fi
+			awmStable=$(echo $awmWSI | sed 's/_/./g')
+		fi
+		awmBuildno=$(nvram get buildno)
+		awmInstalled="$awmBuildno.$(nvram get extendno)"
+		if [ "$awmWSI" ]; then
+			awmBaseVer="${awmStable:0:5}"
+			version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
+			if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
+				availRel="release avail.";stcol=${E_BG};awmUpd=1
+			elif [ "$awmBaseVer" = "$awmBuildno" ]; then
+				if echo "$(nvram get extendno)" | grep -q 'alpha\|beta'; then
+					availRel="release avail.";stcol=${E_BG};awmUpd=1
+				elif [ "$(version_check $awmStable)" -gt "$(version_check $awmInstalled)" ]; then
+					availRel="release avail.";stcol=${E_BG};awmUpd=1
+				else
+					availRel=firmware;stcol=${GN_BG}
+				fi
+			else
+				availRel=firmware;stcol=${GN_BG}
+				[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
+				awmStable=$awmInstalled
+			fi
+			[ "$awmUpd" = 1 ] && [ "$updcheck" ] && echo "- Asuswrt-Merlin $availRel $awmStable" >>/tmp/amtm-tpu-check
+		else
+			availRel=firmware;stcol=${GN_BG}
+			[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
+			awmStable=$awmInstalled
+		fi
+		[ -z "$updcheck" ] && printf "${GN_BG}awm${NC} %-15s%-15s%${COR}s\\n\\n" "Asuswrt-Merlin" "$availRel" " ${stcol}$awmStable${NC}"
 	fi
 }
 #eof

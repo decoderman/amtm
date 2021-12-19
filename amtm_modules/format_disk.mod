@@ -76,7 +76,7 @@ format_disk(){
 		fi
 
 		if [ "$devtfsize" -gt 2199023255552 ]; then
-			am=;show_amtm " Device is over 2TB and cannot be\\n formatted by amtm. Read here why:\\n https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
+			am=;show_amtm " Device is over 2TB and cannot be\\n formatted by amtm. Read here why:\\n https://github.com/RMerl/asuswrt-merlin.ng/wiki/Disk-formatting"
 		fi
 
 		p_e_l
