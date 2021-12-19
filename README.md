@@ -7,10 +7,10 @@ Starting with Asuswrt-Merlin 384.15, amtm is included in the firmware.
 **The file /amtm_fw/amtm is for firmware inclusion only**.
 Use the install link on this page to install the regular version on Asuswrt-Merlin firmware older than 384.15.
 
-See the Asuswrt-Merlin wiki for the [usage of this firmware version](https://github.com/RMerl/asuswrt-merlin/wiki/AMTM).
+See the Asuswrt-Merlin wiki for the [usage of this firmware version](https://github.com/RMerl/asuswrt-merlin.ng/wiki/AMTM).
 
 News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).
-Discussion about [amtm - the Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/threads/amtm-the-snbforums-asuswrt-merlin-terminal-menu.42415/).
+Discussion about [amtm - the Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480).
 
 **Note that starting with version 2.7, amtm is hosted on the Diversion Server**.
 The transition for the built in amtm updater is seamless, no user action is required to use the new Server.
@@ -28,8 +28,6 @@ Enter this into your favorite SSH terminal:
 ```Shell
 amtm
 ```
-
-[![amtm v3.1.8](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.1")](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.8")
 
 ### Supported scripts
 
@@ -68,3 +66,5 @@ amtm also offers an interface for managing a number of other features:
 | Reboot scheduler via cron job | thelonelycoder |
 | Swap file creation and management | thelonelycoder |
 | amtm themes | thelonelycoder |
+
+[![amtm v3.1.8](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.1")](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.8")
