@@ -66,5 +66,6 @@ amtm also offers an interface for managing a number of other features:
 | Reboot scheduler via cron job | thelonelycoder |
 | Swap file creation and management | thelonelycoder |
 | amtm themes | thelonelycoder |
+| email settings | thelonelycoder |
 
 [![amtm v3.1.8](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.1")](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.8")
