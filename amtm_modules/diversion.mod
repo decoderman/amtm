@@ -32,6 +32,7 @@ diversion_installed(){
 				localver="v$divver"
 				upd="${E_BG}-> $remotever${NC}"
 				aUpd="-> $remotever"
+				[ "$updcheck" ] && echo "- Diversion $localver $aUpd" >>/tmp/amtm-tpu-check
 				suUpd=1
 				if [ "$webUiOn" = yes ]; then
 					webui_set Diversion_update $(echo $remotever | sed 's/v//')
@@ -43,6 +44,7 @@ diversion_installed(){
 					localver="v$divver"
 					upd="${E_BG}-> min upd${NC}"
 					aUpd="-> min upd"
+					[ "$updcheck" ] && echo "- Diversion $localver, minor update available" >>/tmp/amtm-tpu-check
 					suUpd=1
 					[ "$webUiOn" = yes ] && webui_set Diversion_update min-upd
 				else
@@ -56,7 +58,6 @@ diversion_installed(){
 			if [ "$aUpd" ]; then
 				echo "DiversionUpate=\"$aUpd\"">>"${add}"/availUpd.txt
 				echo "DiversionMD5=\"$localmd5\"">>"${add}"/availUpd.txt
-				[ "$updcheck" ] && echo "- Diversion $localver $aUpd" >>/tmp/amtm-tpu-check
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"
@@ -74,7 +75,7 @@ diversion_installed(){
 		localver=
 	fi
 
-	printf "${GN_BG} 1 ${NC} %-9s%-21s%${COR}s\\n" "open" "Diversion     $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} 1 ${NC} %-9s%-21s%${COR}s\\n" "open" "Diversion     $localver" " $upd"
 	case_1(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -93,7 +94,7 @@ install_diversion(){
 	echo " on your router."
 	echo
 	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480"
 	c_d
 
 	case "$release" in

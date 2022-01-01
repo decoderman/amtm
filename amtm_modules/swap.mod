@@ -133,18 +133,22 @@ manage_swap(){
 							1)		p_e_l
 									echo " Select a Swap file size"
 									echo
-									echo " 1.   1 GB"
-									echo " 2.   2 GB (recommended)"
-									echo " 3.   5 GB"
-									echo " 4.  10 GB"
+									echo " 1. 250 MB"
+									echo " 2. 500 MB"
+									echo " 3.   1 GB"
+									echo " 4.   2 GB (recommended, required for Skynet)"
+									echo " 5.   5 GB"
+									echo " 6.  10 GB"
 
 									while true; do
-										printf "\\n Enter size [1-4 e=Exit] ";read -r size
+										printf "\\n Enter size [1-6 e=Exit] ";read -r size
 										case "$size" in
-											1)	swsize=1048576; break;;
-											2)	swsize=2097152; break;;
-											3)	swsize=5242880; break;;
-											4)	swsize=10485760;break;;
+											1)	swsize=256000; break;;
+											2)	swsize=512000; break;;
+											3)	swsize=1048576; break;;
+											4)	swsize=2097152; break;;
+											5)	swsize=5242880; break;;
+											6)	swsize=10485760;break;;
 										[Ee])	show_amtm menu;break;;
 											*)	printf "\\n input is not an option\\n";;
 										esac

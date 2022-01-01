@@ -4,7 +4,8 @@ spdmerlin_installed(){
 	scriptname=spdMerlin
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh"
+		remoteurl=https://jackyaz.io/spdMerlin/master/amtm-version/spdmerlin.sh
+		remoteurlmd5=https://jackyaz.io/spdMerlin/master/amtm-md5/spdmerlin.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -17,7 +18,7 @@ spdmerlin_installed(){
 			unset localver spdMerlinUpate spdMerlinMD5
 		fi
 	fi
-	printf "${GN_BG} j4${NC} %-9s%-21s%${COR}s\\n" "open" "spdMerlin     $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} j4${NC} %-9s%-21s%${COR}s\\n" "open" "spdMerlin     $localver" " $upd"
 	case_j4(){
 		/jffs/scripts/spdmerlin
 		sleep 2
@@ -30,10 +31,10 @@ install_spdmerlin(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=19&starter_id=53009"
 	c_d
 
-	c_url "https://raw.githubusercontent.com/jackyaz/spdMerlin/master/spdmerlin.sh" -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
+	c_url https://jackyaz.io/spdMerlin/master/amtm-install/spdmerlin.sh -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
 	sleep 2
 	if [ -f /jffs/scripts/spdmerlin ]; then
 		show_amtm " spdMerlin installed"

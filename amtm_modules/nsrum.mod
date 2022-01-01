@@ -18,7 +18,7 @@ nsrum_installed(){
 			unset localver NVRAM_Save_Restore_UtilityUpate NVRAM_Save_Restore_UtilityMD5
 		fi
 	fi
-	printf "${GN_BG} 8 ${NC} %-9s%-21s%${COR}s\\n" "open" "nsrum         $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} 8 ${NC} %-9s%-21s%${COR}s\\n" "open" "nsrum         $localver" " $upd"
 	case_8(){
 		/jffs/scripts/nsrum
 		sleep 2
@@ -31,7 +31,7 @@ install_nsrum(){
 	echo " on your router."
 	echo
 	echo " Author: Xentrk"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=28"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/Xentrk/nvram-save-restore-utility/master/nsrum" -o "/jffs/scripts/nsrum" && sleep 5 && chmod 755 /jffs/scripts/nsrum && sh /jffs/scripts/nsrum

@@ -29,7 +29,7 @@ entware_installed(){
 					if [ "$tpu" ]; then
 						[ "$tpu" ] && echo "- Entware, $(wc -l </tmp/amtm-entware-check) new package(s) available<br>" >>/tmp/amtm-tpu-check
 					else
-						printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
+						[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
 						i=0
 						while read line; do
 							i=$((i+1))
@@ -41,10 +41,10 @@ entware_installed(){
 						echo "EntwareMD5=\"$(md5sum /opt/lib/opkg/status | awk '{print $1}')\"">>"${add}"/availUpd.txt
 					fi
 				else
-					printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
+					[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
 				fi
 			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
-				printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
+				[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
 				if grep -q 'bin.entware.net' /opt/etc/opkg.conf; then
 					a_m " ! Entware: ${R}bin.entware.net${NC} unreachable"
 				elif grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
@@ -52,6 +52,7 @@ entware_installed(){
 				else
 					a_m " ! Entware: ${R}pkg.entware.net${NC} unreachable"
 				fi
+				[ "$updcheck" ] && echo "- Entware server unreachable." >>/tmp/amtm-tpu-check
 			fi
 		fi
 		rm -f /tmp/amtm-entware-check

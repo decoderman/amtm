@@ -18,7 +18,7 @@ stubby_installed(){
 			unset localver Stubby_DNSUpate Stubby_DNSMD5
 		fi
 	fi
-	printf "${GN_BG} sd${NC} %-9s%-21s%${COR}s\\n" "open" "Stubby DNS    $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} sd${NC} %-9s%-21s%${COR}s\\n" "open" "Stubby DNS    $localver" " $upd"
 	case_sd(){
 		/jffs/scripts/install_stubby.sh
 		sleep 2

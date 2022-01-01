@@ -25,7 +25,7 @@ x3mRouting_installed(){
 				unset localver x3mRouting_Selective_RoutingUpate x3mRouting_Selective_RoutingMD5
 			fi
 		fi
-		printf "${GN_BG} 6 ${NC} %-9s%-21s%${COR}s\\n" "open" "x3mRouting    $localver" " $upd"
+		[ -z "$updcheck" ] && printf "${GN_BG} 6 ${NC} %-9s%-21s%${COR}s\\n" "open" "x3mRouting    $localver" " $upd"
 		case_6(){
 			/opt/bin/x3mMenu
 			sleep 2
@@ -49,7 +49,7 @@ x3mRouting_installed(){
 				unset localver x3mRouting_Selective_RoutingUpate x3mRouting_Selective_RoutingMD5
 			fi
 		fi
-		printf "${GN_BG} 6 ${NC} %-9s%-21s%${COR}s\\n" "open" "x3mRouting    $localver" " $upd"
+		[ -z "$updcheck" ] && printf "${GN_BG} 6 ${NC} %-9s%-21s%${COR}s\\n" "open" "x3mRouting    $localver" " $upd"
 		case_6(){
 			/opt/bin/x3mRouting
 			sleep 2
@@ -63,7 +63,7 @@ install_x3mRouting(){
 	echo " on your router."
 	echo
 	echo " Author: Xentrk"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=9"
 	c_d
 
 	sh -c "$(curl -sL https://raw.githubusercontent.com/Xentrk/x3mRouting/master/Install_x3mRouting.sh)"

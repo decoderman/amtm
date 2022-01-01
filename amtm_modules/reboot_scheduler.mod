@@ -205,6 +205,7 @@ install_reboot_scheduler(){
 	echo " which uses an internal mechanism to reboot."
 	echo
 	echo " Author: thelonelycoder"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
 	c_d
 	reboot_scheduler install
 }

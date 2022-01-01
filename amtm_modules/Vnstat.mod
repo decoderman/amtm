@@ -17,7 +17,7 @@ Vnstat_installed(){
 			unset localver VnstatUpate VnstatMD5
 		fi
 	fi
-	printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "vnStat        $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "vnStat        $localver" " $upd"
 	case_vn(){
 		/jffs/scripts/dn-vnstat
 		sleep 2
@@ -30,7 +30,7 @@ install_Vnstat(){
 	echo " on your router."
 	echo
 	echo " Author: dev_null"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=34"
 	c_d
 
 	c_url "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install

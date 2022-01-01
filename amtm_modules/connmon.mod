@@ -4,7 +4,8 @@ connmon_installed(){
 	scriptname=connmon
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh"
+		remoteurl=https://jackyaz.io/connmon/master/amtm-version/connmon.sh
+		remoteurlmd5=https://jackyaz.io/connmon/master/amtm-md5/connmon.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -17,7 +18,7 @@ connmon_installed(){
 			unset localver connmonUpate connmonMD5
 		fi
 	fi
-	printf "${GN_BG} j1${NC} %-9s%-21s%${COR}s\\n" "open" "connmon       $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} j1${NC} %-9s%-21s%${COR}s\\n" "open" "connmon       $localver" " $upd"
 	case_j1(){
 		/jffs/scripts/connmon
 		sleep 2
@@ -30,10 +31,10 @@ install_connmon(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009"
 	c_d
 
-	c_url "https://raw.githubusercontent.com/jackyaz/connmon/master/connmon.sh" -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
+	c_url https://jackyaz.io/connmon/master/amtm-install/connmon.sh -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
 	sleep 2
 	if [ -f /jffs/scripts/connmon ]; then
 		show_amtm " connmon installed"

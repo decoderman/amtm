@@ -323,6 +323,7 @@ install_Entware(){
 	echo " It includes the installation of Entware."
 	echo
 	echo " Author: thelonelycoder"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
 	p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)setup_Entware;break;;[Ee])r_m entware_setup.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;
 }
 #eof

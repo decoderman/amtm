@@ -21,6 +21,7 @@ install_email(){
 	echo " party scripts, including Diversion (if installed)."
 	echo
 	echo " Author: thelonelycoder"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
 	c_d
 
 	g_m email.mod include
@@ -178,48 +179,16 @@ email_manage(){
 				10)	printf "\\n${R_BG} Enter SSL flag: ${NC} [e=Exit] ";read -r value
 					SSL_FLAG=$value;break;;
 				11)	p_e_l
-					printf " This will send a testmail from:\\n\\n $FROM_ADDRESS to:\\n $TO_NAME <$TO_ADDRESS>\\n"
+					verbose=
+					printf " This will send a testmail\\n\\n From: $FROM_ADDRESS\\n To:   $TO_NAME <$TO_ADDRESS>\\n\\n"
+					echo " 1. Send testmail"
+					echo " 2. Send testmail, verbose output"
 					while true; do
-						printf "\\n Continue? [1=Yes e=Exit] ";read -r continue
+						printf "\\n Enter your selection [1-2 e=Exit] ";read -r continue
 						case "$continue" in
-							1)	check_email_conf_file
-								. "${EMAIL_DIR}/email.conf"
-								[ -z "$(nvram get odmpid)" ] && routerModel=$(nvram get productid) || routerModel=$(nvram get odmpid)
-								rm -f /tmp/divmail-body
-								echo
-								echo "Subject: Router testmail $(date +"%a %b %d %Y")" >/tmp/divmail-body
-								echo "From: \"amtm\" <$FROM_ADDRESS>" >>/tmp/divmail-body
-								echo "Date: $(date -R)" >>/tmp/divmail-body
-								echo "To: \"$TO_NAME\" <$TO_ADDRESS>" >>/tmp/divmail-body
-								echo >>/tmp/divmail-body
-								echo " Greetings from amtm $version" >>/tmp/divmail-body
-								echo >>/tmp/divmail-body
-								echo " This is a testmail." >>/tmp/divmail-body
-								echo >>/tmp/divmail-body
-								echo " Very truly yours," >>/tmp/divmail-body
-								echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/divmail-body
-								echo >>/tmp/divmail-body
-
-								/usr/sbin/curl --url $PROTOCOL://$SMTP:$PORT \
-									--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
-									--upload-file /tmp/divmail-body \
-									--ssl-reqd \
-									--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi)" $SSL_FLAG
-
-								if [ "$?" = "0" ]; then
-									logger -t amtm "sent a testmail (user action)"
-									show_amtm " Success: testmail sent to $TO_NAME\\n at $TO_ADDRESS"
-								else
-									printf "\\n${R_BG} sending testmail failed${NC}\\n\\n"
-									printf " Note the curl: error above and check your settings\\n"
-									logger -t amtm "sending of a testmail failed (user action)"
-									p_e_t "return to menu"
-									rm -f /tmp/divmail*
-									email_manage
-								fi
-								rm -f /tmp/divmail*
-								echo
-								sleep 2;show_amtm menu;break;;
+							1)	send_testmail;break;;
+							2)	verbose=-v
+								send_testmail;break;;
 						 [Ee])	email_manage;break;;
 							*)	printf "\\n input is not an option\\n";;
 						esac
@@ -302,6 +271,47 @@ check_email_conf_file(){
 			printf "\\n${R_BG} email password has not been set.${NC}\\n"
 			p_e_t "email settings";email_manage
 		fi
+	fi
+}
+
+send_testmail(){
+	check_email_conf_file
+	. "${EMAIL_DIR}/email.conf"
+	[ -z "$(nvram get odmpid)" ] && routerModel=$(nvram get productid) || routerModel=$(nvram get odmpid)
+	rm -f /tmp/divmail-body
+	echo
+	echo "Subject: Router testmail $(date +"%a %b %d %Y")" >/tmp/divmail-body
+	echo "From: \"amtm\" <$FROM_ADDRESS>" >>/tmp/divmail-body
+	echo "Date: $(date -R)" >>/tmp/divmail-body
+	echo "To: \"$TO_NAME\" <$TO_ADDRESS>" >>/tmp/divmail-body
+	echo >>/tmp/divmail-body
+	echo " Greetings from amtm $version" >>/tmp/divmail-body
+	echo >>/tmp/divmail-body
+	echo " This is a testmail." >>/tmp/divmail-body
+	echo >>/tmp/divmail-body
+	echo " Very truly yours," >>/tmp/divmail-body
+	echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/divmail-body
+	echo >>/tmp/divmail-body
+
+	/usr/sbin/curl $verbose --url $PROTOCOL://$SMTP:$PORT \
+		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+		--upload-file /tmp/divmail-body \
+		--ssl-reqd \
+		--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi)" $SSL_FLAG
+
+	if [ "$?" = "0" ]; then
+		rm -f /tmp/divmail*
+		echo
+		sleep 2
+		logger -t amtm "sent a testmail (user action)"
+		show_amtm " Success: testmail sent to $TO_NAME\\n at $TO_ADDRESS"
+	else
+		rm -f /tmp/divmail*
+		printf "\\n${R_BG} sending testmail failed${NC}\\n\\n"
+		printf " Note the curl: error above and check your settings\\n"
+		logger -t amtm "sending of a testmail failed (user action)"
+		p_e_t "return to menu"
+		email_manage
 	fi
 }
 #eof

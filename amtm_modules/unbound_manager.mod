@@ -23,7 +23,7 @@ unbound_manager_installed(){
 		fi
 	fi
 	[ "$suUpd" = 1 ] && umtext='unbound Mgr'
-	printf "${GN_BG} 7 ${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} 7 ${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
 	case_7(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -42,7 +42,7 @@ install_unbound_manager(){
 	echo " on your router."
 	echo
 	echo " Author: Martineau"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=5"
 	echo
 	echo " Contributors: rgnldo, dave14305, SomeWhereOverTheRainbow, Cam, Xentrk, thelonelycoder"
 	c_d

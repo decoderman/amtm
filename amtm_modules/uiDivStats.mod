@@ -4,7 +4,8 @@ uiDivStats_installed(){
 	scriptname=uiDivStats
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh"
+		remoteurl=https://jackyaz.io/uiDivStats/master/amtm-version/uiDivStats.sh
+		remoteurlmd5=https://jackyaz.io/uiDivStats/master/amtm-md5/uiDivStats.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -17,7 +18,7 @@ uiDivStats_installed(){
 			unset localver uiDivStatsUpate uiDivStatsMD5
 		fi
 	fi
-	printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
 	case_j5(){
 		/jffs/scripts/uiDivStats
 		sleep 2
@@ -30,11 +31,11 @@ install_uiDivStats(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009"
 	c_d
 
 	if [ -f /opt/bin/diversion ]; then
-		c_url "https://raw.githubusercontent.com/jackyaz/uiDivStats/master/uiDivStats.sh" -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
+		c_url https://jackyaz.io/uiDivStats/master/amtm-install/uiDivStats.sh -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
 		sleep 2
 	else
 		am=;show_amtm " uiDivStats installation failed,\\n Diversion is not installed"

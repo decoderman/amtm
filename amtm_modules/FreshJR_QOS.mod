@@ -18,7 +18,7 @@ FreshJR_QOS_installed(){
 			unset localver FreshJR_QOSUpate FreshJR_QOSMD5
 		fi
 	fi
-	printf "${GN_BG} 3d${NC} %-9s%-21s%${COR}s\\n" "open" "FreshJR QOS   $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} 3d${NC} %-9s%-21s%${COR}s\\n" "open" "FreshJR QOS   $localver" " $upd"
 	case_3d(){
 		/jffs/scripts/FreshJR_QOS -menu
 		sleep 1

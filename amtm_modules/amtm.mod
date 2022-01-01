@@ -1,7 +1,8 @@
 #!/bin/sh
 #bof
-version=3.2.1
-release="December 19 2021"
+
+version=3.2.2
+release="January 01 2022"
 dc_version=3.0
 led_version=2.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -29,6 +30,11 @@ if [ "$amtmRev" = 5 ]; then
 	g_m amtm_rev5.mod include
 elif [ "$amtmRev" -gt 5 ]; then
 	r_m amtm_rev5.mod
+fi
+if [ "$amtmRev" = 6 ]; then
+	g_m amtm_rev6.mod include
+elif [ "$amtmRev" -gt 6 ]; then
+	r_m amtm_rev6.mod
 fi
 # End updates for /usr/sbin/amtm
 
@@ -59,7 +65,8 @@ about_amtm(){
  https://www.snbforums.com/members/thelonelycoder.25480
  https://diversion.ch/amtm.html
 
- Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald
+ Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald,
+ RavenSystem
  https://www.snbforums.com/members/adamm.19554
  https://www.snbforums.com/members/colintaylor.27699
  https://www.snbforums.com/members/martineau.13215
@@ -103,14 +110,20 @@ show_amtm(){
 	s_d_u
 	c_t
 	[ "$su" = 1 ] && [ "$theme" = solarized ] && COR=30
-	[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt || rm -f "${add}"/availUpd.txt
-	echo
+	if [ -z "$su" -a -s "${add}"/availUpd.txt ]; then
+		. "${add}"/availUpd.txt
+	else
+		[ -z "$updcheck" -a -z "$tpu" ] && rm -f "${add}"/availUpd.txt
+	fi
 	unset dlok dfc
-	clear
-	printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
-	[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
-	echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
-	printf "${R_BG}%-44s ${NC}\\n\\n" "    The $title"
+	if [ -z "$updcheck" ]; then
+		echo
+		clear
+		printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
+		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
+		echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+		printf "${R_BG}%-44s ${NC}\\n\\n" "    The $title"
+	fi
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
@@ -153,7 +166,7 @@ show_amtm(){
 	set -f
 	for i in $modules; do
 		if [ "$i" = spacer ]; then
-			[ "$atii" ] || [ "$ss" ] && echo
+			[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 			atii=
 		elif [ "$i" = FreshJR_QOS ]; then
 			if [ -f /jffs/scripts/FreshJR_QOS ]; then
@@ -209,9 +222,10 @@ show_amtm(){
 				[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
 				if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
 					sed -i 's:<br>::g' /tmp/amtm-tpu-check
-					[ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ] && echo "No updates available." >/tmp/amtm-tpu-check
-					updcheck=
-					exec >/dev/tty
+					if [ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ]; then
+						echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
+						rm -f "${add}"/availUpd.txt
+					fi
 					cat /tmp/amtm-tpu-check
 					rm /tmp/amtm-tpu-check
 				fi
@@ -322,7 +336,7 @@ show_amtm(){
 	fi
 	if [ -f "$swl" ]; then
 		atii=1
-		[ "$su" ] || printf "${GN_BG} sw${NC} %-9s%s ${GN_BG}%s${NC} $swsize\\n" "manage" "Swap file" "$(echo "${swl#/tmp}" | sed 's|/myswap.swp||')"
+		[ "$su" ] || printf "${GN_BG} sw${NC} %-9s%s ${GN}%s${NC} $swsize\\n" "manage" "Swap file" "$(echo "${swl#/tmp}" | sed 's|/myswap.swp||')"
 		case_swp(){
 			gms;manage_swap delete
 		}
@@ -559,17 +573,18 @@ script_check(){
 				[ "$tpu" ] && echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
 			else
+				[ "$remoteurlmd5" ] && remoteurl=$remoteurlmd5
 				remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
 				if [ "$localmd5" != "$remotemd5" ]; then
 					upd="${E_BG}-> min upd${NC}"
 					tpUpd="-> min upd"
-					[ "$tpu" ] && echo "- $scriptname $localver minor update available <br>" >>/tmp/amtm-tpu-check
+					[ "$tpu" ] && echo "- $scriptname $localver, minor update available <br>" >>/tmp/amtm-tpu-check
 					suUpd=1
 				else
 					localver=
 				fi
 			fi
-			if [ -z "$tpu" ] && [ "$tpUpd" ]; then
+			if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ]; then
 				echo "$(echo $scriptname | sed -e 's/ /_/g;s/\//_/g')Upate=\"$tpUpd\"">>"${add}"/availUpd.txt
 				echo "$(echo $scriptname | sed -e 's/ /_/g;s/\//_/g')MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
@@ -582,7 +597,7 @@ script_check(){
 		lvtpu=$localver
 		localver=
 	fi
-	unset tpUpd localVother remoteVother bareLocalver bareRemotever localmd5 remotemd5
+	unset tpUpd localVother remoteVother bareLocalver bareRemotever localmd5 remotemd5 remoteurlmd5
 }
 
 reset_amtm(){
@@ -653,10 +668,12 @@ update_amtm(){
 			if [ "$version" != "$amtmRemotever" ]; then
 				thisrem="${E_BG}-> v$amtmRemotever${NC}"
 				thisUpd="-> v$amtmRemotever"
+				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 				amtmUpd=1
 			elif [ "$localmd5" != "$remotemd5" ]; then
 				thisrem="${E_BG}-> min upd${NC}"
 				thisUpd="-> min upd"
+				[ "$updcheck" ] && echo "- amtm $version, minor update available" >>/tmp/amtm-tpu-check
 				amtmUpd=2
 			else
 				thisrem="${GN_BG}v$version${NC}"
@@ -665,7 +682,6 @@ update_amtm(){
 			if [ "$amtmUpd" -gt 0 ]; then
 				echo "amtmUpate=\"$thisUpd\"">>"${add}"/availUpd.txt
 				echo "amtmMD5=\"$localmd5\"">>"${add}"/availUpd.txt
-				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 			fi
 		else
 			if [ "$version" != "$amtmRemotever" ]; then
@@ -688,6 +704,7 @@ update_amtm(){
 }
 
 update_firmware(){
+	[ "$updcheck" ] && rm -f "${add}"/availUpd.txt
 	if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
 		awmWSI=$(nvram get webs_state_info)
 		if [ "$awmWSI" ]; then

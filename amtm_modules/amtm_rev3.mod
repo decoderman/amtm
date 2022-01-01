@@ -1,6 +1,8 @@
 #!/bin/sh
 #bof
-c_url(){ /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
+c_url(){ 
+	[ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@"
+}
 theme_solarized(){ R='[38;2;220;50;47m';R_BG='[48;2;220;50;47m';E_BG='[48;2;220;50;47m';GN='[38;2;133;153;0m';GN_BG='[48;2;7;54;66m';B='[38;2;38;139;210m';GY='[38;2;88;110;117m';NC='[0m';COR=32;}
 theme_amtm(){
 	p_e_l
@@ -70,5 +72,24 @@ theme_amtm(){
 	done
 	echo "theme=$theme" >"${add}"/.amtm_theme
 	[ "$1" ] || show_amtm " changed theme to $theme"
+}
+run_amtm(){
+	if [ ! -f "${add}"/a_fw/amtm.mod ] || [ -f /jffs/scripts/amtm ]; then
+		init_amtm
+	elif [ -z "$1" ]; then
+		[ "$am" ] && show_amtm "$am" || show_amtm menu
+	elif [ "$1" = tpu ]; then
+		su=1;suUpd=0;updErr=;tpu=1
+		> /tmp/amtm-tpu-check
+		show_amtm >/dev/null 2>&1
+	elif [ "$1" = updcheck ]; then
+		su=1;suUpd=0;updErr=;tpu=1;updcheck=1
+		echo "Available script updates:" >/tmp/amtm-tpu-check
+		update_firmware
+		update_amtm
+		show_amtm
+	else
+		show_amtm "$1"
+	fi
 }
 #eof

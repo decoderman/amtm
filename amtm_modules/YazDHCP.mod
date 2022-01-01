@@ -4,7 +4,8 @@ YazDHCP_installed(){
 	scriptname=YazDHCP
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/YazDHCP/master/YazDHCP.sh"
+		remoteurl=https://jackyaz.io/YazDHCP/master/amtm-version/YazDHCP.sh
+		remoteurlmd5=https://jackyaz.io/YazDHCP/master/amtm-md5/YazDHCP.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -17,7 +18,7 @@ YazDHCP_installed(){
 			unset localver YazDHCPUpate YazDHCPMD5
 		fi
 	fi
-	printf "${GN_BG} j7${NC} %-9s%-21s%${COR}s\\n" "open" "YazDHCP     $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} j7${NC} %-9s%-21s%${COR}s\\n" "open" "YazDHCP     $localver" " $upd"
 	case_j7(){
 		/jffs/scripts/YazDHCP
 		sleep 2
@@ -30,10 +31,10 @@ install_YazDHCP(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009"
 	c_d
 	
-	c_url "https://raw.githubusercontent.com/jackyaz/YazDHCP/master/YazDHCP.sh" -o "/jffs/scripts/YazDHCP" && chmod 0755 /jffs/scripts/YazDHCP && /jffs/scripts/YazDHCP install
+	c_url https://jackyaz.io/YazDHCP/master/amtm-install/YazDHCP.sh -o "/jffs/scripts/YazDHCP" && chmod 0755 /jffs/scripts/YazDHCP && /jffs/scripts/YazDHCP install
 
 	sleep 2
 	if [ -f /jffs/scripts/YazDHCP ]; then

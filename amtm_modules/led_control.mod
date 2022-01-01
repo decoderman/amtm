@@ -48,7 +48,7 @@ install_led_control(){
 	echo " on your router."
 	echo
 	echo " Authors: thelonelycoder, RMerlin"
-	echo " https://github.com/RMerl/asuswrt-merlin.ng/wiki/Scheduled-LED-control"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
 	c_d
 
 	tpLED=
@@ -162,10 +162,10 @@ led_control_schedule(){
 		lcDyn=$lcOnOff
 		dynEdit=Edit
 	fi
-	printf " 1. $manEdit Static time ${GN}$lcMan${NC}\\n"
+	printf " 1. $manEdit Static time $lcMan\\n"
 	eok=2;noad=2
 	if [ -f /opt/bin/opkg ]; then
-		printf " 2. $dynEdit Dynamic time ${GN}$lcDyn${NC}\\n    This uses the sunset/sunrise time\\n    from weather.com for your location\\n"
+		printf " 2. $dynEdit Dynamic time $lcDyn\\n    This uses the sunset/sunrise time\\n    from weather.com for your location\\n"
 	else
 		eok=1;noad=
 		printf " ${GY}2. Use Dynamic time\\n    Feature requires Entware installed${NC}\\n"

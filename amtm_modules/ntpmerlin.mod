@@ -4,7 +4,8 @@ ntpmerlin_installed(){
 	scriptname=ntpMerlin
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh"
+		remoteurl=https://jackyaz.io/ntpMerlin/master/amtm-version/ntpmerlin.sh
+		remoteurlmd5=https://jackyaz.io/ntpMerlin/master/amtm-md5/ntpmerlin.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -17,7 +18,7 @@ ntpmerlin_installed(){
 			unset localver ntpMerlinUpate ntpMerlinMD5
 		fi
 	fi
-	printf "${GN_BG} j2${NC} %-9s%-21s%${COR}s\\n" "open" "ntpMerlin     $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} j2${NC} %-9s%-21s%${COR}s\\n" "open" "ntpMerlin     $localver" " $upd"
 	case_j2(){
 		/jffs/scripts/ntpmerlin
 		sleep 2
@@ -30,10 +31,10 @@ install_ntpmerlin(){
 	echo " on your router."
 	echo
 	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22&starter_id=53009"
 	c_d
 
-	c_url "https://raw.githubusercontent.com/jackyaz/ntpMerlin/master/ntpmerlin.sh" -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
+	c_url https://jackyaz.io/ntpMerlin/master/amtm-install/ntpmerlin.sh -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
 	sleep 2
 	if [ -f /jffs/scripts/ntpmerlin ]; then
 		show_amtm " ntpMerlin installed"

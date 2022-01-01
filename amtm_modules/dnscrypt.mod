@@ -58,8 +58,8 @@ dnscrypt_installed(){
 			fi
 		fi
 	fi
-	printf "${GN_BG} di${NC} %-9s%-21s%${COR}s\\n" "open" "$ditext $localver" " $upd"
-	[ "$su" = 1 ] || [ "$dnscrypt_installerPxUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$dptext $localDPver" " $updDP"
+	[ -z "$updcheck" ] && printf "${GN_BG} di${NC} %-9s%-21s%${COR}s\\n" "open" "$ditext $localver" " $upd"
+	[ "$su" = 1 -a -z "$updcheck" ] || [ "$dnscrypt_installerPxUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$dptext $localDPver" " $updDP"
 	case_di(){
 		p_e_l
 		/jffs/dnscrypt/installer
@@ -73,7 +73,7 @@ install_dnscrypt(){
 	echo " on your router."
 	echo
 	echo " Authors: bigeyes0x0, SomeWhereOverTheRainBow"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179"
 
 	c_d
 

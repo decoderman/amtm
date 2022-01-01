@@ -18,7 +18,7 @@ skynet_installed(){
 			unset localver SkynetUpate SkynetMD5
 		fi
 	fi
-	printf "${GN_BG} 2 ${NC} %-9s%-21s%${COR}s\\n" "open" "Skynet        $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} 2 ${NC} %-9s%-21s%${COR}s\\n" "open" "Skynet        $localver" " $upd"
 	case_2(){
 		/jffs/scripts/firewall
 		sleep 2
@@ -31,7 +31,7 @@ install_skynet(){
 	echo " on your router."
 	echo
 	echo " Author: Adamm"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=14"
 	c_d
 
 	if ! ipset -v | grep -qE 'v6|v7'; then

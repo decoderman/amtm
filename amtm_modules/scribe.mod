@@ -17,7 +17,7 @@ scribe_installed(){
 			unset localver scribeUpate scribeMD5
 		fi
 	fi
-	printf "${GN_BG} 5 ${NC} %-9s%-21s%${COR}s\\n" "open" "scribe        $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} 5 ${NC} %-9s%-21s%${COR}s\\n" "open" "scribe        $localver" " $upd"
 	case_5(){
 		/jffs/scripts/scribe
 		sleep 2
@@ -30,7 +30,7 @@ install_scribe(){
 	echo " on your router."
 	echo
 	echo " Author: cmkelley"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/"
+	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7"
 	c_d
 	c_url "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
 	sleep 2
