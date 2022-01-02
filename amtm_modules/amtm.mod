@@ -1,8 +1,8 @@
 #!/bin/sh
 #bof
 
-version=3.2.2
-release="January 01 2022"
+version=3.2.3
+release="January 02 2022"
 dc_version=3.0
 led_version=2.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -151,6 +151,8 @@ show_amtm(){
 	stubby
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
+	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
+	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
 	pixelserv-tls
@@ -303,6 +305,7 @@ show_amtm(){
 					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
+					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
@@ -488,6 +491,7 @@ show_amtm(){
 			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
+			[Aa][Gg])			case_ag;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
 			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
@@ -705,7 +709,7 @@ update_amtm(){
 
 update_firmware(){
 	[ "$updcheck" ] && rm -f "${add}"/availUpd.txt
-	if [ "$(uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
+	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
 		awmWSI=$(nvram get webs_state_info)
 		if [ "$awmWSI" ]; then
 			if echo $awmWSI | grep -q 3004_; then
