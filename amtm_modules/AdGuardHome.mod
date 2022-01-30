@@ -3,14 +3,16 @@
 AdGuardHome_installed(){
 	scriptname=AdGuardHome
 	scriptgrep='^AI_VERSION'
+	[ -f /opt/etc/AdGuardHome/.config ] && . /opt/etc/AdGuardHome/.config
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer
 		grepcheck=SomeWhereOverTheRainBow
-		localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-		remoteAGHver=$(c_url https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | grep "tag_name" | head -1 | cut -d \" -f 4)
-		updAGH="${E_BG}${NC}$localAGHver"
-		AGHext="AGH binary"
-		updAGH="${GN_BG}$localAGHver${NC}"
+		if [ "$ADGUARD_BRANCH" ] && [ "$ADGUARD_BRANCH" = release ]; then
+			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
+			remoteAGHver=$(c_url https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | grep "tag_name" | head -1 | cut -d \" -f 4)
+			AGHext="AGH binary"
+			updAGH="${GN_BG}$localAGHver${NC}"
+		fi
 		if [ "$localAGHver" ] && [ "$remoteAGHver" ]; then
 			if [ "$localAGHver" != "$remoteAGHver" ]; then
 				updAGH="${E_BG}-> $remoteAGHver${NC}"
@@ -22,11 +24,27 @@ AdGuardHome_installed(){
 			else
 				localAGHver=
 			fi
+		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" != release ]; then
+			case "$ADGUARD_BRANCH" in
+				beta)	localAGHver=Beta;;
+				edge)	localAGHver=Edge;;
+			esac
+			updAGH=
+			AGHext="AGH binary branch:"
 		else
 			updAGH=" ${E_BG}upd err${NC}"
 		fi
 	fi
 	script_check
+	if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" != release ]; then
+		[ -f "${add}/availUpd.txt" ] && sed -i '/^AGHbin.*/d' "${add}"/availUpd.txt
+		unset AGHbinUpate AGHbinVer updAGH
+		case "$ADGUARD_BRANCH" in
+			beta)	localAGHver=Beta;;
+			edge)	localAGHver=Edge;;
+		esac
+		AGHext="AGH binary branch:"
+	fi
 	if [ -z "$su" -a -z "$tpu" ] && [ "$AdGuardHomeUpate" -o "$AGHbinUpate" ]; then
 		localver="$lvtpu"
 		upd="${E_BG}$AdGuardHomeUpate${NC}"
@@ -62,7 +80,7 @@ install_AdGuardHome(){
 	echo " Author: SomeWhereOverTheRainBow"
 	echo " https://www.snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/#post-733310"
 	c_d
-	c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer && sh installer ; rm installer
+	curl -L -s -k -O https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer && sh installer
 	sleep 2
 	if [ -f /opt/etc/AdGuardHome/installer ]; then
 		show_amtm " AdGuardHome installed"

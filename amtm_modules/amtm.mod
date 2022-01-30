@@ -2,7 +2,7 @@
 #bof
 
 version=3.2.3
-release="January 02 2022"
+release="January 30 2022"
 dc_version=3.0
 led_version=2.0
 title="Asuswrt-Merlin Terminal Menu"
@@ -613,7 +613,8 @@ reset_amtm(){
 	echo
 	echo " However, when found it will remove the Disk"
 	echo " check script and log, the Format disk log,"
-	echo " the Reboot scheduler and the LED control."
+	echo " the Reboot scheduler, the LED control and"
+	echo " email settings you may have set."
 	c_d
 	if [ -f /jffs/scripts/pre-mount ] && grep -q "disk-check # Added by amtm" /jffs/scripts/pre-mount; then
 		sed -i '\~disk-check # Added by amtm~d' /jffs/scripts/pre-mount
