@@ -7,10 +7,15 @@ AdGuardHome_installed(){
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer
 		grepcheck=SomeWhereOverTheRainBow
-		if [ "$ADGUARD_BRANCH" ] && [ "$ADGUARD_BRANCH" = release ]; then
+		if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = release ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
 			remoteAGHver=$(c_url https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | grep "tag_name" | head -1 | cut -d \" -f 4)
 			AGHext="AGH binary"
+			updAGH="${GN_BG}$localAGHver${NC}"
+		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = beta ]; then
+			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
+			remoteAGHver="$(c_url https://api.github.com/repos/AdguardTeam/AdGuardHome/releases | sed -n '/"prerelease": true,/q;p' | tail -4 | grep "tag_name" | cut -d \" -f 4)"
+			AGHext="AGH Beta bin"
 			updAGH="${GN_BG}$localAGHver${NC}"
 		fi
 		if [ "$localAGHver" ] && [ "$remoteAGHver" ]; then
@@ -24,11 +29,8 @@ AdGuardHome_installed(){
 			else
 				localAGHver=
 			fi
-		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" != release ]; then
-			case "$ADGUARD_BRANCH" in
-				beta)	localAGHver=Beta;;
-				edge)	localAGHver=Edge;;
-			esac
+		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = edge ]; then
+			localAGHver=Edge
 			updAGH=
 			AGHext="AGH binary branch:"
 		else
@@ -36,13 +38,10 @@ AdGuardHome_installed(){
 		fi
 	fi
 	script_check
-	if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" != release ]; then
+	if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = edge ]; then
 		[ -f "${add}/availUpd.txt" ] && sed -i '/^AGHbin.*/d' "${add}"/availUpd.txt
 		unset AGHbinUpate AGHbinVer updAGH
-		case "$ADGUARD_BRANCH" in
-			beta)	localAGHver=Beta;;
-			edge)	localAGHver=Edge;;
-		esac
+		localAGHver=Edge
 		AGHext="AGH binary branch:"
 	fi
 	if [ -z "$su" -a -z "$tpu" ] && [ "$AdGuardHomeUpate" -o "$AGHbinUpate" ]; then

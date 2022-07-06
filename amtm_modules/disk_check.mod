@@ -232,6 +232,7 @@ write_dc_file(){
 	CHKCMD=
 	ntptimer=0
 	ntptimeout=100
+	TZ=\$(cat /etc/TZ); export TZ
 
 	blkidExclude='$blkidExclude'
 

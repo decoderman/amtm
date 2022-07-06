@@ -55,6 +55,7 @@ amtm
 | Vnstat | dev_null | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
 | WireGuard Session Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215) |
 | Asuswrt-Merlin-AdGuardHome-Installer | SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/) |
+| VPNMON-R2 | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
 
 amtm also offers an interface for managing a number of other features:
 
@@ -68,5 +69,6 @@ amtm also offers an interface for managing a number of other features:
 | Swap file creation and management | thelonelycoder |
 | amtm themes | thelonelycoder |
 | email settings | thelonelycoder |
+| 10 router games to choose from | thelonelycoder |
 
-[![amtm v3.1.8](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.1")](https://cdn.imgchest.com/files/my2pckno67j.png "amtm v3.1.8")
+[![amtm v3.3](https://cdn.imgchest.com/files/6yxkcrjmq7w.png "amtm v3.3")](https://cdn.imgchest.com/files/6yxkcrjmq7w.png "amtm v3.3")

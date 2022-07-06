@@ -77,18 +77,34 @@ entware_installed(){
 		p_e_l
 		echo " Entware package options"
 		echo
-		entVersion=
+		entVersion=; bpe=; noad=; sel=2
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="Entware ${ENTURL##*/}"
 
-		if [ "$entVersion" ]; then
-			printf " This router runs ${GN}$entVersion${NC}\\n See available packages list here:\\n $ENTURL/Packages.html\\n"
-			[ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ] && printf " with updates from ${GN}maurerr.github.io${NC}\\n See available packages list here:\\n https://maurerr.github.io/packages/\\n\\n" || printf "\\n"
+		printf " This router runs ${GN}$entVersion${NC}\\n See available packages list here:\\n $ENTURL/Packages.html\\n"
+		if [ "$(uname -m)" = "mips" ]; then
+			if [ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ]; then
+				printf " with updates from ${GN}maurerr.github.io${NC}\\n See available packages list here:\\n https://maurerr.github.io/packages/\\n\\n"
+				bpe="${GN}on${NC}"
+			else
+				printf "\\n"
+				bpe=off
+			fi
+		else
+			printf "\\n"
 		fi
+
 		echo " 1. Update and upgrade Entware packages"
 		echo " 2. Show installed Scripts and Entware packages"
+
+		if [ "$bpe" ]; then
+			printf " 3. Parallel use Entware-backports Repo $bpe\\n"
+			noad=3
+			sel=3
+		fi
+
 		while true; do
-			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-$sel e=Exit] ";read -r continue
 			case "$continue" in
 				1)		/usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && check_entware_https
 						if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
@@ -169,6 +185,77 @@ entware_installed(){
 						fi
 						rm /tmp/column.txt
 						p_e_t "return to menu"
+						show_amtm menu;break;;
+				[$noad])p_e_l
+						echo " Parallel use of Entware-backports Repo is $bpe"
+						if [ "$bpe" != off ]; then
+							while true; do
+								printf "\\n Disable it? [1=Yes e=Exit] ";read -r confirm
+								case "$confirm" in
+									1)	sed -i '/pkg.entware-backports.tk/d' /opt/etc/opkg.conf
+										sed -i '/maurerr.github.io/d' /opt/etc/opkg.conf
+										show_amtm " Entware-backports Repo disabled"
+										break;;
+								 [Ee])	show_amtm menu;break;;
+									*)	printf "\\n input is not an option\\n";;
+								esac
+							done
+						else
+							echo
+							echo " This repository for MIPS based routers receives"
+							echo " updated Entware packages until December 2019,"
+							echo " while the original repo does not."
+							echo
+							echo " The additional backports source is added:"
+							echo " - maurerr.github.io/packages"
+							echo
+							echo " Maintained by @maurer, see this thread for details:"
+							echo " https://www.snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/"
+							while true; do
+								printf "\\n Enable it? [1=Yes e=Exit] ";read -r confirm
+								case "$confirm" in
+									1)	sed -i '2i\src/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf
+										p_e_l
+										echo " Do you want to update and upgrade all packages now?"
+										while true; do
+											printf "\\n Enter your selection [1=Yes 2=No] ";read -r confirm
+											case "$confirm" in
+												1)	echo "${GRAY}"
+													if [ -f /opt/bin/pixelserv-tls ]; then
+														check_ps_version
+														oldpsv=$psVersion
+													fi
+													opkg update >/dev/null
+													opkg upgrade
+													if [ "$?" -ne "1" ]; then
+														if [ -f /opt/bin/pixelserv-tls ]; then
+															check_ps_version
+															pstext=
+															if [ "$oldpsv" != "$psVersion" ] || ! grep -q 'Diversion' /opt/etc/init.d/S80pixelserv-tls; then
+																[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
+																[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
+																echo "${GY}"
+																/opt/etc/init.d/S80pixelserv-tls restart $0
+																echo "${NC}"
+																pstext=",\\n pixelserv-tls $psVersion restarted"
+															fi
+														fi
+														a_m " Entware packages action: all packages upgraded"
+													else
+														a_m " ! Entware packages action: upgrade failed, network error"
+													fi
+													echo "${NC}"
+													show_amtm;break;;
+												2)	break;;
+												*)	printf "\\n input is not an option\\n";;
+											esac
+										done
+										show_amtm " Entware-backports Repo enabled";break;;
+								 [Ee])	show_amtm menu;break;;
+									*)	printf "\\n input is not an option\\n";;
+								esac
+							done
+						fi
 						show_amtm menu;break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;

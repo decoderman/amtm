@@ -1,9 +1,9 @@
 #!/bin/sh
 #bof
 
-version=3.2.3
-release="January 30 2022"
-dc_version=3.0
+version=3.3
+release="July 06 2022"
+dc_version=3.1
 led_version=2.0
 title="Asuswrt-Merlin Terminal Menu"
 
@@ -89,6 +89,7 @@ c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\
 c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
+o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to play a game${NC}";}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
 s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
 t_f(){ sed -i '/^[[:space:]]*$/d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
@@ -147,6 +148,7 @@ show_amtm(){
 	spacer
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
 	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
+	/jffs/scripts/vpnmon-r2.sh vpnmon vp VPNMON-R2¦-¦Monitor¦health¦of¦VPN
 	spacer
 	stubby
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
@@ -156,6 +158,7 @@ show_amtm(){
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
 	pixelserv-tls
+	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
 	spacer
 	/jffs/addons/amtm/mail/email.conf email em email¦settings
 	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
@@ -253,7 +256,7 @@ show_amtm(){
 				atii=1
 				[ "$su" ] || printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
 			else
-				[ "$ss" ] && [ -z "$su" ] && printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
+				[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
 				r_m format_disk.mod
 			fi
 			case_fd(){
@@ -303,10 +306,12 @@ show_amtm(){
 					j6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 					j7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
 					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
+					vp)		case_vp(){ c_e VPNMON-R2;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
+					g)		case_g(){ g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
 					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
@@ -486,8 +491,9 @@ show_amtm(){
 			[Jj]6)				case_j6;break;;
 			[Jj]7)				case_j7;break;;
 			[Vv][Nn])			case_vn;break;;
+			[Vv][Pp])			case_vp;break;;
 			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
-			[Ii])				c_ntp;[ "$ssi" ] && ss= || ss=1;show_amtm menu;break;;
+			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
 			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
@@ -503,6 +509,18 @@ show_amtm(){
 			[Rr][Ss])			c_ntp;case_rs;break;;
 			[Ss][Ww])			case_swp;break;;
 			[Ee][Mm])			case_em;break;;
+			[Gg])				if [ -f "${add}"/games/games.conf ]; then [ "$more" = "more" ] && more=less || more=more;show_amtm menu; else case_g;fi;break;;
+			[Gg]r)				case_gr;break;;
+			[Gg]1|[Gg]1r)		[ "$sgs" != "hide" ] && o_g_s || case_g1;break;;
+			[Gg]2|[Gg]2r)		[ "$sgs" != "hide" ] && o_g_s || case_g2;break;;
+			[Gg]3|[Gg]3r)		[ "$sgs" != "hide" ] && o_g_s || case_g3;break;;
+			[Gg]4|[Gg]4r)		[ "$sgs" != "hide" ] && o_g_s || case_g4;break;;
+			[Gg]5|[Gg]5r)		[ "$sgs" != "hide" ] && o_g_s || case_g5;break;;
+			[Gg]6|[Gg]6r)		[ "$sgs" != "hide" ] && o_g_s || case_g6;break;;
+			[Gg]7|[Gg]7r)		[ "$sgs" != "hide" ] && o_g_s || case_g7;break;;
+			[Gg]8|[Gg]8r)		[ "$sgs" != "hide" ] && o_g_s || case_g8;break;;
+			[Gg]9|[Gg]9r)		[ "$sgs" != "hide" ] && o_g_s || case_g9;break;;
+			[Gg]10|[Gg]10r)		[ "$sgs" != "hide" ] && o_g_s || case_g10;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
 			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;

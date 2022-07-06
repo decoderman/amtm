@@ -28,7 +28,7 @@ use_ps_ca(){
 
 	echo " 1. $run helper script, modified by"
 	echo "    thelonelycoder with updated Asuswrt-Merlin"
-	echo "    router list (November 6 2021)"
+	echo "    router list (February 20 2022)"
 	while true; do
 		printf "\\n Enter selection [1-1 e=Exit] ";read -r continue
 		case "$continue" in
