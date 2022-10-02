@@ -68,6 +68,9 @@ dnscrypt_installed(){
 	}
 }
 install_dnscrypt(){
+	if [ -f /opt/etc/AdGuardHome/installer ]; then
+		am=;show_amtm " ! dnscrypt installer is not available to install.\\n AdGuardHome is installed which is incompatible\\n with dnscrypt installer."
+	fi
 	p_e_l
 	echo " This installs dnscrypt installer"
 	echo " on your router."

@@ -72,6 +72,9 @@ AdGuardHome_installed(){
 	}
 }
 install_AdGuardHome(){
+	if [ -f /jffs/dnscrypt/manager ]; then
+		am=;show_amtm " ! AdGuardHome is not available to install.\\n dnscrypt installer is installed which is incompatible\\n with AdGuardHome."
+	fi
 	p_e_l
 	echo " This installs AdGuardHome - Asuswrt-Merlin-AdGuardHome-Installer"
 	echo " on your router."

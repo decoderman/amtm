@@ -278,35 +278,35 @@ send_testmail(){
 	check_email_conf_file
 	. "${EMAIL_DIR}/email.conf"
 	[ -z "$(nvram get odmpid)" ] && routerModel=$(nvram get productid) || routerModel=$(nvram get odmpid)
-	rm -f /tmp/divmail-body
+	rm -f /tmp/amtm-mail-body
 	echo
-	echo "Subject: Router testmail $(date +"%a %b %d %Y")" >/tmp/divmail-body
-	echo "From: \"amtm\" <$FROM_ADDRESS>" >>/tmp/divmail-body
-	echo "Date: $(date -R)" >>/tmp/divmail-body
-	echo "To: \"$TO_NAME\" <$TO_ADDRESS>" >>/tmp/divmail-body
-	echo >>/tmp/divmail-body
-	echo " Greetings from amtm $version" >>/tmp/divmail-body
-	echo >>/tmp/divmail-body
-	echo " This is a testmail." >>/tmp/divmail-body
-	echo >>/tmp/divmail-body
-	echo " Very truly yours," >>/tmp/divmail-body
-	echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/divmail-body
-	echo >>/tmp/divmail-body
+	echo "Subject: Router testmail $(date +"%a %b %d %Y")" >/tmp/amtm-mail-body
+	echo "From: \"amtm\" <$FROM_ADDRESS>" >>/tmp/amtm-mail-body
+	echo "Date: $(date -R)" >>/tmp/amtm-mail-body
+	echo "To: \"$TO_NAME\" <$TO_ADDRESS>" >>/tmp/amtm-mail-body
+	echo >>/tmp/amtm-mail-body
+	echo " Greetings from amtm $version" >>/tmp/amtm-mail-body
+	echo >>/tmp/amtm-mail-body
+	echo " This is a testmail." >>/tmp/amtm-mail-body
+	echo >>/tmp/amtm-mail-body
+	echo " Very truly yours," >>/tmp/amtm-mail-body
+	echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/amtm-mail-body
+	echo >>/tmp/amtm-mail-body
 
 	/usr/sbin/curl $verbose --url $PROTOCOL://$SMTP:$PORT \
 		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
-		--upload-file /tmp/divmail-body \
+		--upload-file /tmp/amtm-mail-body \
 		--ssl-reqd \
 		--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi)" $SSL_FLAG
 
 	if [ "$?" = "0" ]; then
-		rm -f /tmp/divmail*
+		rm -f /tmp/amtm-mail*
 		echo
 		sleep 2
 		logger -t amtm "sent a testmail (user action)"
 		show_amtm " Success: testmail sent to $TO_NAME\\n at $TO_ADDRESS"
 	else
-		rm -f /tmp/divmail*
+		rm -f /tmp/amtm-mail*
 		printf "\\n${R_BG} sending testmail failed${NC}\\n\\n"
 		printf " Note the curl: error above and check your settings\\n"
 		logger -t amtm "sending of a testmail failed (user action)"

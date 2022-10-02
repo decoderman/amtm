@@ -7,7 +7,15 @@ disk_check_installed(){
 
 	if [ -f /jffs/scripts/pre-mount ]; then
 		if ! grep -q "^. ${add}/disk-check" /jffs/scripts/pre-mount; then
-			disk_check install
+			if [ -f /jffs/scripts/pre-mount ] && grep -q "e2fsck -p" /jffs/scripts/pre-mount; then
+				rm -f "${add}"/disk-check
+				rm -f "${add}"/amtm-disk-check.log
+				blkidExclude=
+				r_m disk_check.mod
+				show_amtm " ! amtm removed its disk check:\\n${R} Unsupported pre-mount script found,\\n please remove this file manually${NC}"
+			else
+				disk_check install
+			fi
 		fi
 
 		if ! grep -qE "^VERSION=$dc_version" "${add}"/disk-check; then

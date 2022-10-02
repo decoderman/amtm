@@ -26,6 +26,9 @@ FreshJR_QOS_installed(){
 	}
 }
 install_FreshJR_QOS(){
+	if [ -f /jffs/addons/flexqos/flexqos.sh ]; then
+		am=;show_amtm " ! FreshJR QOS is not available to install.\\n Its successor FlexQoS is already installed."
+	fi
 	p_e_l
 	echo " This installs FreshJR Adaptive QOS - Improvements, Custom Rules and Inner workings"
 	echo " on your router."

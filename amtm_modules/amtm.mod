@@ -1,10 +1,10 @@
 #!/bin/sh
 #bof
 
-version=3.3
-release="July 06 2022"
+version=3.4
+release="October 02 2022"
 dc_version=3.1
-led_version=2.0
+led_version=2.1
 title="Asuswrt-Merlin Terminal Menu"
 
 # Begin updates for /usr/sbin/amtm
@@ -129,14 +129,14 @@ show_amtm(){
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
 	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement
-	FreshJR_QOS
+	/jffs/scripts/FreshJR_QOS FreshJR_QOS 3d FreshJR¦QOS¦-¦Adaptive¦QOS¦(deprecated)
 	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
-	x3mRouting
+	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
 	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
-	/jffs/scripts/nsrum nsrum 8 nsrum¦-¦NVRAM¦Save/Restore¦Utility
+	/jffs/scripts/nsrum nsrum 8 nsrum¦-¦NVRAM¦Save/Restore¦Utility¦(deprecated)
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
@@ -149,8 +149,8 @@ show_amtm(){
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
 	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
 	/jffs/scripts/vpnmon-r2.sh vpnmon vp VPNMON-R2¦-¦Monitor¦health¦of¦VPN
+	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
 	spacer
-	stubby
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
@@ -173,55 +173,6 @@ show_amtm(){
 		if [ "$i" = spacer ]; then
 			[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 			atii=
-		elif [ "$i" = FreshJR_QOS ]; then
-			if [ -f /jffs/scripts/FreshJR_QOS ]; then
-				g_m FreshJR_QOS.mod include
-				[ -f "${add}/FreshJR_QOS.mod" ] && FreshJR_QOS_installed
-			else
-				r_m FreshJR_QOS.mod
-				if [ ! -f /jffs/addons/flexqos/flexqos.sh ]; then
-					[ "$ss" ] && printf "${E_BG} 3d${NC} %-9s%s\\n" "install" "FreshJR QOS - Adaptive QOS (deprecated)"
-					case_3d(){
-						g_m FreshJR_QOS.mod include
-						[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu
-					}
-				else
-					case_3d(){
-						show_amtm " FreshJR QOS is not available to install.\\n Its successor FlexQoS is already installed."
-					}
-				fi
-			fi
-		elif [ "$i" = x3mRouting ]; then
-			if [ -f /opt/bin/x3mMenu ] || [ -f /opt/bin/x3mRouting ]; then
-				[ -f /opt/bin/x3mMenu ] && scriptloc=/opt/bin/x3mMenu || scriptloc=/opt/bin/x3mRouting
-				g_m x3mRouting.mod include
-				[ -f "${add}/x3mRouting.mod" ] && x3mRouting_installed
-			else
-				[ "$ss" ] && printf "${E_BG} 6 ${NC} %-9s%s\\n" "install" "x3mRouting - Selective Routing"
-				r_m x3mRouting.mod
-				case_6(){
-					c_e x3mRouting
-					g_m x3mRouting.mod include
-					[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu
-				}
-			fi
-		elif [ "$i" = stubby ]; then
-			scriptloc=/jffs/scripts/install_stubby.sh
-			if [ -f "$scriptloc" ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-				g_m install_stubby.mod include
-				stubby_installed
-			elif [ -z "$(nvram get rc_support | tr ' ' '\n' | grep dnspriv)" ] && [ -z "$(nvram get rc_support | tr ' ' '\n' | grep stubby)" ]; then
-				[ "$ss" ] && printf "${E_BG} sd${NC} %-9s%s\\n" "install" "Stubby - DNS Privacy Daemon"
-				r_m install_stubby.mod
-				case_sd(){
-					g_m install_stubby.mod include
-					[ -f "${add}"/install_stubby.mod ] && install_stubby
-				}
-			else
-				case_sd(){
-					show_amtm " Stubby DNS is not available to install. This\\n router supports native DoT, use that instead"
-				}
-			fi
 		elif [ "$i" = tpucheck ]; then
 			if [ "$tpu" ]; then
 				[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
@@ -240,7 +191,11 @@ show_amtm(){
 			[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
 		elif [ "$i" = pixelserv-tls ]; then
 			if [ -f /opt/bin/pixelserv-tls ]; then
-				[ ! -f "${add}"/pixelserv-tls.mod ] && [ "$ss" ] && [ -z "$su" ] && printf "${E_BG} ps${NC} %-9s%s\\n" "use" "pixelserv-tls CA for WebUI"
+				if [ ! -f "${add}"/pixelserv-tls.mod ] && [ "$ss" ] && [ -z "$su" ]; then
+					printf "${E_BG} ps${NC} %-9s%s\\n" "use" "pixelserv-tls CA for WebUI"
+				else
+					g_m pixelserv-tls.mod include
+				fi
 				case_ps(){
 					g_m pixelserv-tls.mod include
 					[ -f "${add}"/pixelserv-tls.mod ] && use_ps_ca
@@ -284,7 +239,7 @@ show_amtm(){
 			else
 				f3="$(echo $i | awk '{print $3}')"
 				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
-				[ "$ss" ] && [ "$scriptloc" != /opt/bin/x3mRouting ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
+				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
 				if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
 					sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
 					[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
@@ -294,8 +249,10 @@ show_amtm(){
 					1)		case_1(){ g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
 					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
 					3)		case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
+					3d)		case_3d(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
 					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
+					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
 					8)		case_8(){ g_m nsrum.mod include;[ "$dlok" = 1 ] && install_nsrum || show_amtm menu;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
@@ -307,6 +264,7 @@ show_amtm(){
 					j7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
 					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 					vp)		case_vp(){ c_e VPNMON-R2;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
+					rt)		case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
@@ -492,9 +450,9 @@ show_amtm(){
 			[Jj]7)				case_j7;break;;
 			[Vv][Nn])			case_vn;break;;
 			[Vv][Pp])			case_vp;break;;
+			[Rr][Tt])			case_rt;break;;
 			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
-			[Ss][Dd])			case_sd;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
 			[Aa][Gg])			case_ag;break;;

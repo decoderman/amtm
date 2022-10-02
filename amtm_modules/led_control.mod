@@ -417,6 +417,7 @@ write_ledcontrol_file(){
 	                        echo "locLastUpd=\"\$locLastUpd\""
 	                        } >${add}/ledcontrol.conf
 	                        logger -s -t "\$caller" "scheduled update of sunset/sunrise time"
+	                        /jffs/addons/amtm/ledcontrol -set
 	                    else
 	                        logger -s -t "\$caller" "failed to get location code"
 	                    fi
