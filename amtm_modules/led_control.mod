@@ -433,7 +433,7 @@ write_ledcontrol_file(){
 	                if [ "\$lcMode" = on ]; then
 	                    cru a amtm_LEDcontrol_on "\$lcOnm \$lcOnh * * * ${add}/ledcontrol -on"
 	                    cru a amtm_LEDcontrol_off "\$lcOffm \$lcOffh * * * ${add}/ledcontrol -off"
-	                    [ "\$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * SAT,TUE /jffs/addons/amtm/ledcontrol -upd"
+	                    [ "\$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * Sat,Tue /jffs/addons/amtm/ledcontrol -upd"
 	                    logger -s -t "\$caller" "cron jobs set"
 	                    ntptimer=0
 	                    ntptimeout=20

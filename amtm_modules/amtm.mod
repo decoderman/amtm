@@ -1,10 +1,11 @@
 #!/bin/sh
 #bof
 
-version=3.4
-release="October 02 2022"
+version=3.5
+release="April 02 2023"
 dc_version=3.1
-led_version=2.1
+led_version=2.2
+sh_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
 
 # Begin updates for /usr/sbin/amtm
@@ -46,6 +47,7 @@ ascii_logo(){
 	echo "  \_||_|_|_|_|\___)_|_|_|"
 	echo
 	echo " $1"
+	[ "$1" = "  Goodbye" ] && [ -f "${add}/shellhistory" ] && "${add}"/shellhistory &
 }
 
 about_amtm(){
@@ -77,8 +79,7 @@ about_amtm(){
  Public License, version 3 (GPL-3.0).
  https://opensource.org/licenses/GPL-3.0
 
- Follow amtm on Twitter or Reddit:
- https://twitter.com/DiversionBlock
+ Follow amtm on Reddit:
  https://www.reddit.com/r/diversion"
 	p_r_l
 	p_e_t "return to menu"
@@ -141,6 +142,7 @@ show_amtm(){
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
 	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control
+	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
 	spacer
 	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats
@@ -149,11 +151,13 @@ show_amtm(){
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
 	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
 	/jffs/scripts/vpnmon-r2.sh vpnmon vp VPNMON-R2¦-¦Monitor¦health¦of¦VPN
+	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
 	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
 	spacer
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
+	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
 	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
@@ -164,7 +168,9 @@ show_amtm(){
 	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
 	fdisk
 	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
-	rscheduler'
+	spacer
+	rscheduler
+	/jffs/addons/amtm/.ash_history shell_history sh shell¦history¦-¦Keep¦history¦of¦shell¦commands'
 
 	IFS='
 	'
@@ -258,21 +264,25 @@ show_amtm(){
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
 					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;[ "$dlok" = 1 ] && install_ntpmerlin || show_amtm menu;};;
 					j3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
+					wi)		case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
 					j4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
 					j5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
 					j6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 					j7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
 					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 					vp)		case_vp(){ c_e VPNMON-R2;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
+					km)		case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
 					rt)		case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
+					wf)		case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 					g)		case_g(){ g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
 					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
+					sh)		case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
 				esac
 			fi
 		fi
@@ -444,18 +454,21 @@ show_amtm(){
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;
+			[Ww][Ii])			case_wi;break;;
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]6)				case_j6;break;;
 			[Jj]7)				case_j7;break;;
 			[Vv][Nn])			case_vn;break;;
 			[Vv][Pp])			case_vp;break;;
+			[Kk][Mm])			case_km;break;;
 			[Rr][Tt])			case_rt;break;;
 			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
 			[Aa][Gg])			case_ag;break;;
+			[Ww][Ff])			case_wf;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
 			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
@@ -479,6 +492,7 @@ show_amtm(){
 			[Gg]8|[Gg]8r)		[ "$sgs" != "hide" ] && o_g_s || case_g8;break;;
 			[Gg]9|[Gg]9r)		[ "$sgs" != "hide" ] && o_g_s || case_g9;break;;
 			[Gg]10|[Gg]10r)		[ "$sgs" != "hide" ] && o_g_s || case_g10;break;;
+			[Ss][Hh])			case_sh;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
 			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;
@@ -516,16 +530,20 @@ s_l_f(){
 		echo " END FILE"
 		echo
 		p_e_l
-		while true; do
-			printf " Delete log file now? [1=Yes e=Exit] ";read -r continue
-			case "$continue" in
-				1)		rm "${add}/$1"
-						show_amtm " $1 deleted"
-						break;;
-				[Ee])	show_amtm menu;break;;
-				*)		printf "\\n input is not an option\\n\\n";;
-			esac
-		done
+		if [ "$1" = .ash_history ]; then
+			p_e_t "return to menu"
+		else
+			while true; do
+				printf " Delete log file now? [1=Yes e=Exit] ";read -r continue
+				case "$continue" in
+					1)		rm "${add}/$1"
+							show_amtm " $1 deleted"
+							break;;
+					[Ee])	show_amtm menu;break;;
+					*)		printf "\\n input is not an option\\n\\n";;
+				esac
+			done
+		fi
 	else
 		show_amtm " No $1 found"
 	fi
@@ -610,6 +628,11 @@ reset_amtm(){
 		r_w_e /jffs/scripts/services-start
 		cru d amtm_LEDcontrol_on
 		cru d amtm_LEDcontrol_off
+	fi
+	if [ -f /jffs/scripts/services-start ] && grep -q "^${add}/shellhistory" /jffs/scripts/services-start; then
+		sed -i "\~${add}/shellhistory.*~d" /jffs/scripts/services-start
+		r_w_e /jffs/scripts/services-start
+		rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
 	fi
 	rm -rf "${add}"
 

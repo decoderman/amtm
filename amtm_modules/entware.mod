@@ -27,7 +27,7 @@ entware_installed(){
 				if [ -s /tmp/amtm-entware-check ]; then
 					suUpd=1
 					if [ "$tpu" ]; then
-						[ "$tpu" ] && echo "- Entware, $(wc -l </tmp/amtm-entware-check) new package(s) available<br>" >>/tmp/amtm-tpu-check
+						echo "- Entware, $(wc -l </tmp/amtm-entware-check) new package(s) available<br>" >>/tmp/amtm-tpu-check
 					else
 						[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
 						i=0
@@ -94,7 +94,7 @@ entware_installed(){
 			printf "\\n"
 		fi
 
-		echo " 1. Update and upgrade Entware packages"
+		echo " 1. Check for updated Entware packages"
 		echo " 2. Show installed Scripts and Entware packages"
 
 		if [ "$bpe" ]; then
@@ -124,24 +124,52 @@ entware_installed(){
 							oldpsv=$psVersion
 						fi
 
-						echo "${GY}"
-						opkg update
-						opkg upgrade
-						echo "${NC}"
-
-						if [ -f /opt/bin/pixelserv-tls ]; then
-							check_ps_version
-							pstext=
-							if [ "$oldpsv" != "$psVersion" ] || ! grep -q 'Diversion' /opt/etc/init.d/S80pixelserv-tls; then
-								[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
-								[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
+						if $(opkg update | grep -q 'pdated list'); then
+							if [ "$(opkg list-upgradable)" ]; then
+								p_e_l
+								echo " These Entware updates are available:"
+								opkg list-upgradable | sed 's/^/ - /'
+								c_d
+								
+								echo " Stopping Entware services before updating packages"
 								echo "${GY}"
-								/opt/etc/init.d/S80pixelserv-tls restart $0
+								/opt/etc/init.d/rc.unslung stop
 								echo "${NC}"
-								pstext=",\\n pixelserv-tls $psVersion restarted"
+
+								echo " Updating / upgrading Entware packages"
+								echo "${GY}"
+								opkg upgrade
+								echo "${NC}"
+								
+								echo " Re-starting Entware services"
+								echo "${GY}"
+								if [ -f /opt/bin/pixelserv-tls ]; then
+									if ! grep -q 'Diversion' /opt/etc/init.d/S80pixelserv-tls; then
+										[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
+										[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
+									fi
+								fi
+								/opt/etc/init.d/rc.unslung start
+								echo "${NC}"
+								p_e_t "return to menu"
+								
+								show_amtm " Entware packages updated and upgraded"
+							else
+								show_amtm " No Entware package updates available at\\n this time."
+							fi
+						else
+							a_m " Entware update check failed:"
+							if grep -q 'bin.entware.net' /opt/etc/opkg.conf; then
+								a_m " ${R}bin.entware.net${NC} unreachable"
+							elif grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
+								a_m " ${R}pkg.entware.net${NC} and\\n ${R}maurerr.github.io${NC} unreachable"
+							else
+								a_m " ${R}pkg.entware.net${NC} unreachable"
 							fi
 						fi
-						show_amtm " Entware packages updated and upgraded${pstext}";break;;
+						echo "${NC}"
+						show_amtm
+						break;;
 				2)		/usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && check_entware_https
 						if [ ! -f /opt/bin/column ]; then
 							echo
