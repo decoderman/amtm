@@ -91,7 +91,13 @@ manage_swap(){
 		echo " This creates a Swap file."
 		echo " A Swap file is useful when the router"
 		echo " runs out of memory (RAM)."
-		echo " See router WebUI/Tools under Memory."
+		if [ ! -f /opt/bin/opkg ]; then
+			echo
+			echo " Note: If you plan to install the"
+			echo " Entware ${GN_BG} ep${NC} repository on this router"
+			echo " install it first, this will allow to"
+			echo " show progress on the swap file creation."
+		fi
 		p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])r_m swap.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;
 
 		while true; do
@@ -143,12 +149,12 @@ manage_swap(){
 									while true; do
 										printf "\\n Enter size [1-6 e=Exit] ";read -r size
 										case "$size" in
-											1)	swsize=256000; break;;
-											2)	swsize=512000; break;;
-											3)	swsize=1048576; break;;
-											4)	swsize=2097152; break;;
-											5)	swsize=5242880; break;;
-											6)	swsize=10485760;break;;
+											1)	swsize=256000; swtext="250 MB"; break;;
+											2)	swsize=512000; swtext="500 MB"; break;;
+											3)	swsize=1048576; swtext="1 GB"; break;;
+											4)	swsize=2097152; swtext="2 GB"; break;;
+											5)	swsize=5242880; swtext="5 GB"; break;;
+											6)	swsize=10485760; swtext="10 GB"; break;;
 										[Ee])	show_amtm menu;break;;
 											*)	printf "\\n input is not an option\\n";;
 										esac
@@ -158,17 +164,29 @@ manage_swap(){
 										p_e_l
 										echo " Not enough free space available on:"
 										echo " $swapDevice"
-										p_e_t "select another device"
-										read -r;echo
-										p_e_l
+										p_e_t "select another device or smaller swap file size"
 										manage_swap create
 									fi
 
+									if [ -f /opt/bin/opkg ] && [ ! -f /opt/bin/dd ]; then
+										echo
+										echo " Installing Entware package 'coreutils-dd'"
+										echo " for swap file creation progress."
+										echo "${GY}"
+										opkg update
+										opkg install coreutils-dd
+										echo "${NC}"
+									fi
+									
 									p_e_l
-									echo " Creating the Swap file,"
+									echo " Creating ${GN_BG} $swtext ${NC} Swap file,"
 									echo " this will take some time..."
 									echo
-									dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize"
+									if [ -f /opt/bin/dd ]; then
+										/opt/bin/dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize" status=progress
+									else
+										/bin/dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize" 
+									fi
 									mkswap "$swapDevice/myswap.swp"
 									swapon "$swapDevice/myswap.swp"
 									nvram set usb_idle_timeout=0
@@ -176,7 +194,7 @@ manage_swap(){
 									c_j_s /jffs/scripts/post-mount
 									t_f /jffs/scripts/post-mount
 									sed -i "1a swapon $swapDevice/myswap.swp # Added by amtm" /jffs/scripts/post-mount
-									show_amtm " Swap file created and activated at:\\n $swapDevice/myswap.swp";break;;
+									show_amtm " Swap file created and activated:\\n $(echo "${swapDevice#/tmp}")/myswap.swp";break;;
 							[Ee])	show_amtm menu;break;;
 							*)		printf "\\n input is not an option\\n";;
 						esac
@@ -199,6 +217,7 @@ manage_swap(){
 							swapoff "$swl"
 							rm "$swl"
 							sed -i '\~swapon ~d' /jffs/scripts/post-mount
+							r_m swap.mod
 							show_amtm " Swap file deleted:\\n $swl"
 						else
 							sed -i '\~swapon ~d' /jffs/scripts/post-mount

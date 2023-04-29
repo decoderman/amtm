@@ -270,7 +270,7 @@ setup_Entware(){
 		echo
 		echo " Installing $entVer, using external script"
 		echo "${GY}"
-		wget --timeout=10 --tries=3 --retry-connrefused -qO - "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
+		c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
 		echo "${NC}"
 	fi
 

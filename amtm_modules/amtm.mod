@@ -1,8 +1,8 @@
 #!/bin/sh
 #bof
 
-version=3.5
-release="April 02 2023"
+version=3.6
+release="April 29 2023"
 dc_version=3.1
 led_version=2.2
 sh_version=1.0
@@ -278,7 +278,7 @@ show_amtm(){
 					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
 					wf)		case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
-					g)		case_g(){ g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
+					g)		case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
 					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
@@ -571,15 +571,19 @@ script_check(){
 				[ "$tpu" ] && echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
 			else
-				[ "$remoteurlmd5" ] && remoteurl=$remoteurlmd5
-				remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
-				if [ "$localmd5" != "$remotemd5" ]; then
-					upd="${E_BG}-> min upd${NC}"
-					tpUpd="-> min upd"
-					[ "$tpu" ] && echo "- $scriptname $localver, minor update available <br>" >>/tmp/amtm-tpu-check
-					suUpd=1
+				if grep -q '^# amtm NoMD5check' "$scriptloc"; then
+					localver="No MD5"
 				else
-					localver=
+					[ "$remoteurlmd5" ] && remoteurl=$remoteurlmd5
+					remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
+					if [ "$localmd5" != "$remotemd5" ]; then
+						upd="${E_BG}-> min upd${NC}"
+						tpUpd="-> min upd"
+						[ "$tpu" ] && echo "- $scriptname $localver, minor update available <br>" >>/tmp/amtm-tpu-check
+						suUpd=1
+					else
+						localver=
+					fi
 				fi
 			fi
 			if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ]; then
@@ -709,19 +713,14 @@ update_amtm(){
 
 update_firmware(){
 	[ "$updcheck" ] && rm -f "${add}"/availUpd.txt
-	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(echo "$(nvram get buildno)" | grep '38[2-6]')" ]; then
+	version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
+	awmBuildno=$(nvram get buildno)
+	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(version_check $awmBuildno)" -ge "$(version_check 382)" ]; then
 		awmWSI=$(nvram get webs_state_info)
-		if [ "$awmWSI" ]; then
-			if echo $awmWSI | grep -q 3004_; then
-				awmWSI=$(echo $awmWSI | sed 's/3004_//')
-			fi
-			awmStable=$(echo $awmWSI | sed 's/_/./g')
-		fi
-		awmBuildno=$(nvram get buildno)
 		awmInstalled="$awmBuildno.$(nvram get extendno)"
 		if [ "$awmWSI" ]; then
-			awmBaseVer="${awmStable:0:5}"
-			version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
+			awmStable=$(echo $awmWSI | sed 's/3004_//' | sed 's/_/./g')
+			awmBaseVer=$(echo $awmStable | cut -d'.' -f1-2)
 			if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
 				availRel="release avail.";stcol=${E_BG};awmUpd=1
 			elif [ "$awmBaseVer" = "$awmBuildno" ]; then

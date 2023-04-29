@@ -633,10 +633,10 @@ format_disk(){
 		format_device | tee -a "${add}"/amtm-format-disk.log
 
 		p_e_l
-		printf " Done formatting device\\n\\n"
+		printf "${GN_BG} Done formatting device ${NC}\\n\\n"
 		echo " The log file can be viewed with ${GN_BG}fdl${NC}"
-		printf "\\n Your router will now reboot for the changes\\n"
-		printf " to take effect.\\n"
+		printf "\\n${E_BG} Your router will now reboot for the changes ${NC}\\n"
+		printf "${E_BG} to take effect. ${NC}\\n"
 		p_e_t continue
 		sleep 1
 		r_m format_disk.mod

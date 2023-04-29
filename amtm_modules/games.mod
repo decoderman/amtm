@@ -28,7 +28,7 @@ games_installed(){
 
 		[ -z "$ss" ] && printf "\\n To exit a game, press CTRL+C or q or ESC.\\n To remove a game, add r to option, e.g. ${GN_BG}g2r${NC}\\n"
 		games='spacer
-		/tmp/shtris shtris g1 shtris¦-¦Tetris¦by¦user¦DDD
+		/opt/bin/shtris shtris g1 shtris¦-¦Tetris¦by¦user¦DDD
 		/opt/bin/angband angband g2 Angband¦-¦Text¦based¦Dungeon
 		/opt/bin/phear cavezofphear g3 cavezofphear¦-¦CAVEZ¦of¦PHEAR
 		/opt/bin/crawl crawl g4 crawl¦-¦Dungeon¦Crawl¦Stone¦Soup
@@ -56,7 +56,7 @@ games_installed(){
 					[ "$(echo $f3 | wc -m)" -gt 3 ] && ssp= || ssp=' '
 					printf " ${GN_BG}${f3}$ssp${NC} %-9s%s\\n" "play" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
 					case $f3 in
-						[Gg]1|[Gg]1r)	case_g1(){ if [ "$(echo $selection | grep r)" ]; then rm -f /tmp/shtris;sed -i "/^shtris/d" "${add}"/games/games.conf;show_amtm " shtris removed";else trap_game '/bin/sh /tmp/shtris';fi;};;
+						[Gg]1|[Gg]1r)	case_g1(){ if [ "$(echo $selection | grep r)" ]; then rm -f /opt/bin/shtris;sed -i "/^shtris/d" "${add}"/games/games.conf;show_amtm " shtris removed";else trap_game '/bin/sh /opt/bin/shtris';fi;};;
 						[Gg]2|[Gg]2r)	case_g2(){ [ "$(echo $selection | grep r)" ] && rm_game angband || trap_game /opt/bin/angband;};;
 						[Gg]3|[Gg]3r)	case_g3(){ [ "$(echo $selection | grep r)" ] && rm_game cavezofphear || trap_game /opt/bin/phear;};;
 						[Gg]4|[Gg]4r)	case_g4(){ [ "$(echo $selection | grep r)" ] && rm_game crawl || trap_game /opt/bin/crawl;};;
@@ -73,10 +73,10 @@ games_installed(){
 					[ "$(echo $f3 | wc -m)" -gt 3 ] && ssp= || ssp=' '
 					printf " ${E_BG}${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
 					case $f3 in
-						[Gg]1)		case_g1(){ p_e_l;printf " This installs shtris - Tetris optimized for Asuswrt-Merlin\\n on your router.\\n\\n Author: DDD\\n https://www.snbforums.com/threads/i-may-be-the-first-person-to-play-games-on-asus-router.79319/\\n"
-									printf "\\n Note that this game will be deleted after\\n restarting the router.\\n";c_d
-									c_url https://raw.githubusercontent.com/l11/router-tetris/main/shtris -o /tmp/shtris;[ -f /tmp/shtris ] && show_amtm " shtris installed" || show_amtm " shtris install failed";};;
-						[Gg]2)		case_g2(){ p_e_l;echo " This installs";opkg list | grep ^angband | sed -e 's/^/ /';printf " on your router.\\n\\n Source: Entware package\\n";c_d
+						[Gg]1)		case_g1(){ c_e shtris; p_e_l;printf " This installs shtris - Tetris optimized for Asuswrt-Merlin\\n on your router.\\n\\n Author: DDD\\n https://www.snbforums.com/threads/i-may-be-the-first-person-to-play-games-on-asus-router.79319/\\n"
+									printf "\\n Source: https://github.com/l11/router-tetris\\n";c_d
+									c_url https://raw.githubusercontent.com/l11/router-tetris/main/shtris -o /opt/bin/shtris;[ -f /opt/bin/shtris ] && show_amtm " shtris installed" || show_amtm " shtris install failed";};;
+						[Gg]2)		case_g2(){ c_e Angband; p_e_l;echo " This installs";opkg list | grep ^angband | sed -e 's/^/ /';printf " on your router.\\n\\n Source: Entware package\\n";c_d
 									opkg install angband;[ -f /opt/bin/angband ] && show_amtm " angband installed" || show_amtm " angband install failed";};;
 						[Gg]3)		case_g3(){ c_e cavezofphear; p_e_l;echo " This installs";opkg list | grep ^cavezofphear | sed -e 's/^/ /';printf " on your router.\\n\\n Source: Entware package\\n";c_d
 									opkg install cavezofphear;[ -f /opt/bin/phear ] && show_amtm " cavezofphear installed" || show_amtm " cavezofphear install failed";};;
