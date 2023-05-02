@@ -86,16 +86,19 @@ setup_Entware(){
 					version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
 					if [ "$(version_check $(uname -r))" -ge "$(version_check 3.2)" ]; then
 						INST_URL='https://bin.entware.net/armv7sf-k3.2/installer/generic.sh'
+						INST_URL_MIRROR='https://mirrors.bfsu.edu.cn/entware/armv7sf-k3.2/installer/generic.sh'
 						entVer="Entware (armv7sf-k3.2)"
 						availEntVer=armv7
 					else
 						INST_URL='https://bin.entware.net/armv7sf-k2.6/installer/generic.sh'
+						INST_URL_MIRROR='https://mirrors.bfsu.edu.cn/entware/armv7sf-k2.6/installer/generic.sh'
 						entVer="Entware (armv7sf-k2.6)"
 						availEntVer=armv7
 					fi
 					;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
 					INST_URL='https://bin.entware.net/aarch64-k3.10/installer/generic.sh'
+					INST_URL_MIRROR='https://mirrors.bfsu.edu.cn/entware/aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)"
 					availEntVer='armv8\|aarch64';;
 		*)			am=;show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
@@ -220,8 +223,10 @@ setup_Entware(){
 			printf "\\n Enter your selection [1-2] ";read -r eversion
 			case "$eversion" in
 				1)	INST_URL='https://bin.entware.net/aarch64-k3.10/installer/generic.sh'
+					INST_URL_MIRROR='https://mirrors.bfsu.edu.cn/entware/aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)";break;;
 				2)	INST_URL='https://bin.entware.net/armv7sf-k3.2/installer/generic.sh'
+					INST_URL_MIRROR='https://mirrors.bfsu.edu.cn/entware/armv7sf-k3.2/installer/generic.sh'
 					entVer="Entware (armv7sf-k3.2)";break;;
 				*) 	printf "\\n input is not an option\\n";;
 			esac
@@ -239,12 +244,15 @@ setup_Entware(){
 	echo
 	echo " ${GN_BG} $entDev ${NC}"
 	echo
-	printf " 1. Continue\\n 2. Return to device selection\\n"
+	printf " 1. Continue using entware.net server (default)\\n 2. Continue using mirror bfsu.edu.cn\\n    (in case entware.net fails)\\n"
+	printf " 3. Return to device selection\\n"
 	while true; do
-		printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+		printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
 		case "$continue" in
 			1)			break;;
-			2)			echo;setup_Entware;break;;
+			2)			[ -z "$INST_URL_MIRROR" ] && useMirror=no || useMirror=yes
+						break;;
+			3)			echo;setup_Entware;break;;
 			[Ee])		r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
 			*)			printf "\\n input is not an option\\n";;
 		esac
@@ -269,8 +277,13 @@ setup_Entware(){
 	if [ -z "$usePreviousEntware" ]; then
 		echo
 		echo " Installing $entVer, using external script"
+		[ "$useMirror" = yes ] && echo " from Entware mirror bfsu.edu.cn"
 		echo "${GY}"
-		c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
+		if [ "$useMirror" = yes ]; then
+			c_url "$INST_URL_MIRROR" | sed 's#URL=http://bin.entware.net/#URL=https://mirrors.bfsu.edu.cn/entware/#g' | sed -e "41 i sed -i 's#http://bin.entware.net/#https://mirrors.bfsu.edu.cn/entware/#g' /opt/etc/opkg.conf" | sh
+		else
+			c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
+		fi
 		echo "${NC}"
 	fi
 
