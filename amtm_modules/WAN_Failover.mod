@@ -4,8 +4,16 @@ WAN_Failover_installed(){
 	scriptname='Dual WAN Failover'
 	scriptgrep='^VERSION='
 	dwftext=$scriptname
+
+	devmode=
+	branch=wan-failover.sh
+	if [ -f /jffs/configs/wan-failover.conf ] && grep -q 'DEVMODE=1' /jffs/configs/wan-failover.conf; then
+		devmode=D
+		branch=wan-failover-beta.sh
+	fi
+
 	if [ "$su" = 1 ]; then
-		remoteurl=https://raw.githubusercontent.com/Ranger802004/asusmerlin/main/wan-failover.sh
+		remoteurl=https://raw.githubusercontent.com/Ranger802004/asusmerlin/main/$branch
 		grepcheck=Ranger802004
 	fi
 	script_check
@@ -21,7 +29,7 @@ WAN_Failover_installed(){
 		fi
 	fi
 	[ "$suUpd" = 1 ] && dwftext='WAN Failover'
-	[ -z "$updcheck" ] && printf "${GN_BG} wf${NC} %-9s%-21s%${COR}s\\n" "open" "$dwftext  $localver" " $upd"
+	[ -z "$updcheck" ] && printf "${GN_BG} wf${NC} %-9s%-21s%${COR}s\\n" "open" "$dwftext $devmode $localver" " $upd"
 	case_wf(){
 		trap trap_ctrl 2
 		trap_ctrl(){
