@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=3.6
-release="April 29 2023"
+version=3.7
+release="May 18 2023"
 title="Asuswrt-Merlin Terminal Menu"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
@@ -81,6 +81,15 @@ show_amtm(){
 		printf "${R_BG}%-27s%s\\n" " amtm $version" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+		OM='Operation Mode:'
+		case "$(nvram get sw_mode)" in
+			1) echo " $OM Wireless router";;
+			2) echo " $OM Repeater";;
+			3) echo " $OM Access Point (AP)";;
+			4) echo " $OM Media Bridge";;
+			5) echo " $OM AiMesh Node";;
+			*) echo " $OM $(nvram get sw_mode), as-yet-unknown";;
+		esac
 		printf "${R_BG}%-44s ${NC}\\n\\n" "    The $title"
 	fi
 

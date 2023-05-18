@@ -1,8 +1,8 @@
 #!/bin/sh
 #bof
 
-version=3.6
-release="April 29 2023"
+version=3.7
+release="May XX 2023"
 dc_version=3.1
 led_version=2.2
 sh_version=1.0
@@ -10,33 +10,12 @@ title="Asuswrt-Merlin Terminal Menu"
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
-s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}
-s_d_u
-if [ "$amtmRev" = 1 ]; then
-	g_m amtm_rev1.mod include
-elif [ "$amtmRev" -ge 2 ]; then
-	r_m amtm_rev1.mod
-fi
-if [ "$amtmRev" -le 3 ]; then
-	g_m amtm_rev3.mod include
-elif [ "$amtmRev" -gt 3 ]; then
-	r_m amtm_rev3.mod
-fi
-if [ "$amtmRev" = 4 ]; then
-	g_m amtm_rev4.mod include
-elif [ "$amtmRev" -gt 4 ]; then
-	r_m amtm_rev4.mod
-fi
-if [ "$amtmRev" = 5 ]; then
-	g_m amtm_rev5.mod include
-elif [ "$amtmRev" -gt 5 ]; then
-	r_m amtm_rev5.mod
-fi
-if [ "$amtmRev" = 6 ]; then
-	g_m amtm_rev6.mod include
-elif [ "$amtmRev" -gt 6 ]; then
-	r_m amtm_rev6.mod
-fi
+s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}; s_d_u
+if [ "$amtmRev" = 1 ]; then g_m amtm_rev1.mod include; elif [ "$amtmRev" -ge 2 ]; then r_m amtm_rev1.mod; fi
+if [ "$amtmRev" -le 3 ]; then g_m amtm_rev3.mod include; elif [ "$amtmRev" -gt 3 ]; then r_m amtm_rev3.mod; fi
+if [ "$amtmRev" = 4 ]; then	g_m amtm_rev4.mod include; elif [ "$amtmRev" -gt 4 ]; then r_m amtm_rev4.mod; fi
+if [ "$amtmRev" = 5 ]; then	g_m amtm_rev5.mod include; elif [ "$amtmRev" -gt 5 ]; then r_m amtm_rev5.mod; fi
+if [ "$amtmRev" = 6 ]; then g_m amtm_rev6.mod include; elif [ "$amtmRev" -gt 6 ]; then r_m amtm_rev6.mod; fi
 # End updates for /usr/sbin/amtm
 
 ascii_logo(){
@@ -124,6 +103,15 @@ show_amtm(){
 		printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+		OM='Operation Mode:'
+		case "$(nvram get sw_mode)" in
+			1) echo " $OM Wireless router";;
+			2) echo " $OM Repeater";;
+			3) echo " $OM Access Point (AP)";;
+			4) echo " $OM Media Bridge";;
+			5) echo " $OM AiMesh Node";;
+			*) echo " $OM $(nvram get sw_mode), as-yet-unknown";;
+		esac
 		printf "${R_BG}%-44s ${NC}\\n\\n" "    The $title"
 	fi
 
