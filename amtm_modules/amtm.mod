@@ -2,7 +2,7 @@
 #bof
 
 version=3.7
-release="May XX 2023"
+release="May 18 2023"
 dc_version=3.1
 led_version=2.2
 sh_version=1.0
