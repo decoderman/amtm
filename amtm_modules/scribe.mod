@@ -4,7 +4,7 @@ scribe_installed(){
 	scriptname=scribe
 	scriptgrep='^scribe_ver='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/cynicastic/scribe/master/scribe"
+		remoteurl=https://raw.githubusercontent.com/cynicastic/scribe/master/scribe
 		grepcheck=cynicastic
 	fi
 	script_check
@@ -32,7 +32,7 @@ install_scribe(){
 	echo " Author: cmkelley"
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7"
 	c_d
-	c_url "https://raw.githubusercontent.com/cynicastic/scribe/master/scribe" -o "/jffs/scripts/scribe" && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
+	c_url https://raw.githubusercontent.com/cynicastic/scribe/master/scribe -o /jffs/scripts/scribe && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
 	sleep 2
 	if [ -f /jffs/scripts/scribe ]; then
 		show_amtm " scribe installed"

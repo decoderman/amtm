@@ -4,7 +4,7 @@ vpnmon_installed(){
 	scriptname=vpnmon
 	localVother="v$(grep ^Version "$scriptloc" | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 	if [ "$su" = 1 ]; then
-		remoteurl=https://raw.githubusercontent.com/ViktorJp/VPNMON-R2/master/vpnmon-r2.sh
+		remoteurl=https://raw.githubusercontent.com/ViktorJp/VPNMON-R2/main/vpnmon-r2.sh
 		remoteVother="v$(c_url "$remoteurl" | grep ^Version | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 		grepcheck=ViktorJp
 	fi
@@ -41,7 +41,7 @@ install_vpnmon(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36"
 	c_d
 
-	c_url https://raw.githubusercontent.com/ViktorJp/VPNMON-R2/master/vpnmon-r2.sh -o /jffs/scripts/vpnmon-r2.sh && chmod a+rx /jffs/scripts/vpnmon-r2.sh && /jffs/scripts/vpnmon-r2.sh -setup
+	c_url https://raw.githubusercontent.com/ViktorJp/VPNMON-R2/main/vpnmon-r2.sh -o /jffs/scripts/vpnmon-r2.sh && chmod a+rx /jffs/scripts/vpnmon-r2.sh && /jffs/scripts/vpnmon-r2.sh -setup
 	sleep 2
 	if [ -f /jffs/scripts/vpnmon-r2.sh ]; then
 		show_amtm " VPNMON-R2 installed"

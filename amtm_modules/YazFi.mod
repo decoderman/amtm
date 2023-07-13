@@ -33,7 +33,7 @@ install_YazFi(){
 	echo " Author: Jack Yaz"
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009"
 	c_d
-	c_url https://jackyaz.io/YazFi/master/amtm-install/YazFi.sh -o "/jffs/scripts/YazFi" && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
+	c_url https://jackyaz.io/YazFi/master/amtm-install/YazFi.sh -o /jffs/scripts/YazFi && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
 	sleep 2
 	if [ -f /jffs/scripts/YazFi ]; then
 		show_amtm " YazFi installed"

@@ -6,7 +6,7 @@ wireguard_manager_installed(){
 	scriptgrep='^VERSION="v'
 	umtext='WireGuard Mgr'
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/MartineauUK/wireguard/main/wg_manager.sh"
+		remoteurl=https://raw.githubusercontent.com/MartineauUK/wireguard/main/wg_manager.sh
 		remoteVother="$(c_url "$remoteurl" | grep '^VERSION="v' | sed -e 's/VERSION=//;s/"//g')"
 		grepcheck=Martineau
 	fi
@@ -40,7 +40,7 @@ install_wireguard_manager(){
 	echo " Sh0cker54, here1310, defung, The Chief"
 	c_d
 
-	c_url "https://raw.githubusercontent.com/MartineauUK/wireguard/main/wg_manager.sh" --create-dirs -o "/jffs/addons/wireguard/wg_manager.sh" && chmod 755 "/jffs/addons/wireguard/wg_manager.sh" && /jffs/addons/wireguard/wg_manager.sh install
+	c_url https://raw.githubusercontent.com/MartineauUK/wireguard/main/wg_manager.sh --create-dirs -o /jffs/addons/wireguard/wg_manager.sh && chmod 755 /jffs/addons/wireguard/wg_manager.sh && /jffs/addons/wireguard/wg_manager.sh install
 	sleep 2
 	if [ -f /jffs/addons/wireguard/wg_manager.sh ]; then
 		show_amtm " WireGuard Session Manager installed"

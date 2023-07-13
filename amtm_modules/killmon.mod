@@ -41,7 +41,7 @@ install_killmon(){
 	echo " https://www.snbforums.com/threads/killmon-v1-01-dec-9-2022-ip4-ip6-vpn-kill-switch-monitor-configurator.81758/"
 	c_d
 
-	c_url https://raw.githubusercontent.com/ViktorJp/KILLMON/master/killmon-1.01.sh -o /jffs/scripts/killmon.sh && chmod a+rx /jffs/scripts/killmon.sh && /jffs/scripts/killmon.sh -setup
+	c_url https://raw.githubusercontent.com/ViktorJp/KILLMON/main/killmon.sh -o /jffs/scripts/killmon.sh && chmod a+rx /jffs/scripts/killmon.sh && /jffs/scripts/killmon.sh -setup
 
 	sleep 2
 	if [ -f /jffs/scripts/killmon.sh ]; then

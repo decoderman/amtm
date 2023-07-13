@@ -6,7 +6,7 @@ unbound_manager_installed(){
 	scriptgrep='^VERSION='
 	umtext=$scriptname
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh"
+		remoteurl=https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh
 		remoteVother="v$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
 		grepcheck=Martineau
 	fi
@@ -48,7 +48,7 @@ install_unbound_manager(){
 	c_d
 
 	mkdir -p /jffs/addons/unbound
-	c_url "https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh" -o "/jffs/addons/unbound/unbound_manager.sh" && chmod 755 "/jffs/addons/unbound/unbound_manager.sh" && /jffs/addons/unbound/unbound_manager.sh
+	c_url https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh -o /jffs/addons/unbound/unbound_manager.sh && chmod 755 /jffs/addons/unbound/unbound_manager.sh && /jffs/addons/unbound/unbound_manager.sh
 	sleep 2
 	if [ -f /jffs/addons/unbound/unbound_manager.sh ]; then
 		show_amtm " unbound Manager installed"

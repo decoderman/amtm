@@ -84,7 +84,7 @@ install_dnscrypt(){
 		am=;show_amtm " dnscrypt install failed,\\n MIPS routers are not supported"
 	fi
 
-	if [ -f "/jffs/scripts/install_stubby.sh" ] && [ -f "/opt/etc/stubby/stubby.yml" ]; then
+	if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
 		am=;show_amtm " dnscrypt install failed.\\n It is not compatible with Stubby DNS\\n which is installed on this router."
 	fi
 
@@ -93,7 +93,7 @@ install_dnscrypt(){
 	fi
 
 	mkdir -p /jffs/dnscrypt
-	c_url "https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer" -o "/jffs/dnscrypt/installer" && chmod 0755 /jffs/dnscrypt/installer
+	c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer -o /jffs/dnscrypt/installer && chmod 0755 /jffs/dnscrypt/installer
 	/jffs/dnscrypt/installer
 
 	sleep 5

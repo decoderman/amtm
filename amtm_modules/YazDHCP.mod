@@ -34,7 +34,7 @@ install_YazDHCP(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009"
 	c_d
 
-	c_url https://jackyaz.io/YazDHCP/master/amtm-install/YazDHCP.sh -o "/jffs/scripts/YazDHCP" && chmod 0755 /jffs/scripts/YazDHCP && /jffs/scripts/YazDHCP install
+	c_url https://jackyaz.io/YazDHCP/master/amtm-install/YazDHCP.sh -o /jffs/scripts/YazDHCP && chmod 0755 /jffs/scripts/YazDHCP && /jffs/scripts/YazDHCP install
 
 	sleep 2
 	if [ -f /jffs/scripts/YazDHCP ]; then

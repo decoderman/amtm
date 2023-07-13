@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 setup_Entware(){
-	NAME="amtm Entware installer"
 	c_e_folder(){
 		if [ "$(/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" 2>/dev/null | wc -l)" -gt 1 ]; then
 			/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" | while read fdir; do

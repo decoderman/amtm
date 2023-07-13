@@ -4,7 +4,7 @@ Vnstat_installed(){
 	scriptname=Vnstat
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh"
+		remoteurl=https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh
 		grepcheck=dev_null
 	fi
 	script_check
@@ -33,7 +33,7 @@ install_Vnstat(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=34"
 	c_d
 
-	c_url "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
+	c_url https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh -o /jffs/scripts/dn-vnstat && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 
 	sleep 2
 	if [ -f /jffs/scripts/dn-vnstat ]; then

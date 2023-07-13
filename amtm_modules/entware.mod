@@ -102,9 +102,10 @@ entware_installed(){
 		else
 			printf " 3. Select Entware server to use\\n"
 		fi
+		echo " 4. Remove Entware"
 
 		while true; do
-			printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-4 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		echo
 						check_entware_https
@@ -328,6 +329,10 @@ entware_installed(){
 							}
 							selectServer
 						fi
+						show_amtm menu;break;;
+				4)		p_e_l
+						printf " To remove Entware use the ${GN_BG} r ${NC} option in amtm.\\n"
+						p_e_t "to return to amtm"
 						show_amtm menu;break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;

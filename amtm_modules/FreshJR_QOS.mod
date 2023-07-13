@@ -4,7 +4,7 @@ FreshJR_QOS_installed(){
 	scriptname='FreshJR QOS'
 	localVother="v$(grep "^version=" /jffs/scripts/FreshJR_QOS | sed -e 's/version=//')"
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh"
+		remoteurl=https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh
 		remoteVother="v$(c_url "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 		grepcheck=FreshJR
 	fi
@@ -41,13 +41,13 @@ install_FreshJR_QOS(){
 	echo " FlexQoS - Flexible QoS Enhancement Script for Adaptive QoS instead."
 	c_d
 
-	c_url "https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh" -o /jffs/scripts/FreshJR_QOS --create-dirs
-	c_url "https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QoS_Stats.asp" -o /jffs/scripts/www_FreshJR_QoS_Stats.asp
+	c_url https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh -o /jffs/scripts/FreshJR_QOS --create-dirs
+	c_url https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QoS_Stats.asp -o /jffs/scripts/www_FreshJR_QoS_Stats.asp
 	sh /jffs/scripts/FreshJR_QOS -install
 
 	p_e_t "return to amtm menu"
 
-	if [ -f "/jffs/scripts/FreshJR_QOS" ]; then
+	if [ -f /jffs/scripts/FreshJR_QOS ]; then
 		show_amtm " FreshJR Adaptive QOS installed"
 	else
 		am=;show_amtm " FreshJR Adaptive QOS installation failed"

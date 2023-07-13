@@ -1,11 +1,12 @@
 #!/bin/sh
 #bof
 
-version=3.7
-release="May 18 2023"
-dc_version=3.1
-led_version=2.2
-sh_version=1.0
+version=3.8
+release="July 13 2023"
+dc_version=3.2
+led_version=2.3
+sh_version=1.1
+rd_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
 
 # Begin updates for /usr/sbin/amtm
@@ -56,10 +57,7 @@ about_amtm(){
  amtm License:
  amtm is free to use under the GNU General
  Public License, version 3 (GPL-3.0).
- https://opensource.org/licenses/GPL-3.0
-
- Follow amtm on Reddit:
- https://www.reddit.com/r/diversion"
+ https://opensource.org/licenses/GPL-3.0"
 	p_r_l
 	p_e_t "return to menu"
 	show_amtm menu
@@ -158,7 +156,8 @@ show_amtm(){
 	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
 	spacer
 	rscheduler
-	/jffs/addons/amtm/.ash_history shell_history sh shell¦history¦-¦Keep¦history¦of¦shell¦commands'
+	/jffs/addons/amtm/.ash_history shell_history sh shell¦history¦-¦Keep¦history¦of¦shell¦commands
+	/jffs/addons/amtm/routerdate router_date rd Router¦date¦keeper¦-¦Keeps¦router¦date¦when¦rebooting'
 
 	IFS='
 	'
@@ -271,6 +270,7 @@ show_amtm(){
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
 					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
 					sh)		case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
+					rd)		case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
 				esac
 			fi
 		fi
@@ -481,6 +481,7 @@ show_amtm(){
 			[Gg]9|[Gg]9r)		[ "$sgs" != "hide" ] && o_g_s || case_g9;break;;
 			[Gg]10|[Gg]10r)		[ "$sgs" != "hide" ] && o_g_s || case_g10;break;;
 			[Ss][Hh])			case_sh;break;;
+			[Rr][Dd])			case_rd;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
 			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;
@@ -591,49 +592,125 @@ script_check(){
 }
 
 reset_amtm(){
-	p_e_l
-	echo " Do you want to reset amtm settings now?"
-	echo
-	echo " Note that resetting amtm will not remove or"
-	echo " uninstall any third-party SNBForum scripts."
-	echo
-	echo " However, when found it will remove the Disk"
-	echo " check script and log, the Format disk log,"
-	echo " the Reboot scheduler, the LED control and"
-	echo " email settings you may have set."
-	c_d
-	if [ -f /jffs/scripts/pre-mount ] && grep -q "disk-check # Added by amtm" /jffs/scripts/pre-mount; then
-		sed -i '\~disk-check # Added by amtm~d' /jffs/scripts/pre-mount
-		r_w_e /jffs/scripts/pre-mount
-	fi
-	if [ -f /jffs/scripts/init-start ] && grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
-		sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
-		r_w_e /jffs/scripts/init-start
-		cru d amtm_RebootScheduler
-	fi
-	if [ -f "${add}"/ledcontrol ]; then
-		"${add}"/ledcontrol -on -p >/dev/null 2>&1
-		rm "${add}"/ledcontrol*
-	fi
-	if [ -f /jffs/scripts/services-start ] && grep -q "${add}/ledcontrol.*" /jffs/scripts/services-start; then
-		sed -i "\~${add}/ledcontrol.*~d" /jffs/scripts/services-start
-		r_w_e /jffs/scripts/services-start
-		cru d amtm_LEDcontrol_on
-		cru d amtm_LEDcontrol_off
-	fi
-	if [ -f /jffs/scripts/services-start ] && grep -q "^${add}/shellhistory" /jffs/scripts/services-start; then
-		sed -i "\~${add}/shellhistory.*~d" /jffs/scripts/services-start
-		r_w_e /jffs/scripts/services-start
-		rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
-	fi
-	rm -rf "${add}"
+	rm_entware() {
+		if [ -f "/jffs/scripts/services-stop" ]; then
+			/opt/etc/init.d/rc.unslung stop
+			sed -i '/rc.unslung stop/d' /jffs/scripts/services-stop
+			r_w_e /jffs/scripts/services-stop
+		fi
+		rm -rf "$(readlink /tmp/opt)"
+		if [ -L /tmp/opt ]; then
+			rm -f /tmp/opt 2> /dev/null
+			rm -f /opt 2> /dev/null
+		fi
+	}
 
-	clear
-	ascii_logo "  amtm settings reset"
-	echo
-	echo "   Goodbye!"
-	echo
-	exit 0
+	p_e_l
+	printf " amtm reset options\\n\\n Enter option for more info.\\n\\n"
+	printf " 1. Reset amtm.\\n    This resets amtm and its own settings.\\n    Third party scripts are NOT affected.\\n\\n"
+	printf " 2. Reset amtm, remove scripts and Entware.\\n    This resets amtm and its own settings\\n    and removes all third party scripts,\\n    including Entware (if installed).\\n    Third party scripts WILL be removed.\\n\\n"
+	printf " 3. Remove Entware.\\n    This removes the Entware repository.\\n    Third party scripts depending on Entware\\n    may no longer work after removing.\\n"
+	while true; do
+		printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
+		case "$continue" in
+			1)		p_e_l
+					printf " This resets all amtm settings.\\n\\n Note that resetting amtm will NOT remove or\\n uninstall any third-party scripts.\\n\\n"
+					printf " However, when found it will remove the Disk\\n check script and log, the Format disk log,\\n the Reboot scheduler, the LED control and\\n"
+					printf " email settings you may have set.\\n"
+					c_d
+					if [ -f /jffs/scripts/pre-mount ] && grep -q "disk-check # Added by amtm" /jffs/scripts/pre-mount; then
+						sed -i '\~disk-check # Added by amtm~d' /jffs/scripts/pre-mount
+						r_w_e /jffs/scripts/pre-mount
+					fi
+					if [ -f /jffs/scripts/init-start ] && grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
+						sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
+						r_w_e /jffs/scripts/init-start
+						cru d amtm_RebootScheduler
+					fi
+					if [ -f /jffs/scripts/init-start ] && grep -q "routerdate restore" /jffs/scripts/init-start; then
+						sed -i '\~routerdate restore~d' /jffs/scripts/init-start
+						r_w_e /jffs/scripts/init-start
+						cru d amtm_RouterDate
+					fi
+					if [ -f /jffs/scripts/services-stop ] && grep -q "routerdate save" /jffs/scripts/services-stop; then
+						sed -i '\~routerdate save~d' /jffs/scripts/services-stop
+						r_w_e /jffs/scripts/services-stop
+					fi
+					if [ -f "${add}"/ledcontrol ]; then
+						"${add}"/ledcontrol -on -p >/dev/null 2>&1
+						rm "${add}"/ledcontrol*
+					fi
+					if [ -f /jffs/scripts/services-start ] && grep -q "${add}/ledcontrol.*" /jffs/scripts/services-start; then
+						sed -i "\~${add}/ledcontrol.*~d" /jffs/scripts/services-start
+						r_w_e /jffs/scripts/services-start
+						cru d amtm_LEDcontrol_on
+						cru d amtm_LEDcontrol_off
+					fi
+					if [ -f /jffs/scripts/services-start ] && grep -q "^${add}/shellhistory" /jffs/scripts/services-start; then
+						sed -i "\~${add}/shellhistory.*~d" /jffs/scripts/services-start
+						r_w_e /jffs/scripts/services-start
+						rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
+					fi
+					rm -rf "${add}"
+
+					clear
+					ascii_logo "  amtm settings reset"
+					echo
+					echo "   Goodbye!"
+					echo
+					exit 0
+					break;;
+			2)		p_e_l
+					printf " This resets amtm and removes all\\n third party scripts including Entware (if\\n installed) from this router.\\n\\n"
+					printf " Note that this option will NOT restore the\\n router settings (NVRAM) to default.\\n\\n It empties these directories:\\n"
+					printf " - /jffs/addons\\n - /jffs/configs\\n - /jffs/scripts\\n\\n And if found it removes:\\n"
+					printf " - directory /jffs/dnscrypt\\n - directory /mnt/*/skynet\\n - Entware repository\\n - the SWAP file\\n\\n The router automatically reboots after this.\\n"
+					c_d
+					rm_entware
+					if [ -f "$swl" ]; then
+						sync; echo 3 > /proc/sys/vm/drop_caches
+						swapoff "$swl"
+						rm -f "$swl"
+					fi
+					rm -r /jffs/configs/*
+					rm -r /jffs/scripts/*
+					rm -r /jffs/addons/*
+					rm -rf /jffs/dnscrypt
+					skynetcfg=$(/usr/bin/find /mnt/*/skynet/skynet.cfg 2> /dev/null)
+					[ -f "$skynetcfg" ] && rm -rf "${skynetcfg%/skynet.cfg}"
+
+					clear
+					ascii_logo '  Everything reset and removed. Goodbye!'
+					printf "\\n   amtm reboots this router now\\n\\n"
+					sleep 1
+					service reboot >/dev/null 2>&1 &
+					exit 0
+					break;;
+			3)		p_e_l
+					printf " This removes Entware from this router.\\n\\n Beware that if you have scripts installed\\n that depend on Entware that they no longer\\n"
+					printf " work after removing.\\n\\n You have been warned.\\n\\n The router automatically reboots after this.\\n"
+					c_d
+					if [ -f /jffs/scripts/post-mount ]; then
+						sed -i '/mount-entware.div/d' /jffs/scripts/post-mount
+						r_w_e /jffs/scripts/post-mount
+					fi
+					if [ -d /jffs/addons/diversion ]; then
+						rm -f /jffs/addons/diversion/mount-entware.div
+						[ "$(ls -A /jffs/addons/diversion)" ] || rm -rf /jffs/addons/diversion
+					fi
+					[ -L /tmp/opt ] && rmText="Removed all traces of Entware" || rmText="Entware not found but removed all traces if found" ||
+					rm_entware
+					
+					clear
+					printf "\\n $rmText.\\n amtm reboots this router now\\n\\n"
+					sleep 1
+					service reboot >/dev/null 2>&1 &
+					exit 0
+					break;;
+			[Ee])	show_amtm menu;break;;
+			*)		printf "\\n input is not an option\\n";break;;
+		esac
+	done
 }
 
 update_amtm(){

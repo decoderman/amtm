@@ -34,7 +34,7 @@ install_connmon(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009"
 	c_d
 
-	c_url https://jackyaz.io/connmon/master/amtm-install/connmon.sh -o "/jffs/scripts/connmon" && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
+	c_url https://jackyaz.io/connmon/master/amtm-install/connmon.sh -o /jffs/scripts/connmon && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
 	sleep 2
 	if [ -f /jffs/scripts/connmon ]; then
 		show_amtm " connmon installed"

@@ -4,7 +4,7 @@ skynet_installed(){
 	scriptname=Skynet
 	localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
 	if [ "$su" = 1 ]; then
-		remoteurl="https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh"
+		remoteurl=https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh
 		remoteVother="$(c_url "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 		grepcheck=Adamm
 	fi
@@ -42,7 +42,7 @@ install_skynet(){
 	elif [ ! -f /lib/modules/"$(uname -r)"/kernel/net/netfilter/ipset/ip_set_hash_ipmac.ko ]; then
 		am=;show_amtm " Skynet install aborted,\\n IPSet extension not supported, please\\n update router to latest Firmware version."
 	else
-		c_url "https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh" -o "/jffs/scripts/firewall" && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
+		c_url https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh -o /jffs/scripts/firewall && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
 		sleep 2
 		if [ -f /jffs/scripts/firewall ]; then
 			show_amtm " Skynet installed"

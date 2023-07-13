@@ -41,7 +41,7 @@ install_rtrmon(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=37"
 	c_d
 
-	c_url https://raw.githubusercontent.com/ViktorJp/RTRMON/master/rtrmon.sh -o /jffs/scripts/rtrmon.sh && chmod a+rx /jffs/scripts/rtrmon.sh && /jffs/scripts/rtrmon.sh -setup
+	c_url https://raw.githubusercontent.com/ViktorJp/RTRMON/main/rtrmon.sh -o /jffs/scripts/rtrmon.sh && chmod a+rx /jffs/scripts/rtrmon.sh && /jffs/scripts/rtrmon.sh -setup
 
 	sleep 2
 	if [ -f /jffs/scripts/rtrmon.sh ]; then

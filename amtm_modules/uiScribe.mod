@@ -35,7 +35,7 @@ install_uiScribe(){
 	c_d
 
 	if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
-		c_url https://jackyaz.io/uiScribe/master/amtm-install/uiScribe.sh -o "/jffs/scripts/uiScribe" && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
+		c_url https://jackyaz.io/uiScribe/master/amtm-install/uiScribe.sh -o /jffs/scripts/uiScribe && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
 		sleep 2
 		if [ -f /jffs/scripts/uiScribe ]; then
 			show_amtm " uiScribe installed"
