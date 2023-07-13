@@ -74,5 +74,7 @@ amtm also offers an interface for managing a number of other features:
 | email settings | thelonelycoder |
 | 10 router games to choose from | thelonelycoder |
 | Keep a history of entered shell commands | thelonelycoder
+| Router date keeper | thelonelycoder
+| amtm and third party script reset/remove options | thelonelycoder
 
 [![amtm v3.3](https://cdn.imgchest.com/files/6yxkcrjmq7w.png "amtm v3.3")](https://cdn.imgchest.com/files/6yxkcrjmq7w.png "amtm v3.3")
