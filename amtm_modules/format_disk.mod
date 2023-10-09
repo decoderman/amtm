@@ -2,19 +2,11 @@
 #bof
 format_disk(){
 	p_e_l
-	echo " This (re)formats your plugged in USB storage"
-	echo " device with up to three partitions."
-	echo
-	echo " The process erases all data and partitions"
-	echo " on the device."
-	echo " After formatting, the router will reboot."
-	echo
-	echo " To be on the safe side, remove all other"
-	echo " attached USB devices before continuing."
-	echo
-	echo " Authors: ColinTaylor, thelonelycoder, Zonkd"
-	echo " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting"
-	echo " https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723"
+	printf " This (re)formats a plugged in USB storage\\n device with up to three partitions.\\n\\n"
+	printf " The process erases all data and partitions\\n on the device.\\n ${E_BG} After formatting, the router will reboot. ${NC}\\n\\n"
+	printf " To be on the safe side, remove all other\\n attached USB devices before continuing.\\n\\n"
+	printf " Authors: ColinTaylor, thelonelycoder, Zonkd\\n"
+	printf " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting\\n https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723\\n"
 	c_d
 	select_device(){
 		pts=4
@@ -632,13 +624,13 @@ format_disk(){
 		echo "amtm format disk log $(date -R)" >"${add}"/amtm-format-disk.log
 		format_device | tee -a "${add}"/amtm-format-disk.log
 
+		trap '' 2
 		p_e_l
 		printf "${GN_BG} Done formatting device ${NC}\\n\\n"
 		echo " The log file can be viewed with ${GN_BG}fdl${NC}"
 		printf "\\n${E_BG} Your router will now reboot for the changes ${NC}\\n"
 		printf "${E_BG} to take effect. ${NC}\\n"
-		p_e_t continue
-		sleep 1
+		sleep 6
 		r_m format_disk.mod
 		service reboot >/dev/null 2>&1 &
 		exit 0

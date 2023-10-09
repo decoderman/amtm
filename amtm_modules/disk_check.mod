@@ -24,7 +24,7 @@ disk_check_installed(){
 				[ "$blkidExclude" = "''" ] && blkidExclude=
 			fi
 			disk_check install
-			a_m " - Disk check script updated to v$dc_version"
+			a_m " - Disk check script updated to $dc_version"
 		fi
 		[ -f "${add}"/amtm-disk-check.log ] && dcltext="${GN_BG}dcl${NC} show log" || dcltext=
 		[ -z "$su" ] && printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"

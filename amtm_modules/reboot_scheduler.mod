@@ -22,7 +22,7 @@ reboot_scheduler(){
 		fi
 
 		if [ -f /jffs/scripts/init-start ] && grep -qE "ScheduledReboot" /jffs/scripts/init-start; then
-			echo " Removing third party reboot scheduler"
+			echo " Removing third-party reboot scheduler"
 			echo " in /jffs/scripts/init-start."
 			cru d ScheduledReboot
 			sed -i '\~/jffs/scripts/ScheduledReboot~d' /jffs/scripts/init-start

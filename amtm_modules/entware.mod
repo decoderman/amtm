@@ -5,7 +5,7 @@ check_ps_version(){
 	[ -z "$psVersion" ] && psVersion="likely v.Kk"
 	case $psVersion in
 	  v*|*v.K*) ;;
-	  * ) psVersion="v$psVersion" ;;
+	  * ) psVersion="$psVersion" ;;
 	esac
 }
 
@@ -36,7 +36,7 @@ entware_installed(){
 						while read line; do
 							i=$((i+1))
 							printf "- %-22s%-10s%${COR}s\\n" "$(echo $line | awk '{print $1}')" " $(echo $line | awk '{print $3}')" " $(echo $line | awk '{print "'${E_BG}'-> " $5 "'${NC}'"}')"
-							[ "$tpu" ] && echo "&nbsp;- $(echo $line | awk '{print $1}') v$(echo $line | awk '{print $3}') -> v$(echo $line | awk '{print $5}')<br>" >>/tmp/amtm-tpu-check
+							[ "$tpu" ] && echo "&nbsp;- $(echo $line | awk '{print $1}') $(echo $line | awk '{print $3}') -> $(echo $line | awk '{print $5}')<br>" >>/tmp/amtm-tpu-check
 						done </tmp/amtm-entware-check
 						echo
 						echo "EntwareUpate=\"$i\"">>"${add}"/availUpd.txt
@@ -282,7 +282,7 @@ entware_installed(){
 							server=bin.entware.net
 							if ping -c2 -W3 $server &> /dev/null; then
 								es=$((es+1))
-								echo " ${es}. ${GN}$server${NC} - Primary server by Entware team"
+								echo " ${es}. ${GN}$server${NC} - Primary server by Entware team (recommended)"
 								eval servers$es="$server"
 							else
 								echo "    ${R}$server${NC} failed, primary server"
@@ -330,10 +330,7 @@ entware_installed(){
 							selectServer
 						fi
 						show_amtm menu;break;;
-				4)		p_e_l
-						printf " To remove Entware use the ${GN_BG} r ${NC} option in amtm.\\n"
-						p_e_t "to return to amtm"
-						show_amtm menu;break;;
+				4)		reset_amtm;break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;
 			esac

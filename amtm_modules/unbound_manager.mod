@@ -2,12 +2,12 @@
 #bof
 unbound_manager_installed(){
 	scriptname='unbound Manager'
-	localVother="v$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
+	localVother="$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 	scriptgrep='^VERSION='
 	umtext=$scriptname
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh
-		remoteVother="v$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
+		remoteVother="$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
 		grepcheck=Martineau
 	fi
 	script_check

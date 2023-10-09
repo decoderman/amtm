@@ -2,10 +2,10 @@
 #bof
 vpnmon_installed(){
 	scriptname=vpnmon
-	localVother="v$(grep ^Version "$scriptloc" | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
+	localVother="$(grep ^Version "$scriptloc" | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ViktorJp/VPNMON-R2/main/vpnmon-r2.sh
-		remoteVother="v$(c_url "$remoteurl" | grep ^Version | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
+		remoteVother="$(c_url "$remoteurl" | grep ^Version | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 		grepcheck=ViktorJp
 	fi
 	script_check

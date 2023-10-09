@@ -2,10 +2,10 @@
 #bof
 FreshJR_QOS_installed(){
 	scriptname='FreshJR QOS'
-	localVother="v$(grep "^version=" /jffs/scripts/FreshJR_QOS | sed -e 's/version=//')"
+	localVother="$(grep "^version=" /jffs/scripts/FreshJR_QOS | sed -e 's/version=//')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/FreshJR07/FreshJR_QOS/master/FreshJR_QOS.sh
-		remoteVother="v$(c_url "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
+		remoteVother="$(c_url "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 		grepcheck=FreshJR
 	fi
 	script_check

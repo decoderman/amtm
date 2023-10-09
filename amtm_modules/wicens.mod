@@ -2,11 +2,11 @@
 #bof
 wicens_installed(){
 	scriptname='WAN IP Notification'
-	localVother="v$(grep "^script_version=" "$scriptloc" | sed -e "s/script_version=//;s/'//g")"
+	localVother="$(grep "^script_version=" "$scriptloc" | sed -e "s/script_version=//;s/'//g")"
 	witext=$scriptname
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/maverickcdn/wicens/master/wicens.sh
-		remoteVother="v$(c_url "$remoteurl" | grep "^script_version=" | sed -e "s/script_version=//;s/'//g")"
+		remoteVother="$(c_url "$remoteurl" | grep "^script_version=" | sed -e "s/script_version=//;s/'//g")"
 		grepcheck=maverickcdn
 	fi
 	script_check

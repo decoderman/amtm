@@ -17,8 +17,8 @@ install_email(){
 	echo " This sets up email settings"
 	echo " on your router."
 	echo
-	echo " These settings are used by multiple third"
-	echo " party scripts, including Diversion (if installed)."
+	echo " These settings are used by multiple"
+	echo " third-party scripts, including Diversion."
 	echo
 	echo " Author: thelonelycoder"
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
@@ -297,6 +297,7 @@ send_testmail(){
 		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 		--upload-file /tmp/amtm-mail-body \
 		--ssl-reqd \
+		--crlf \
 		--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi)" $SSL_FLAG
 
 	if [ "$?" = "0" ]; then

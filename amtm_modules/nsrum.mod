@@ -2,10 +2,10 @@
 #bof
 nsrum_installed(){
 	scriptname='NVRAM Save/Restore Utility'
-	localVother="v$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
+	localVother="$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		remoteurl="https://raw.githubusercontent.com/Xentrk/nvram-save-restore-utility/master/nsrum"
-		remoteVother="v$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
+		remoteVother="$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
 		grepcheck=Xentrk
 	fi
 	script_check
@@ -26,8 +26,7 @@ nsrum_installed(){
 	}
 }
 install_nsrum(){
-	version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
-	if [ "$(version_check $(nvram get buildno))" -gt "$(version_check 384.19)" ]; then
+	if [ "$(v_c $(nvram get buildno))" -gt "$(v_c 384.19)" ]; then
 		am=;show_amtm " ! This router runs on $(nvram get buildno) firmware.\\n nsrum is deprecated and only available for\\n routers running on outdated 384.XX or older\\n firmware.\\n\\n Installation aborted."
 	fi
 	p_e_l

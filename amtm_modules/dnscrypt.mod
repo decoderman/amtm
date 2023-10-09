@@ -4,17 +4,17 @@ dnscrypt_installed(){
 	if [ "$su" = 1 ]; then
 		localDPver="$(/jffs/dnscrypt/dnscrypt-proxy -version)"
 		remoteDPver=$(c_url -H 'Accept: application/json' https://github.com/DNSCrypt/dnscrypt-proxy/releases/latest | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
-		updDP="${E_BG}${NC}v$localDPver"
+		updDP="${E_BG}${NC}$localDPver"
 		ditext="dnscrypt inst"
 		dptext="dnscrypt-prox"
-		updDP="${GN_BG}v$localDPver${NC}"
+		updDP="${GN_BG}$localDPver${NC}"
 		if [ "$localDPver" ] && [ "$remoteDPver" ]; then
 			if [ "$localDPver" != "$remoteDPver" ]; then
-				updDP="${E_BG}-> v$remoteDPver${NC}"
-				updtpuDP="-> v$remoteDPver"
-				[ "$tpu" ] && echo "- dnscrypt installer, dnscrypt-proxy v$localDPver -> v$remoteDPver <br>" >>/tmp/amtm-tpu-check
+				updDP="${E_BG}-> $remoteDPver${NC}"
+				updtpuDP="-> $remoteDPver"
+				[ "$tpu" ] && echo "- dnscrypt installer, dnscrypt-proxy $localDPver -> $remoteDPver <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
-				localDPver=v$localDPver
+				localDPver=$localDPver
 				echo "dnscrypt_installerPxUpate=\"$updtpuDP\"">>"${add}"/availUpd.txt
 				echo "dnscrypt_installerPxVer=\"$localDPver\"">>"${add}"/availUpd.txt
 			else
@@ -50,7 +50,7 @@ dnscrypt_installed(){
 			fi
 		fi
 		if [ "$dnscrypt_installerPxUpate" ]; then
-			localDPver="v$(/jffs/dnscrypt/dnscrypt-proxy -version)"
+			localDPver="$(/jffs/dnscrypt/dnscrypt-proxy -version)"
 			updDP="${E_BG}$dnscrypt_installerPxUpate${NC}"
 			if [ "$dnscrypt_installerPxVer" != "$localDPver" ]; then
 				sed -i '/^dnscrypt_installerP.*/d' "${add}"/availUpd.txt

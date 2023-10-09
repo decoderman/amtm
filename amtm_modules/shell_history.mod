@@ -7,7 +7,7 @@ shell_history_installed(){
 
 	if ! grep -qE "^VERSION=$sh_version" "${add}"/shellhistory; then
 		write_shell_history_file
-		a_m " - shell history script updated to v$sh_version"
+		a_m " - shell history script updated to $sh_version"
 	fi
 
 	[ -z "$su" ] && printf "${GN_BG} sh${NC} %-9s%-19s\\n" "manage" "shell history"

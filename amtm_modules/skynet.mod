@@ -2,10 +2,10 @@
 #bof
 skynet_installed(){
 	scriptname=Skynet
-	localVother=$(grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
+	localVother=$(grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh
-		remoteVother="$(c_url "$remoteurl" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+		remoteVother="$(c_url "$remoteurl" | grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 		grepcheck=Adamm
 	fi
 	script_check

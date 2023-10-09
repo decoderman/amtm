@@ -1,12 +1,12 @@
 #!/bin/sh
 #bof
 
-version=3.8
-release="July 13 2023"
+version=4.0
+release="October 09 2023"
 dc_version=3.2
 led_version=2.3
 sh_version=1.1
-rd_version=1.0
+rd_version=1.1
 title="Asuswrt-Merlin Terminal Menu"
 
 # Begin updates for /usr/sbin/amtm
@@ -71,6 +71,7 @@ o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to pl
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
 s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
 t_f(){ sed -i '/^[[:space:]]*$/d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
+v_c(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
 
 g_i_m(){
 	for i in "$1"/*; do
@@ -98,7 +99,7 @@ show_amtm(){
 	if [ -z "$updcheck" ]; then
 		echo
 		clear
-		printf "${R_BG}%-27s%s\\n" " amtm $version FW" "by thelonelycoder ${NC}"
+		printf "${R_BG}%-27s%s\\n\\n" " amtm $version FW" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
 		OM='Operation Mode:'
@@ -110,7 +111,12 @@ show_amtm(){
 			5) echo " $OM AiMesh Node";;
 			*) echo " $OM $(nvram get sw_mode), as-yet-unknown";;
 		esac
-		printf "${R_BG}%-44s ${NC}\\n\\n" "    The $title"
+		printf "\\n${R_BG}%-44s ${NC}\\n\\n" " amtm - the $title"
+		if [ -f /opt/bin/opkg ]; then
+			thisDev="$(readlink /tmp/opt | sed 's#/tmp/#/#')"
+			printf "${R_BG}%-44s ${NC}\\n\\n" " $(df -kh ${thisDev%/entware} | xargs | awk '{print "'${thisDev%/entware}' "$2" "$9" "$3" "$10" ("$12")"}')"
+		fi
+		[ "$ss" ] && printf "${GN_BG}%-44s ${NC}\\n\\n" "    Third-party scripts"
 	fi
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
@@ -133,17 +139,19 @@ show_amtm(){
 	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
-	spacer
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
+	spacer
 	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
 	/jffs/scripts/vpnmon-r2.sh vpnmon vp VPNMON-R2¦-¦Monitor¦health¦of¦VPN
 	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
 	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
+	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
 	spacer
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
 	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
+	/jffs/scripts/domain_vpn_routing.sh  vpn_routing vr Domain-based¦VPN¦Routing
 	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
@@ -196,16 +204,17 @@ show_amtm(){
 			else
 				r_m pixelserv-tls.mod
 				case_ps(){
-					show_amtm " No pixelserv-tls beta versions are available\\n at thist time from its author kvic"
+					show_amtm " Option not available,\\n pixelserv-tls is not installed"
 				}
 			fi
+			[ "$ss" ] && printf "\\n${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
 		elif [ "$i" = fdisk ]; then
+			r_m format_disk.mod
 			if [ -f "${add}"/amtm-format-disk.log ]; then
 				atii=1
 				[ "$su" ] || printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
 			else
 				[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
-				r_m format_disk.mod
 			fi
 			case_fd(){
 				g_m format_disk.mod include
@@ -239,7 +248,7 @@ show_amtm(){
 				fi
 				r_m ${f2}.mod
 				case $f3 in
-					1)		case_1(){ g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
+					1)		case_1(){ c_e Diversion;g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
 					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
 					3)		case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
 					3d)		case_3d(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
@@ -260,10 +269,12 @@ show_amtm(){
 					vp)		case_vp(){ c_e VPNMON-R2;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
 					km)		case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
 					rt)		case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
+					bm)		case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
 					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
 					wf)		case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
+					vr)		case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
 					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 					g)		case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
@@ -323,6 +334,8 @@ show_amtm(){
 		}
 	fi
 
+	[ "$su" ] || printf "${GN_BG} cj${NC} %-9s%s\\n" "show" "all cron jobs"
+
 	[ "$atii" ] || [ "$ss" ] && [ -z "$su" ] && echo
 	atii=
 
@@ -341,14 +354,14 @@ show_amtm(){
 			corr1=-2
 		else
 			[ "$theme" = solarized ] && corr2=+1
-			vversion="        v$version"
+			vversion="        $version"
 		fi
 		printf "${GN_BG} m ${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
 	else
 		[ "$ss" ] || printf "${GN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
 		echo
 		if [ "$amtmUpate" ]; then
-			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          v$version" "${E_BG}$amtmUpate${NC}"
+			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          $version" "${E_BG}$amtmUpate${NC}"
 		else
 			echo "    amtm options"
 		fi
@@ -360,7 +373,7 @@ show_amtm(){
 	if [ "$su" = 1 ]; then
 		su=
 		if [ "$suUpd" = 1 -o "$awmUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
-			tpText="${R}Third party script update(s) available!${NC} Use\\n the scripts own update function to update."
+			tpText="${R}Third-party script update(s) available!${NC} Use\\n the scripts own update function to update."
 			[ "$awmUpd" = 1 ] && awmText="${R}Asuswrt-Merlin firmware update available!${NC}\\n See https://asuswrt-merlin.net/download"
 			if [ "$amtmUpd" -gt 0 ]; then
 				p_e_l
@@ -372,7 +385,7 @@ show_amtm(){
 					printf " $awmText\\n"
 					p_e_l
 				fi
-				amtmUpdText="updated from v$version to v$amtmRemotever"
+				amtmUpdText="updated from $version to $amtmRemotever"
 				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n"
 				if [ "$amtmUpd" = 2 ]; then
 					printf " ${R}A minor amtm update is available!${NC}\\n"
@@ -427,7 +440,7 @@ show_amtm(){
 	fi
 
 	while true; do
-		printf "${R_BG} Enter option ${NC} ";read -r selection
+		printf "${R_BG} Enter amtm option ${NC} ";read -r selection
 		s_d_u
 		case "$selection" in
 			1)					case_1;break;;
@@ -451,12 +464,14 @@ show_amtm(){
 			[Vv][Pp])			case_vp;break;;
 			[Kk][Mm])			case_km;break;;
 			[Rr][Tt])			case_rt;break;;
+			[Bb][Mm])			case_bm;break;;
 			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
 			[Aa][Gg])			case_ag;break;;
 			[Ww][Ff])			case_wf;break;;
+			[Vv][Rr])			case_vr;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Pp][Ss])			case_ps;break;;
 			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
@@ -482,6 +497,7 @@ show_amtm(){
 			[Gg]10|[Gg]10r)		[ "$sgs" != "hide" ] && o_g_s || case_g10;break;;
 			[Ss][Hh])			case_sh;break;;
 			[Rr][Dd])			case_rd;break;;
+			[Cc][Jj])			c_j;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
 			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;
@@ -502,22 +518,37 @@ show_amtm(){
 								service reboot >/dev/null 2>&1 &
 								exit 0
 								break;;
-			*)					printf "\\n               input is not an option\\n\\n";;
+			*)					printf "\\n                    input is not an option\\n\\n";;
 		esac
 	done
 }
 
+c_j(){
+	p_e_l
+	printf "\\n The following cron jobs are active (cru l):\\n"
+	p_e_l
+	if [ ! "$(ls -A /var/spool/cron/crontabs)" ] || [ ! -s "/var/spool/cron/crontabs/$(nvram get http_username)" ]; then
+		echo " (there are no cron jobs set at the moment)"
+		p_e_l
+	else
+		printf " .---------------- minute (0 - 59)\\n |  .------------- hour (0 - 23)\\n |  |  .---------- day of month (1 - 31)\\n"
+		printf " |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...\\n |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat\\n"
+		printf " |  |  |  |  |\\n *  *  *  *  * command to be executed #job_name# ( * = every ... )\\n\\n"
+		cru l | sed -e 's/^/ /'
+	fi
+	p_e_t "return to menu"
+	show_amtm menu
+}
+
 s_l_f(){
 	if [ -f "${add}/$1" ]; then
-		echo
-		echo " ---------------------------------------------------"
-		printf " $1 has this content:\\n\\n"
-		echo " START FILE, --- lines are not part of file"
-		echo " ---------------------------------------------------"
+		slfLine=---------------------------------------------------
+		p_e_l
+		printf " $1 has this content:\\n\\n START FILE\\n"
+		p_e_l
 		sed -e 's/^/ /' "${add}/$1"
-		echo " ---------------------------------------------------"
-		echo " END FILE"
-		echo
+		p_e_l
+		printf " END FILE\\n"
 		p_e_l
 		if [ "$1" = .ash_history ]; then
 			p_e_t "return to menu"
@@ -540,11 +571,11 @@ s_l_f(){
 
 script_check(){
 	atii=1
-	[ "$localVother" ] && localver=$localVother || localver="$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+	[ "$localVother" ] && localver=$localVother || localver="$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 	upd="${E_BG}${NC}$localver"
 	if [ "$su" = 1 ]; then
 		if c_url "$remoteurl" | grep -qF -m1 "$grepcheck"; then
-			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(c_url "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(c_url "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 			bareLocalver=$(echo $localver | sed 's/[^0-9]*//g')
 			bareRemotever=$(echo $remotever | sed 's/[^0-9]*//g')
 			localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
@@ -606,10 +637,10 @@ reset_amtm(){
 	}
 
 	p_e_l
-	printf " amtm reset options\\n\\n Enter option for more info.\\n\\n"
-	printf " 1. Reset amtm.\\n    This resets amtm and its own settings.\\n    Third party scripts are NOT affected.\\n\\n"
-	printf " 2. Reset amtm, remove scripts and Entware.\\n    This resets amtm and its own settings\\n    and removes all third party scripts,\\n    including Entware (if installed).\\n    Third party scripts WILL be removed.\\n\\n"
-	printf " 3. Remove Entware.\\n    This removes the Entware repository.\\n    Third party scripts depending on Entware\\n    may no longer work after removing.\\n"
+	printf " amtm reset options\\n\\n Enter option for more info.\\n\\n Use ${E_BG} i ${NC} to see the list of third-party\\n and amtm's own (non third-party) scripts.\\n\\n"
+	printf " 1. Reset amtm.\\n    This resets amtm and its own settings.\\n    Third-party scripts are NOT affected.\\n\\n"
+	printf " 2. Reset amtm, remove scripts and Entware.\\n    This resets amtm and its own settings\\n    and removes all third-party scripts,\\n    including Entware (if installed).\\n    Third-party scripts WILL be removed.\\n\\n"
+	printf " 3. Remove Entware.\\n    This removes the Entware repository.\\n    Third-party scripts depending on Entware\\n    may no longer work after removing.\\n"
 	while true; do
 		printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
 		case "$continue" in
@@ -661,9 +692,9 @@ reset_amtm(){
 					exit 0
 					break;;
 			2)		p_e_l
-					printf " This resets amtm and removes all\\n third party scripts including Entware (if\\n installed) from this router.\\n\\n"
+					printf " This resets amtm and removes all\\n third-party scripts including Entware (if\\n installed) from this router.\\n\\n"
 					printf " Note that this option will NOT restore the\\n router settings (NVRAM) to default.\\n\\n It empties these directories:\\n"
-					printf " - /jffs/addons\\n - /jffs/configs\\n - /jffs/scripts\\n\\n And if found it removes:\\n"
+					printf " - /jffs/addons\\n - /jffs/configs\\n - /jffs/scripts\\n\\n Additionally if found it removes:\\n"
 					printf " - directory /jffs/dnscrypt\\n - directory /mnt/*/skynet\\n - Entware repository\\n - the SWAP file\\n\\n The router automatically reboots after this.\\n"
 					c_d
 					rm_entware
@@ -672,9 +703,9 @@ reset_amtm(){
 						swapoff "$swl"
 						rm -f "$swl"
 					fi
-					rm -r /jffs/configs/*
-					rm -r /jffs/scripts/*
-					rm -r /jffs/addons/*
+					rm -rf /jffs/configs/*
+					rm -rf /jffs/scripts/*
+					rm -rf /jffs/addons/*
 					rm -rf /jffs/dnscrypt
 					skynetcfg=$(/usr/bin/find /mnt/*/skynet/skynet.cfg 2> /dev/null)
 					[ -f "$skynetcfg" ] && rm -rf "${skynetcfg%/skynet.cfg}"
@@ -700,7 +731,7 @@ reset_amtm(){
 					fi
 					[ -L /tmp/opt ] && rmText="Removed all traces of Entware" || rmText="Entware not found but removed all traces if found" ||
 					rm_entware
-					
+
 					clear
 					printf "\\n $rmText.\\n amtm reboots this router now\\n\\n"
 					sleep 1
@@ -708,7 +739,7 @@ reset_amtm(){
 					exit 0
 					break;;
 			[Ee])	show_amtm menu;break;;
-			*)		printf "\\n input is not an option\\n";break;;
+			*)		printf "\\n input is not an option\\n";;
 		esac
 	done
 }
@@ -739,8 +770,8 @@ update_amtm(){
 
 		if [ "$su" = 1 ]; then
 			if [ "$version" != "$amtmRemotever" ]; then
-				thisrem="${E_BG}-> v$amtmRemotever${NC}"
-				thisUpd="-> v$amtmRemotever"
+				thisrem="${E_BG}-> $amtmRemotever${NC}"
+				thisUpd="-> $amtmRemotever"
 				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 				amtmUpd=1
 			elif [ "$localmd5" != "$remotemd5" ]; then
@@ -749,7 +780,7 @@ update_amtm(){
 				[ "$updcheck" ] && echo "- amtm $version, minor update available" >>/tmp/amtm-tpu-check
 				amtmUpd=2
 			else
-				thisrem="${GN_BG}v$version${NC}"
+				thisrem="${GN_BG}$version${NC}"
 				amtmUpd=0
 			fi
 			if [ "$amtmUpd" -gt 0 ]; then
@@ -758,11 +789,11 @@ update_amtm(){
 			fi
 		else
 			if [ "$version" != "$amtmRemotever" ]; then
-				a_m "updated from v$version to v$amtmRemotever"
+				a_m "updated from $version to $amtmRemotever"
 			elif [ "$localmd5" != "$remotemd5" ]; then
 				a_m "minor version update applied"
 			else
-				a_m "force updated to v$amtmRemotever"
+				a_m "force updated to $amtmRemotever"
 			fi
 			g_i_m "${add}"
 			[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
@@ -778,20 +809,19 @@ update_amtm(){
 
 update_firmware(){
 	[ "$updcheck" ] && rm -f "${add}"/availUpd.txt
-	version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
 	awmBuildno=$(nvram get buildno)
-	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(version_check $awmBuildno)" -ge "$(version_check 382)" ]; then
+	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(v_c $awmBuildno)" -ge "$(v_c 382)" ]; then
 		awmWSI=$(nvram get webs_state_info)
 		awmInstalled="$awmBuildno.$(nvram get extendno)"
 		if [ "$awmWSI" ]; then
 			awmStable=$(echo $awmWSI | sed 's/3004_//' | sed 's/_/./g')
 			awmBaseVer=$(echo $awmStable | cut -d'.' -f1-2)
-			if [ "$(version_check $awmBaseVer)" -gt "$(version_check $awmBuildno)" ]; then
+			if [ "$(v_c $awmBaseVer)" -gt "$(v_c $awmBuildno)" ]; then
 				availRel="release avail.";stcol=${E_BG};awmUpd=1
 			elif [ "$awmBaseVer" = "$awmBuildno" ]; then
 				if echo "$(nvram get extendno)" | grep -q 'alpha\|beta'; then
 					availRel="release avail.";stcol=${E_BG};awmUpd=1
-				elif [ "$(version_check $awmStable)" -gt "$(version_check $awmInstalled)" ]; then
+				elif [ "$(v_c $awmStable)" -gt "$(v_c $awmInstalled)" ]; then
 					availRel="release avail.";stcol=${E_BG};awmUpd=1
 				else
 					availRel=firmware;stcol=${GN_BG}

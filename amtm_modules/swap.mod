@@ -177,7 +177,7 @@ manage_swap(){
 										opkg install coreutils-dd
 										echo "${NC}"
 									fi
-									
+
 									p_e_l
 									echo " Creating ${GN_BG} $swtext ${NC} Swap file,"
 									echo " this will take some time..."
@@ -185,7 +185,7 @@ manage_swap(){
 									if [ -f /opt/bin/dd ]; then
 										/opt/bin/dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize" status=progress
 									else
-										/bin/dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize" 
+										/bin/dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize"
 									fi
 									mkswap "$swapDevice/myswap.swp"
 									swapon "$swapDevice/myswap.swp"

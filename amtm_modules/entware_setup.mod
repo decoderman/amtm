@@ -76,14 +76,42 @@ setup_Entware(){
 		fi
 	}
 
+	check_device_free(){
+		minsize=71680
+		maxsize=102400
+		free="$(df $1 | xargs | awk '{print $11}')"
+		if [ "$free" -le "$minsize" ]; then
+			echo " Not enough free space available on"
+			echo " $1"
+			echo
+			echo " Required Entware: $(( ${minsize} / 1024)) - $(( ${maxsize} / 1024)) MB"
+			echo " Free space on $1: $(( ${free} / 1024)) MB"
+			echo
+			p_e_t aknowledge
+			am=;show_amtm " Not enough free space available on\\n $1."
+
+		elif [ "$free" -gt "$minsize" ] && [ "$free" -le "$maxsize" ]; then
+			echo " Device $1"
+			echo " has low free space available."
+			echo
+			echo " Required Entware: $(( ${minsize} / 1024)) - $(( ${maxsize} / 1024)) MB"
+			echo " Free space on $1: $(( ${free} / 1024)) MB"
+			echo
+			echo " Entware will work if the free space is"
+			echo " close to $(( ${maxsize} / 1024)) MB, but might not if it is"
+			echo " closer to $(( ${minsize} / 1024)) MB."
+			echo
+			p_e_t aknowledge
+		fi
+	}
+
 	case "$(uname -m)" in
 		mips)		PART_TYPES='ext2|ext3'
 					INST_URL='https://pkg.entware.net/binaries/mipsel/installer/installer.sh'
 					entVer="Entware (mipsel)"
 					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io';;
 		armv7l)		PART_TYPES='ext2|ext3|ext4'
-					version_check(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
-					if [ "$(version_check $(uname -r))" -ge "$(version_check 3.2)" ]; then
+					if [ "$(v_c $(uname -r))" -ge "$(v_c 3.2)" ]; then
 						INST_URL='armv7sf-k3.2/installer/generic.sh'
 						entVer="Entware (armv7sf-k3.2)"
 						availEntVer=armv7
@@ -183,6 +211,8 @@ setup_Entware(){
 
 	check_device "$entDev"
 
+	check_device_free "$entDev"
+
 	echo " Device checks passed"
 
 	if [ -f "$entDev/entware/bin/opkg" ] && grep -q "$availEntVer" "$entDev/entware/etc/opkg.conf"; then
@@ -235,7 +265,7 @@ setup_Entware(){
 		server=bin.entware.net
 		if ping -c2 -W3 $server &> /dev/null; then
 			es=$((es+1))
-			echo " ${es}. ${GN}$server${NC} - Primary server by Entware team"
+			echo " ${es}. ${GN}$server${NC} - Primary server by Entware team (recommended)"
 			eval servers$es="$server"
 		else
 			echo "    ${R}$server${NC} failed, primary server"
@@ -328,7 +358,6 @@ setup_Entware(){
 	if [ -z "$usePreviousEntware" ]; then
 		echo
 		echo " Installing $entVer, using external script"
-
 		echo "${GY}"
 		if [ "$(uname -m)" != mips ]; then
 			c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
@@ -355,7 +384,7 @@ setup_Entware(){
 			echo " the previous Entware installation."
 			echo
 			echo " Note that you may have to reinstall already"
-			echo " installed third party (amtm) apps that reside"
+			echo " installed third-party scripts that reside"
 			echo " in Entware after the reboot."
 			echo " In the case of Diversion, all you need to do is open"
 			echo " Diversion in amtm so it can do a self check."

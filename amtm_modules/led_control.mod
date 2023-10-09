@@ -4,7 +4,7 @@ led_control_installed(){
 	atii=1
 	if ! grep -qE "^VERSION=$led_version" "${add}"/ledcontrol; then
 		write_ledcontrol_file
-		a_m " - LED control script updated to v$led_version"
+		a_m " - LED control script updated to $led_version"
 	fi
 	if [ -f "${add}"/ledcontrol.conf ]; then
 		. "${add}"/ledcontrol.conf

@@ -2,10 +2,10 @@
 #bof
 FlexQoS_installed(){
 	scriptname='FlexQoS'
-	localVother="v$(grep "^version=" /jffs/addons/flexqos/flexqos.sh | sed -e 's/version=//')"
+	localVother="$(grep "^version=" /jffs/addons/flexqos/flexqos.sh | sed -e 's/version=//')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/dave14305/FlexQoS/master/flexqos.sh
-		remoteVother="v$(c_url "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
+		remoteVother="$(c_url "$remoteurl" | grep "^version=" | sed -e 's/version=//')"
 		grepcheck=FlexQoS
 	fi
 	script_check
