@@ -170,7 +170,7 @@ reboot_scheduler(){
 	fi
 }
 reboot_scheduler_installed(){
-	atii=1
+	[ -z "$su" ] && atii=1
 	rsui="$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6}')"
 	[ "$rsui" = '*' ] && rsui=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $4}')
 	rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print "'$rsui'"" @ "$3":"$2}' | sed -e 's/"//')
@@ -198,14 +198,9 @@ reboot_scheduler_installed(){
 }
 install_reboot_scheduler(){
 	p_e_l
-	echo " This enables the reboot scheduler for your"
-	echo " router."
-	echo " The scheduler is set with a cron job via"
-	echo " init-start, as opposed to the WebUI setting"
-	echo " which uses an internal mechanism to reboot."
-	echo
-	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
+	printf " This installs reboot scheduler\\n on your router.\\n\\n"
+	printf " This scheduler is set with a cron job via\\n init-start, as opposed to the WebUI setting\\n which uses an internal mechanism to reboot.\\n\\n"
+	printf " Author: thelonelycoder\\n https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480\\n"
 	c_d
 	reboot_scheduler install
 }

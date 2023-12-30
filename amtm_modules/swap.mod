@@ -191,9 +191,22 @@ manage_swap(){
 									swapon "$swapDevice/myswap.swp"
 									nvram set usb_idle_timeout=0
 									nvram commit
+
 									c_j_s /jffs/scripts/post-mount
 									t_f /jffs/scripts/post-mount
+									if grep -q '^swapon.*\.' /jffs/scripts/post-mount; then
+										sed -i '/swapon/d' /jffs/scripts/post-mount >/dev/null
+									fi
 									sed -i "1a swapon $swapDevice/myswap.swp # Added by amtm" /jffs/scripts/post-mount
+
+									c_j_s /jffs/scripts/unmount
+									t_f /jffs/scripts/unmount
+									if ! grep -q "^\[ \"\$(/usr/bin/find \$1/$swapfile" /jffs/scripts/unmount; then
+										sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
+										trim_file /jffs/scripts/unmount
+										echo "[ \"\$(/usr/bin/find \$1/$swapfile 2> /dev/null)\" ] && swapoff \$1/$swapfile # Added by amtm" >> /jffs/scripts/unmount
+									fi
+
 									show_amtm " Swap file created and activated:\\n $(echo "${swapDevice#/tmp}")/myswap.swp";break;;
 							[Ee])	show_amtm menu;break;;
 							*)		printf "\\n input is not an option\\n";;

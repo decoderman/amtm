@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 diversion_installed(){
-	atii=1
 	scriptname=Diversion
 	localVother="$(grep ^VERSION "$scriptloc" | sed -e 's/VERSION=//')"
 
@@ -25,12 +24,13 @@ diversion_installed(){
 			fi
 		fi
 	else
+		localVother=
 		if [ -s "$divconf" ]; then
 			divver="$(grep "thisVERSION=" "$divconf" | sed -e 's/thisVERSION=//')"
 			divMver="$(grep "thisM_VERSION=" "$divconf" | sed -e 's/thisM_VERSION=//')"
 			[ "$divMver" ] && divver="${divver}.$divMver" || divver=$divver
 		fi
-		localver="v$divver"
+		localver="$divver"
 		upd="${E_BG}${NC}$localver"
 		if [ "$su" = 1 ]; then
 			case "$release" in
@@ -43,8 +43,8 @@ diversion_installed(){
 				S_VERSION=$(echo $remotever | awk '{print $1}')
 				S_M_VERSION=$(echo $remotever | awk '{print $2}')
 				localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
-				[ "$S_M_VERSION" ] && remotever="v${S_VERSION}.$S_M_VERSION" || remotever="v$S_VERSION"
-				upd="${GN_BG}v$divver${NC}"
+				[ "$S_M_VERSION" ] && remotever="${S_VERSION}.$S_M_VERSION" || remotever="$S_VERSION"
+				upd="${GN_BG}$divver${NC}"
 				webUiOn=no
 				if [ -d /www/user/diversion ] && [ -f /opt/share/diversion/.conf/webui-vars.js ]; then
 					. /opt/share/diversion/file/helper.div
@@ -52,7 +52,7 @@ diversion_installed(){
 				fi
 
 				if [ "$localver" != "$remotever" ]; then
-					localver="v$divver"
+					localver="$divver"
 					upd="${E_BG}-> $remotever${NC}"
 					aUpd="-> $remotever"
 					[ "$updcheck" ] && echo "- Diversion $localver $aUpd" >>/tmp/amtm-tpu-check
@@ -64,7 +64,7 @@ diversion_installed(){
 				else
 					remotemd5="$(c_url "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
 					if [ "$localmd5" != "$remotemd5" ]; then
-						localver="v$divver"
+						localver="$divver"
 						upd="${E_BG}-> min upd${NC}"
 						aUpd="-> min upd"
 						[ "$updcheck" ] && echo "- Diversion $localver, minor update available" >>/tmp/amtm-tpu-check

@@ -18,12 +18,49 @@ uiDivStats_installed(){
 			unset localver uiDivStatsUpate uiDivStatsMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
-	case_j5(){
-		/jffs/scripts/uiDivStats
-		sleep 2
-		show_amtm menu
-	}
+
+	if [ -f /opt/bin/diversion ]; then
+		divV=$(grep '^VERSION' /opt/bin/diversion | sed 's/VERSION=//')
+		if [ "$(v_c $divV)" -ge "$(v_c "5.0")" ]; then
+			if [ "$(v_c $lvtpu)" -gt "$(v_c "3.0.2")" ]; then
+				[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+				case_j5(){
+					/jffs/scripts/uiDivStats
+					sleep 2
+					show_amtm menu
+				}
+			elif [ -z "$updcheck" ]; then
+				if [ -z "$localver" ]; then
+					divStatsV=$upd
+					printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "show" "uiDivStats, incompatible" ""
+					case_j5(){
+						am=;show_amtm " The current release of uiDivStats ($divStatsV) is\\n no longer compatible with Diversion $divV.\\n\\n Watch out for an update with ${GN_BG} u ${NC} in amtm,\\n it will show when a new version is available."
+					}
+				else
+					printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+					case_j5(){
+						/jffs/scripts/uiDivStats
+						sleep 2
+						show_amtm menu
+					}
+				fi
+			fi
+		else
+			[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+			case_j5(){
+				/jffs/scripts/uiDivStats
+				sleep 2
+				show_amtm menu
+			}
+		fi
+	else
+		[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+		case_j5(){
+			/jffs/scripts/uiDivStats
+			sleep 2
+			show_amtm menu
+		}
+	fi
 }
 install_uiDivStats(){
 	p_e_l
@@ -34,11 +71,26 @@ install_uiDivStats(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009"
 	c_d
 
-	if [ -f /opt/bin/diversion ]; then
+	installOK(){
 		c_url https://jackyaz.io/uiDivStats/master/amtm-install/uiDivStats.sh -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
 		sleep 2
+	}
+
+	if [ -f /opt/bin/diversion ]; then
+		divV=$(grep '^VERSION' /opt/bin/diversion | sed 's/VERSION=//')
+		if [ "$(v_c $divV)" -ge "$(v_c "5.0")" ]; then
+			remoteurl=https://jackyaz.io/uiDivStats/master/amtm-version/uiDivStats.sh
+			divStatsV=$(c_url "$remoteurl" | grep -m1 " SCRIPT_VERSION=" | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+			if [ "$(v_c $divStatsV)" -gt "$(v_c "3.0.2")" ]; then
+				installOK
+			else
+				am=;show_amtm " The current release of uiDivStats ($divStatsV) is\\n no longer compatible with Diversion $divV.\\n\\n Watch out for a compatibility update of uiDivStats."
+			fi
+		else
+			installOK
+		fi
 	else
-		am=;show_amtm " uiDivStats installation failed,\\n Diversion is not installed"
+		am=;show_amtm " uiDivStats installation not possible,\\n Diversion is not installed"
 	fi
 	if [ -f /jffs/scripts/uiDivStats ]; then
 		show_amtm " uiDivStats installed"

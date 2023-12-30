@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
 disk_check_installed(){
-	atii=1
+	[ -z "$su" ] && atii=1
 	[ -f /jffs/scripts/disk-check ] && rm /jffs/scripts/disk-check
 	[ -f "${add}"/disk-check.mod ] && rm "${add}"/disk-check.mod
 

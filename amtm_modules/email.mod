@@ -1,9 +1,7 @@
 #!/bin/sh
 #bof
-EMAIL_DIR=/jffs/addons/amtm/mail
 email_installed(){
-	atii=1
-
+	[ -z "$su" ] && atii=1
 	emMan=setup
 	[ -f "${EMAIL_DIR}"/emailpw.enc ] && emMan=open
 	[ -z "$su" ] && printf "${GN_BG} em${NC} %-9s%-19s\\n" "$emMan" "email settings"
@@ -24,6 +22,7 @@ install_email(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
 	c_d
 
+	check_email_conf
 	g_m email.mod include
 	if [ -f "${add}/email.mod" ]; then
 		email_manage

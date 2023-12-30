@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
 router_date_installed(){
-	atii=1
+	[ -z "$su" ] && atii=1
 	if ! grep -qE "^VERSION=$rd_version" "${add}"/routerdate; then
 		write_router_date_file
 		a_m " - Router date keeper script updated to $rd_version"
@@ -41,8 +41,8 @@ router_date(){
 			sed -i "\~routerdate ~d" /jffs/scripts/services-stop
 			echo "${add}/routerdate save # Added by amtm" >> /jffs/scripts/services-stop
 		fi
-		if [ "$(/bin/nvram get time_zone_x)" ]; then
-			printf "%s" "\$(/bin/nvram get time_zone_x)" > "${add}"/TZ
+		if [ "$(nvram get time_zone_x)" ]; then
+			printf "%s" "\$(nvram get time_zone_x)" > "${add}"/TZ
 		elif [ -f /etc/TZ ]; then
 			cp /etc/TZ "${add}"/TZ
 		fi
@@ -85,17 +85,17 @@ write_router_date_file(){
 	# Script created by amtm $version
 	VERSION=$rd_version
 	NAME="amtm \$(basename "\$0")[\$\$]"
-	[ -f "/jffs/addons/amtm/TZ" ] && export TZ="\$(cat /jffs/addons/amtm/TZ)" || export TZ="\$(/bin/nvram get time_zone_x)"
+	[ -f "/jffs/addons/amtm/TZ" ] && export TZ="\$(cat /jffs/addons/amtm/TZ)" || export TZ="\$(nvram get time_zone_x)"
 	SCRIPT_LOC="\$(/usr/bin/readlink -f "\$0")"
 	rd='/bin/date -u -r "\$SCRIPT_LOC" '\''+%Y-%m-%d %H:%M:%S'\'''
 
 	case \${1} in
 	    save|cron)  /bin/touch "\$SCRIPT_LOC"
-	                printf "%s" "\$(/bin/nvram get time_zone_x)" > /jffs/addons/amtm/TZ
+	                printf "%s" "\$(nvram get time_zone_x)" > /jffs/addons/amtm/TZ
 	                [ "\$1" = "save" ] && rdtxt='before reboot' || rdtxt='via cron'
 	                logger -t "\$NAME" "Preserving router date \$rdtxt (\$(eval "\$rd")) UTC time."
 	                ;;
-	    restore)    if [ "\$(/bin/nvram get ntp_ready)" = 0 ]; then
+	    restore)    if [ "\$(nvram get ntp_ready)" = 0 ]; then
 	                    /bin/date -u -s "\$(eval "\$rd")"
 	                fi
 	                if ! cru l | grep -q "amtm_RouterDate"; then

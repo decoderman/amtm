@@ -9,14 +9,16 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=4.0
-release="October 09 2023"
+version=4.1
+release="December 30 2023"
 scriptPath=/jffs/scripts/amtm
 add=/jffs/addons/amtm
+EMAIL_DIR="${add}/mail"
 dc_version=3.2
-led_version=2.3
-sh_version=1.1
-rd_version=1.1
+led_version=2.4
+sh_version=1.2
+rd_version=1.2
+fw_version=1.0
 title="Asuswrt-Merlin Terminal Menu"
 
 ascii_logo(){
@@ -60,6 +62,20 @@ about_amtm(){
 	p_r_l
 	p_e_t "return to menu"
 	show_amtm menu
+}
+
+check_email_conf(){
+	if [ ! -f "${EMAIL_DIR}/email.conf" ]; then
+		show_amtm " Setup mail settings in em first"
+	else
+		unset FROM_ADDRESS TO_NAME TO_ADDRESS USERNAME PASSWORD SMTP PORT PROTOCOL
+		. "${EMAIL_DIR}/email.conf"
+		if [ -z "$FROM_ADDRESS" ] || [ -z "$TO_NAME" ] || [ -z "$TO_ADDRESS" ] || [ -z "$USERNAME" ] || [ ! -f "${EMAIL_DIR}/emailpw.enc" ] || [ -z "$SMTP" ] || [ -z "$PORT" ] || [ -z "$PROTOCOL" ]; then
+			show_amtm " email settings not set or incomplete.\\n Use em to setup mail settings."
+		elif [ "$PASSWORD" = "PUT YOUR PASSWORD HERE" ]; then
+			show_amtm " email password has not been set.\\n Use em to setup mail settings."
+		fi
+	fi
 }
 
 show_amtm(){
@@ -136,6 +152,9 @@ show_amtm(){
 	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
 	spacer
 	/jffs/addons/amtm/mail/email.conf email em email¦settings
+	/jffs/addons/amtm/fw_update.mod fw_update fw Firmware¦update¦notification
+	/jffs/addons/amtm/sc_update.mod sc_update sc Scripts¦update¦notification
+	spacer
 	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
 	fdisk
 	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
@@ -160,8 +179,10 @@ show_amtm(){
 						echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
 						rm -f "${add}"/availUpd.txt
 					fi
-					cat /tmp/amtm-tpu-check
-					rm /tmp/amtm-tpu-check
+					if [ ! -f /tmp/amtm-no-delete ]; then
+						cat /tmp/amtm-tpu-check
+						rm /tmp/amtm-tpu-check
+					fi
 				fi
 				exit 0
 			fi
@@ -258,6 +279,8 @@ show_amtm(){
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
 					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
+					fw)		case_fw(){ g_m fw_update.mod include;[ "$dlok" = 1 ] && install_fw_update || show_amtm menu;};;
+					sc)		case_sc(){ g_m sc_update.mod include;[ "$dlok" = 1 ] && install_sc_update || show_amtm menu;};;
 					sh)		case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
 					rd)		case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
 				esac
@@ -336,6 +359,7 @@ show_amtm(){
 		printf "${GN_BG} m ${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
 	else
 		[ "$ss" ] || printf "${GN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
+		[ "$ss" ] || printf "${GN_BG} rr${NC} %-9s%s\\n" "reboot" "router"
 		echo
 		if [ "$amtmUpate" ]; then
 			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          $version" "${E_BG}$amtmUpate${NC}"
@@ -385,6 +409,7 @@ show_amtm(){
 					unset amtmUpate amtmMD5
 				fi
 				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
+				tpw=
 				exec "${scriptPath}" " amtm $am"
 			else
 				[ "$suUpd" = 1 ] && a_m " $tpText"
@@ -459,6 +484,8 @@ show_amtm(){
 			[Rr][Ss])			c_ntp;case_rs;break;;
 			[Ss][Ww])			case_swp;break;;
 			[Ee][Mm])			case_em;break;;
+			[Ff][Ww])			case_fw;break;;
+			[Ss][Cc])			case_sc;break;;
 			[Gg])				if [ -f "${add}"/games/games.conf ]; then [ "$more" = "more" ] && more=less || more=more;show_amtm menu; else case_g;fi;break;;
 			[Gg]r)				case_gr;break;;
 			[Gg]1|[Gg]1r)		[ "$sgs" != "hide" ] && o_g_s || case_g1;break;;
@@ -483,13 +510,12 @@ show_amtm(){
 								ascii_logo '  Goodbye'
 								echo
 								exit 0;break;;
-			reboot)				p_e_l   # hidden, reboot router
-								echo " OK then, rebooting this router, are you sure?"
+			[Rr][Rr]|reboot)	p_e_l   # hidden, reboot router
+								printf " OK then,\\n do you want to reboot this router now?\\n"
 								c_d
 								clear
-								ascii_logo '  Goodbye!'
-								echo
-								printf " amtm reboots this router now\\n\\n"
+								ascii_logo '  Rebooting...'
+								printf "   amtm reboots this router now\\n\\n"
 								sleep 1
 								service reboot >/dev/null 2>&1 &
 								exit 0
@@ -1032,6 +1058,9 @@ remove_amtm(){
 						r_w_e /jffs/scripts/services-start
 						rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
 					fi
+					if [ -f /jffs/scripts/update-notification ] && grep -q "created by amtm" /jffs/scripts/update-notification; then
+						rm -f /jffs/scripts/update-notification
+					fi
 
 					if [ -f "/jffs/configs/profile.add" ]; then
 						sed -i '/alias amtm=/d' /jffs/configs/profile.add >/dev/null
@@ -1078,13 +1107,14 @@ remove_amtm(){
 					printf " work after removing.\\n\\n You have been warned.\\n\\n The router automatically reboots after this.\\n"
 					c_d
 					if [ -f /jffs/scripts/post-mount ]; then
-						sed -i '/mount-entware.div/d' /jffs/scripts/post-mount
+						sed -i '/mount-entware./d' /jffs/scripts/post-mount
 						r_w_e /jffs/scripts/post-mount
 					fi
 					if [ -d /jffs/addons/diversion ]; then
 						rm -f /jffs/addons/diversion/mount-entware.div
 						[ "$(ls -A /jffs/addons/diversion)" ] || rm -rf /jffs/addons/diversion
 					fi
+					r_m mount-entware.mod
 					[ -L /tmp/opt ] && rmText="Removed all traces of Entware" || rmText="Entware not found but removed all traces if found" ||
 					rm_entware
 

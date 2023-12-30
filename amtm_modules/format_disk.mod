@@ -200,7 +200,7 @@ format_disk(){
 	select_label(){
 		p_e_l
 		printf " Set device label$pn\\n\\n"
-		printf " 1. Set label (recommended)\\n 2. No label\\n"
+		printf " 1. Set label, highly recommended\\n    especially if addon BACKUPMON is used\\n 2. No label\\n"
 		while true; do
 			printf "\\n Enter selection [1-2] ";read -r continue
 			case "$continue" in

@@ -16,11 +16,15 @@ setup_Entware(){
 
 		c_j_s /jffs/scripts/post-mount
 		t_f /jffs/scripts/post-mount
-		if ! grep -q ". /jffs/addons/diversion/mount-entware.div" /jffs/scripts/post-mount; then
-			# remove old entries if found
+		if grep -q "post-mount.div\|mount-entware.div" /jffs/scripts/post-mount; then
 			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
 			sed -i '/mount-entware.div/d' /jffs/scripts/post-mount >/dev/null
-			echo ". /jffs/addons/diversion/mount-entware.div # Added by amtm" >>/jffs/scripts/post-mount
+		fi
+		if ! grep -q ". /jffs/addons/amtm/mount-entware.mod" /jffs/scripts/post-mount; then
+			# remove old entries if found
+			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
+			sed -i '/mount-entware./d' /jffs/scripts/post-mount >/dev/null
+			sed -i "2s~^~. /jffs/addons/amtm/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
 			echo " post-mount entry added"
 		else
 			echo " OK post-mount"
@@ -35,14 +39,13 @@ setup_Entware(){
 			echo " OK services-stop"
 		fi
 
-		mkdir -p /jffs/addons/diversion
-		if [ ! -f /jffs/addons/diversion/mount-entware.div ]; then
-			g_m mount-entware.div new /jffs/addons/diversion
-			echo " mount-entware.div downloaded"
+		if [ ! -f /jffs/addons/amtm/mount-entware.mod ]; then
+			g_m mount-entware.mod new
+			echo " mount-entware.mod downloaded"
 		else
-			echo " OK mount-entware.div"
+			echo " OK mount-entware.mod"
 		fi
-		[ ! -x /jffs/addons/diversion/mount-entware.div ] && chmod 0755 /jffs/addons/diversion/mount-entware.div
+		[ ! -x /jffs/addons/amtm/mount-entware.mod ] && chmod 0755 /jffs/addons/amtm/mount-entware.mod
 	}
 
 	check_entware_https(){
@@ -411,9 +414,7 @@ install_Entware(){
 	echo " This installs Entware - the ultimate Software repository"
 	echo " on this router."
 	echo
-	echo " Note if you plan to install Diversion on"
-	echo " this router, install Diversion first."
-	echo " It includes the installation of Entware."
+	echo " Visit https://entware.net to learn more about Entware"
 	echo
 	echo " Author: thelonelycoder"
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"

@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
 led_control_installed(){
-	atii=1
+	[ -z "$su" ] && atii=1
 	if ! grep -qE "^VERSION=$led_version" "${add}"/ledcontrol; then
 		write_ledcontrol_file
 		a_m " - LED control script updated to $led_version"
@@ -289,7 +289,7 @@ check_services_start(){
 }
 get_dynamic_schedule(){
 	if [ ! -f /opt/bin/date ]; then
-		echo "Installing required Entware module coreutils-date"
+		echo "Installing required Entware package coreutils-date"
 		opkg install coreutils-date
 	fi
 	tmpfile=/tmp/$locCode.out
@@ -385,6 +385,10 @@ write_ledcontrol_file(){
 	    -upd)   if [ -f ${add}/ledcontrol.conf ]; then
 	                . ${add}/ledcontrol.conf
 	                if [ "\$lcMode" = on ] && [ "\$locMode" = on ]; then
+	                    if [ ! -f /opt/bin/date ]; then
+	                        logger -s -t "\$caller" "scheduled update failed, Entware package /opt/bin/date not found, investigate"
+	                        exit 0
+	                    fi
 	                    tmpfile=/tmp/\$locCode.out
 	                    /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "https://weather.com/weather/today/l/\$locCode" -o "\$tmpfile"
 	                    if grep -q "SunriseSunset" "\$tmpfile"; then
