@@ -21,9 +21,7 @@ setup_Entware(){
 			sed -i '/mount-entware.div/d' /jffs/scripts/post-mount >/dev/null
 		fi
 		if ! grep -q ". /jffs/addons/amtm/mount-entware.mod" /jffs/scripts/post-mount; then
-			# remove old entries if found
-			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
-			sed -i '/mount-entware./d' /jffs/scripts/post-mount >/dev/null
+			c_nl /jffs/scripts/post-mount
 			sed -i "2s~^~. /jffs/addons/amtm/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
 			echo " post-mount entry added"
 		else
@@ -46,12 +44,6 @@ setup_Entware(){
 			echo " OK mount-entware.mod"
 		fi
 		[ ! -x /jffs/addons/amtm/mount-entware.mod ] && chmod 0755 /jffs/addons/amtm/mount-entware.mod
-	}
-
-	check_entware_https(){
-		if [ -f /opt/etc/opkg.conf ] && grep -q 'http:' /opt/etc/opkg.conf; then
-			sed -i 's/http:/https:/g' /opt/etc/opkg.conf
-		fi
 	}
 
 	check_device(){
@@ -169,7 +161,7 @@ setup_Entware(){
 				rm -f /tmp/opt 2> /dev/null
 				rm -f /opt 2> /dev/null
 			fi
-			echo "${E_BG} Corrected invalid Entware symlink ${NC}"
+			echo "${E_BG} Corrected orphaned Entware symlink ${NC}"
 		fi
 	fi
 
@@ -185,7 +177,6 @@ setup_Entware(){
 		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
 			echo "    Found compatible previous Entware"
 			echo "    installation on this device."
-			echo
 		fi
 		eval mounts$i="$mounted"
 		noad="${noad}${i} "
@@ -267,25 +258,43 @@ setup_Entware(){
 		es=
 		server=bin.entware.net
 		if ping -c2 -W3 $server &> /dev/null; then
-			es=$((es+1))
-			echo " ${es}. ${GN}$server${NC} - Primary server by Entware team (recommended)"
-			eval servers$es="$server"
+			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
+			if [ -s /tmp/Packages.gz ]; then
+				es=$((es+1))
+				echo " ${es}. ${GN}$server${NC} - Primary server by Entware team (recommended)"
+				eval servers$es="$server"
+			else
+				echo "    ${R}$server${NC} failed, primary server"
+			fi
+			rm -f /tmp/Packages.gz
 		else
 			echo "    ${R}$server${NC} failed, primary server"
 		fi
 		server=entware.diversion.ch
 		if ping -c2 -W3 $server &> /dev/null; then
-			es=$((es+1))
-			echo " ${es}. ${GN}$server${NC} - Mirror by thelonelycoder"
-			eval servers$es="$server"
+			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
+			if [ -s /tmp/Packages.gz ]; then
+				es=$((es+1))
+				echo " ${es}. ${GN}$server${NC} - Mirror by thelonelycoder"
+				eval servers$es="$server"
+			else
+				echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
+			fi
+			rm -f /tmp/Packages.gz
 		else
 			echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
 		fi
 		server=mirrors.bfsu.edu.cn
 		if ping -c2 -W3 $server &> /dev/null; then
-			es=$((es+1))
-			echo " ${es}. ${GN}$server${NC} - Mirror by Beijing Foreign Studies University"
-			eval servers$es="$server/entware"
+			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
+			if [ -s /tmp/Packages.gz ]; then
+				es=$((es+1))
+				echo " ${es}. ${GN}$server${NC} - Mirror by Beijing Foreign Studies University"
+				eval servers$es="$server"
+			else
+				echo "    ${R}$server${NC} failed, mirror by Beijing Foreign Studies University"
+			fi
+			rm -f /tmp/Packages.gz
 		else
 			echo "    ${R}$server${NC} failed, mirror by Beijing Foreign Studies University"
 		fi
@@ -316,7 +325,26 @@ setup_Entware(){
 		selectServer
 	}
 
-	[ "$(uname -m)" != mips ] && testEntwareServer
+	if [ "$(uname -m)" != mips ] ; then
+		testEntwareServer
+	else
+		p_e_l
+		printf " Testing Entware server availability\\n\\n"
+		server=pkg.entware.net
+		if ping -c2 -W3 $server &> /dev/null; then
+			c_url https://pkg.entware.net/binaries/mipsel/Packages.gz -o /tmp/Packages.gz
+			if [ -s /tmp/Packages.gz ]; then
+				echo " ${GN}$server${NC} responded"
+			else
+				r_m entware_setup.mod
+				am=;show_amtm " Entware ${R}$server${NC} failed"
+			fi
+			rm -f /tmp/Packages.gz
+		else
+			r_m entware_setup.mod
+				am=;show_amtm " Entware ${R}$server${NC} failed"
+		fi
+	fi
 
 	p_e_l
 	if [ "$usePreviousEntware" ]; then
@@ -365,7 +393,7 @@ setup_Entware(){
 		if [ "$(uname -m)" != mips ]; then
 			c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
 		else
-			c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
+			c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
 		fi
 		echo "${NC}"
 	fi
@@ -374,7 +402,9 @@ setup_Entware(){
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="Entware (${ENTURL##*/})"
 		[ -z "$entVersion" ] && entVersion=$entVer
-		check_entware_https
+		if [ -f /opt/etc/opkg.conf ] && /usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && grep -q 'http:' /opt/etc/opkg.conf; then
+			sed -i 's/http:/https:/g' /opt/etc/opkg.conf
+		fi
 		c_e_folder
 		cd
 		write_jffsfile

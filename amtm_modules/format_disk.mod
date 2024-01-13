@@ -7,7 +7,16 @@ format_disk(){
 	printf " To be on the safe side, remove all other\\n attached USB devices before continuing.\\n\\n"
 	printf " Authors: ColinTaylor, thelonelycoder, Zonkd\\n"
 	printf " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting\\n https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723\\n"
-	c_d
+	p_e_l
+	while true;do
+		printf " Continue? [1=Yes e=Exit] ";read -r continue
+		case "$continue" in
+			1)		echo;break;;
+			[Ee])	r_m format_disk.mod;am=;show_amtm menu;break;;
+			*)		printf "\\n input is not an option\\n\\n";;
+		esac
+	done
+
 	select_device(){
 		pts=4
 		case "$(uname -m)" in
@@ -509,20 +518,26 @@ format_disk(){
 			) | fdisk $devtf
 
 			formatting_dev(){
+
+				# Find router binary
+				savePATH=$PATH
+				PATH=/bin:/usr/bin:/sbin:/usr/sbin
+				mke2fsBin="$(which mke2fs)"
+				PATH=$savePATH
 				echo
 				case "$3" in
 					ext*)		if [ "$3" = "ext2" ]; then
 									echo "${NC} Formatting $1 as \"$3\"${GY}"
 									echo
-									mke2fs -t $3 ${devtf}${2}
+									$mke2fsBin -t $3 ${devtf}${2}
 								elif [ "$4" = "on" ]; then
 									echo "${NC} Formatting $1 as \"$3\", enabling journalling${GY}"
 									echo
-									mke2fs -t $3 -O has_journal ${devtf}${2}
+									$mke2fsBin -t $3 -O has_journal ${devtf}${2}
 								else
 									echo "${NC} Formatting $1 as \"$3\"${GY}"
 									echo
-									mke2fs -t $3 -O ^has_journal ${devtf}${2}
+									$mke2fsBin -t $3 -O ^has_journal ${devtf}${2}
 								fi
 
 								if [ "$5" ]; then

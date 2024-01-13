@@ -1,27 +1,94 @@
 #!/bin/sh
 #bof
-check_ps_version(){
-	psVersion="$(pixelserv-tls -v | awk 'NR == 1 {print $2}')"
-	[ -z "$psVersion" ] && psVersion="likely v.Kk"
-	case $psVersion in
-	  v*|*v.K*) ;;
-	  * ) psVersion="$psVersion" ;;
-	esac
-}
-
 entware_installed(){
+	c_j_s /jffs/scripts/post-mount
+	t_f /jffs/scripts/post-mount
+	if ! grep -q ". /jffs/addons/amtm/mount-entware.mod" /jffs/scripts/post-mount; then
+		c_nl /jffs/scripts/post-mount
+		sed -i "2s~^~. /jffs/addons/amtm/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
+	fi
 
-	check_entware_https(){
-		if [ -f /opt/etc/opkg.conf ] && /usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && grep -q 'http:' /opt/etc/opkg.conf; then
-			 sed -i 's/http:/https:/g' /opt/etc/opkg.conf
-		fi
+	get_entware_identifiers(){
+		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
+		ENTDOMAIN=$(echo $ENTURL | awk -F'/' '{print $1FS$2FS$3}' | sed 's%http.*://%%')
+		entVersion=
+		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="${ENTURL##*/}"
 	}
+	get_entware_identifiers
 
-	ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
-	ENTDOMAIN=$(echo $ENTURL | awk -F'/' '{print $1FS$2FS$3}' | sed 's%http.*://%%')
 	atii=1
 	if [ "$su" = 1 ]; then
-		opkg update >/tmp/amtm-entware-check 2>&1
+		opkg_update(){
+			opkg update >/tmp/amtm-entware-check 2>&1
+		}
+		use_alternate_server(){
+			printf "- Entware server ${R}$ENTDOMAIN${NC} unreachable\\n"
+			change_opkg_server(){
+				sed -i "1s#.*#src\/gz entware https://$1/$entVersion#" /opt/etc/opkg.conf
+			}
+			serverOK=
+			if [ "$ENTDOMAIN" != pkg.entware.net ]; then
+				server=bin.entware.net
+				if [ "$ENTDOMAIN" != "$server" ]; then
+					if ping -c2 -W3 $server &> /dev/null; then
+						printf "- Using Entware server ${GN}$server${NC},\\n  Primary server by Entware team\\n"
+						change_opkg_server $server
+						opkg_update
+						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
+					else
+						printf "- Entware server ${R}$server${NC} unreachable\\n"
+						echo 'ailed to' >/tmp/amtm-entware-check
+					fi
+				fi
+				server=entware.diversion.ch
+				if [ "$ENTDOMAIN" != "$server" ] && [ -z "$serverOK" ]; then
+					if ping -c2 -W3 $server &> /dev/null; then
+						printf "- Using Entware server ${GN}$server${NC},\\n  Mirror by thelonelycoder\\n"
+						change_opkg_server $server
+						opkg_update
+						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
+					else
+						printf "- Entware server ${R}$server${NC} unreachable\\n"
+						echo 'ailed to' >/tmp/amtm-entware-check
+					fi
+				fi
+				server=mirrors.bfsu.edu.cn
+				if [ "$ENTDOMAIN" != "$server" ] && [ -z "$serverOK" ]; then
+					if  ping -c2 -W3 $server &> /dev/null; then
+						printf "- Using Entware server ${GN}$server${NC},\\n  Mirror by Beijing Foreign Studies University\\n"
+						change_opkg_server $server
+						opkg_update
+						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
+					else
+						printf "- Entware server ${R}$server${NC} unreachable\\n"
+						echo 'ailed to' >/tmp/amtm-entware-check
+					fi
+				fi
+			else
+				if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
+					server=maurerr.github.io
+					if ping -c2 -W3 $server &> /dev/null; then
+						printf "- Using Entware server ${GN}$server${NC},\\n  entware-backports-mirror\\n"
+						opkg update >/tmp/amtm-entware-check 2>&1
+					else
+						printf "- Entware server ${R}$server${NC} unreachable\\n"
+						echo 'ailed to' >/tmp/amtm-entware-check
+					fi
+				else
+					echo 'ailed to' >/tmp/amtm-entware-check
+				fi
+			fi
+		}
+
+		if ping -c2 -W3 $ENTDOMAIN &> /dev/null; then
+			opkg_update
+			if grep -q 'ailed to' /tmp/amtm-entware-check; then
+				use_alternate_server
+			fi
+		else
+			use_alternate_server
+		fi
+
 		if [ -s /tmp/amtm-entware-check ]; then
 			if grep -q 'pdated list' /tmp/amtm-entware-check; then
 				rm /tmp/amtm-entware-check
@@ -47,11 +114,7 @@ entware_installed(){
 				fi
 			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
 				[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
-				if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
-					a_m " ! Entware: ${R}$ENTDOMAIN${NC} and\\n   ${R}maurerr.github.io${NC} unreachable"
-				else
-					a_m " ! Entware: ${R}$ENTDOMAIN${NC} unreachable"
-				fi
+				a_m " Entware: ${R}All servers failed to respond${NC}"
 				[ "$updcheck" ] && echo "- Entware server unreachable." >>/tmp/amtm-tpu-check
 			fi
 		fi
@@ -66,19 +129,16 @@ entware_installed(){
 				unset EntwareUpate EntwareMD5 entUpd
 			fi
 		fi
-		if [ ! -L /opt/bin/entware-services ]; then
-			ln -nsf /opt/etc/init.d/rc.unslung /opt/bin/entware-services
-			a_m " entware-services symlink set for rc.unslung"
-		fi
 		[ "$entUpd" = 1 ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpate avail${NC}"
 		[ -z "$entUpd" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi
+
 	case_ep(){
 		p_e_l
 		echo " Entware package options"
 		echo
-		entVersion=; bpe=
-		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="${ENTURL##*/}"
+		bpe=
+		get_entware_identifiers
 
 		printf " This router runs ${GN}Entware $entVersion${NC}\\n Server in use: ${GN}$ENTDOMAIN${NC}\\n"
 		if [ "$(uname -m)" = "mips" ]; then
@@ -108,59 +168,50 @@ entware_installed(){
 			printf "\\n Enter selection [1-4 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		echo
-						check_entware_https
+						if ping -c2 -W3 $ENTDOMAIN &> /dev/null; then
+							if $(opkg update | grep -q 'pdated list'); then
+								if [ "$(opkg list-upgradable)" ]; then
+									p_e_l
+									echo " These Entware updates are available:"
+									opkg list-upgradable | sed 's/^/ - /'
+									c_d
 
-						if [ -f /opt/bin/pixelserv-tls ]; then
-							check_ps_version
-							oldpsv=$psVersion
-						fi
+									echo " Stopping Entware services before updating packages"
+									echo "${GY}"
+									/opt/etc/init.d/rc.unslung stop
+									echo "${NC}"
 
-						if $(opkg update | grep -q 'pdated list'); then
-							if [ "$(opkg list-upgradable)" ]; then
-								p_e_l
-								echo " These Entware updates are available:"
-								opkg list-upgradable | sed 's/^/ - /'
-								c_d
+									echo " Updating / upgrading Entware packages"
+									echo "${GY}"
+									opkg upgrade
+									echo "${NC}"
 
-								echo " Stopping Entware services before updating packages"
-								echo "${GY}"
-								/opt/etc/init.d/rc.unslung stop
-								echo "${NC}"
+									echo " Re-starting Entware services"
+									echo "${GY}"
+									/opt/etc/init.d/rc.unslung start
+									echo "${NC}"
+									p_e_t "return to menu"
 
-								echo " Updating / upgrading Entware packages"
-								echo "${GY}"
-								opkg upgrade
-								echo "${NC}"
-
-								echo " Re-starting Entware services"
-								echo "${GY}"
-								if [ -f /opt/bin/pixelserv-tls ]; then
-									if ! grep -q 'Diversion' /opt/etc/init.d/S80pixelserv-tls; then
-										[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
-										[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
-									fi
+									show_amtm " Entware packages updated and upgraded"
+								else
+									show_amtm " No Entware package updates available at\\n this time."
 								fi
-								/opt/etc/init.d/rc.unslung start
-								echo "${NC}"
-								p_e_t "return to menu"
-
-								show_amtm " Entware packages updated and upgraded"
 							else
-								show_amtm " No Entware package updates available at\\n this time."
+								a_m " Entware update check failed:"
+								if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
+									a_m " ${R}$ENTDOMAIN${NC} and\\n ${R}maurerr.github.io${NC} unreachable"
+								else
+									a_m " ${R}$ENTDOMAIN${NC} unreachable"
+								fi
 							fi
 						else
-							a_m " Entware update check failed:"
-							if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
-								a_m " ${R}$ENTDOMAIN${NC} and\\n ${R}maurerr.github.io${NC} unreachable"
-							else
-								a_m " ${R}$ENTDOMAIN${NC} unreachable"
-							fi
+							show_amtm " Entware update check failed,\\n $ENTDOMAIN failed to resolve"
 						fi
+
 						echo "${NC}"
 						show_amtm
 						break;;
-				2)		check_entware_https
-						if [ ! -f /opt/bin/column ]; then
+				2)		if [ ! -f /opt/bin/column ]; then
 							echo
 							echo " Installing required Entware package 'column'"
 							echo " for a better file presentation."
@@ -239,25 +290,9 @@ entware_installed(){
 												printf "\\n Enter your selection [1=Yes 2=No] ";read -r confirm
 												case "$confirm" in
 													1)	echo "${GY}"
-														if [ -f /opt/bin/pixelserv-tls ]; then
-															check_ps_version
-															oldpsv=$psVersion
-														fi
 														opkg update >/dev/null
 														opkg upgrade
 														if [ "$?" -ne "1" ]; then
-															if [ -f /opt/bin/pixelserv-tls ]; then
-																check_ps_version
-																pstext=
-																if [ "$oldpsv" != "$psVersion" ] || ! grep -q 'Diversion' /opt/etc/init.d/S80pixelserv-tls; then
-																	[ -f /opt/share/diversion/file/S80pixelserv-tls ] && cp -f /opt/share/diversion/file/S80pixelserv-tls /opt/etc/init.d/
-																	[ -f /opt/etc/init.d/S80pixelserv-tls ] && [ ! -x /opt/etc/init.d/S80pixelserv-tls ] && chmod 0755 /opt/etc/init.d/S80pixelserv-tls
-																	echo "${GY}"
-																	/opt/etc/init.d/S80pixelserv-tls restart $0
-																	echo "${NC}"
-																	pstext=",\\n pixelserv-tls $psVersion restarted"
-																fi
-															fi
 															a_m " Entware packages action: all packages upgraded"
 														else
 															a_m " ! Entware packages action: upgrade failed, network error"

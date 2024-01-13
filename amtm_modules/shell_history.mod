@@ -102,11 +102,7 @@ write_shell_history_file(){
 	else
 	    >/tmp/amtm_sort_s_h
 	fi
-	if [ -f /jffs/addons/amtm/mount-entware.mod ] && grep -q "Entware and Diversion" /jffs/addons/amtm/mount-entware.mod; then
-		echo 'diversion' >>/tmp/amtm_sort_s_h
-	elif [ -f /jffs/addons/diversion/mount-entware.div ] && grep -q "Entware and Diversion" /jffs/addons/diversion/mount-entware.div; then
-		echo 'diversion' >>/tmp/amtm_sort_s_h
-	fi
+	[ -f /opt/bin/diversion ] && echo 'diversion' >>/tmp/amtm_sort_s_h
 	echo 'amtm' >>/tmp/amtm_sort_s_h
 	mv -f /tmp/amtm_sort_s_h /jffs/addons/amtm/.ash_history
 	ln -sf /jffs/addons/amtm/.ash_history  /home/root/

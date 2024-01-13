@@ -1,13 +1,16 @@
 #!/bin/sh
 #bof
 
-version=4.0
-release="October 09 2023"
-dc_version=3.2
-led_version=2.3
-sh_version=1.1
-rd_version=1.1
+version=4.2
+release="January 13 2024"
+dc_version=3.2 # Disk check
+led_version=2.4 # LED scheduler
+sh_version=1.3 # Shell History
+rd_version=1.2 # Router date keeper
+fw_version=1.0 # Firmware update notification
+wl_MD5=a0043933737502238af590de5412d435 # shared-amtm-whitelist
 title="Asuswrt-Merlin Terminal Menu"
+EMAIL_DIR="${add}/mail"
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
@@ -86,6 +89,20 @@ g_i_m(){
 	rdl=
 }
 
+check_email_conf(){
+	if [ ! -f "${EMAIL_DIR}/email.conf" ]; then
+		show_amtm " Setup mail settings in em first"
+	else
+		unset FROM_ADDRESS TO_NAME TO_ADDRESS USERNAME PASSWORD SMTP PORT PROTOCOL
+		. "${EMAIL_DIR}/email.conf"
+		if [ -z "$FROM_ADDRESS" ] || [ -z "$TO_NAME" ] || [ -z "$TO_ADDRESS" ] || [ -z "$USERNAME" ] || [ ! -f "${EMAIL_DIR}/emailpw.enc" ] || [ -z "$SMTP" ] || [ -z "$PORT" ] || [ -z "$PROTOCOL" ]; then
+			show_amtm " email settings not set or incomplete.\\n Use em to setup mail settings."
+		elif [ "$PASSWORD" = "PUT YOUR PASSWORD HERE" ]; then
+			show_amtm " email password has not been set.\\n Use em to setup mail settings."
+		fi
+	fi
+}
+
 show_amtm(){
 	s_d_u
 	c_t
@@ -117,19 +134,56 @@ show_amtm(){
 			printf "${R_BG}%-44s ${NC}\\n\\n" " $(df -kh ${thisDev%/entware} | xargs | awk '{print "'${thisDev%/entware}' "$2" "$9" "$3" "$10" ("$12")"}')"
 		fi
 		[ "$ss" ] && printf "${GN_BG}%-44s ${NC}\\n\\n" "    Third-party scripts"
+		shared_Diversion_wl=/jffs/addons/shared-whitelists/shared-Diversion-whitelist
+		shared_amtm_wl=/jffs/addons/shared-whitelists/shared-amtm-whitelist
+		if [ ! -f "$shared_Diversion_wl" ]; then
+			if [ ! -f "$shared_amtm_wl" ] || [ "$wl_MD5" != "$(md5sum "$shared_amtm_wl" | awk '{print $1}')" ]; then
+				mkdir -p /jffs/addons/shared-whitelists
+				cat <<-EOF >"$shared_amtm_wl"
+				1drv.ms
+				asuswrt-merlin.net
+				asuswrt.lostrealm.ca
+				big.oisd.nl
+				bin.entware.net
+				codeload.github.com
+				diversion.ch
+				entware.diversion.ch
+				entware.net
+				fwupdate.asuswrt-merlin.net
+				localhost.localdomain
+				maurerr.github.io
+				mirrors.bfsu.edu.cn
+				oisd.nl
+				onedrive.live.com
+				pgl.yoyo.org
+				pkg.entware.net
+				raw.githubusercontent.com
+				small.oisd.nl
+				smallnetbuilder.com
+				snbforums.com
+				someonewhocares.org
+				sourceforge.net
+				urlhaus.abuse.ch
+				www.asuswrt-merlin.net
+				www.smallnetbuilder.com
+				www.snbforums.com
+				EOF
+				a_m " - shared-amtm-whitelist created or updated"
+			fi
+		else
+			rm -f "$shared_amtm_wl"
+		fi
 	fi
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
 	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement
-	/jffs/scripts/FreshJR_QOS FreshJR_QOS 3d FreshJR¦QOS¦-¦Adaptive¦QOS¦(deprecated)
 	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
 	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
 	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
-	/jffs/scripts/nsrum nsrum 8 nsrum¦-¦NVRAM¦Save/Restore¦Utility¦(deprecated)
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
@@ -159,6 +213,9 @@ show_amtm(){
 	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
 	spacer
 	/jffs/addons/amtm/mail/email.conf email em email¦settings
+	/jffs/addons/amtm/fw_update.mod fw_update fw Firmware¦update¦notification
+	/jffs/addons/amtm/sc_update.mod sc_update sc Scripts¦update¦notification
+	spacer
 	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
 	fdisk
 	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
@@ -183,8 +240,10 @@ show_amtm(){
 						echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
 						rm -f "${add}"/availUpd.txt
 					fi
-					cat /tmp/amtm-tpu-check
-					rm /tmp/amtm-tpu-check
+					if [ ! -f /tmp/amtm-no-delete ]; then
+						cat /tmp/amtm-tpu-check
+						rm /tmp/amtm-tpu-check
+					fi
 				fi
 				exit 0
 			fi
@@ -209,7 +268,6 @@ show_amtm(){
 			fi
 			[ "$ss" ] && printf "\\n${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
 		elif [ "$i" = fdisk ]; then
-			r_m format_disk.mod
 			if [ -f "${add}"/amtm-format-disk.log ]; then
 				atii=1
 				[ "$su" ] || printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
@@ -217,6 +275,7 @@ show_amtm(){
 				[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
 			fi
 			case_fd(){
+				echo
 				g_m format_disk.mod include
 				[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
 			}
@@ -251,12 +310,10 @@ show_amtm(){
 					1)		case_1(){ c_e Diversion;g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
 					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
 					3)		case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
-					3d)		case_3d(){ g_m FreshJR_QOS.mod include;[ "$dlok" = 1 ] && install_FreshJR_QOS || show_amtm menu;};;
 					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
 					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
 					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
 					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
-					8)		case_8(){ g_m nsrum.mod include;[ "$dlok" = 1 ] && install_nsrum || show_amtm menu;};;
 					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
 					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;[ "$dlok" = 1 ] && install_ntpmerlin || show_amtm menu;};;
 					j3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
@@ -280,6 +337,8 @@ show_amtm(){
 					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
 					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
+					fw)		case_fw(){ g_m fw_update.mod include;[ "$dlok" = 1 ] && install_fw_update || show_amtm menu;};;
+					sc)		case_sc(){ g_m sc_update.mod include;[ "$dlok" = 1 ] && install_sc_update || show_amtm menu;};;
 					sh)		case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
 					rd)		case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
 				esac
@@ -333,7 +392,6 @@ show_amtm(){
 			gms;manage_swap create
 		}
 	fi
-
 	[ "$su" ] || printf "${GN_BG} cj${NC} %-9s%s\\n" "show" "all cron jobs"
 
 	[ "$atii" ] || [ "$ss" ] && [ -z "$su" ] && echo
@@ -359,6 +417,7 @@ show_amtm(){
 		printf "${GN_BG} m ${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
 	else
 		[ "$ss" ] || printf "${GN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
+		[ "$ss" ] || printf "${GN_BG} rr${NC} %-9s%s\\n" "reboot" "router"
 		echo
 		if [ "$amtmUpate" ]; then
 			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          $version" "${E_BG}$amtmUpate${NC}"
@@ -446,12 +505,10 @@ show_amtm(){
 			1)					case_1;break;;
 			2)					case_2;break;;
 			3)					case_3;break;;
-			3d)					case_3d;break;;
 			4)					case_4;break;;
 			5)					case_5;break;;
 			6)					case_6;break;;
 			7)					case_7;break;;
-			8)					case_8;break;;
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;
@@ -483,6 +540,8 @@ show_amtm(){
 			[Rr][Ss])			c_ntp;case_rs;break;;
 			[Ss][Ww])			case_swp;break;;
 			[Ee][Mm])			case_em;break;;
+			[Ff][Ww])			case_fw;break;;
+			[Ss][Cc])			case_sc;break;;
 			[Gg])				if [ -f "${add}"/games/games.conf ]; then [ "$more" = "more" ] && more=less || more=more;show_amtm menu; else case_g;fi;break;;
 			[Gg]r)				case_gr;break;;
 			[Gg]1|[Gg]1r)		[ "$sgs" != "hide" ] && o_g_s || case_g1;break;;
@@ -507,14 +566,12 @@ show_amtm(){
 								ascii_logo '  Goodbye'
 								echo
 								exit 0;break;;
-			reboot)				p_e_l   # hidden, reboot router
-								echo " OK then, rebooting this router, are you sure?"
+			[Rr][Rr]|reboot)	p_e_l   # hidden, reboot router
+								printf " OK then,\\n do you want to reboot this router now?\\n"
 								c_d
 								clear
-								ascii_logo '  Goodbye!'
-								echo
-								printf " amtm reboots this router now\\n\\n"
-								sleep 1
+								ascii_logo '  Rebooting...'
+								printf "   amtm reboots this router now\\n\\n"
 								service reboot >/dev/null 2>&1 &
 								exit 0
 								break;;
@@ -682,6 +739,10 @@ reset_amtm(){
 						r_w_e /jffs/scripts/services-start
 						rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
 					fi
+					if [ -f /jffs/scripts/update-notification ] && grep -q "created by amtm" /jffs/scripts/update-notification; then
+						rm -f /jffs/scripts/update-notification
+					fi
+					[ -f "$shared_amtm_wl" ] && rm -f "$shared_amtm_wl"
 					rm -rf "${add}"
 
 					clear
@@ -713,7 +774,6 @@ reset_amtm(){
 					clear
 					ascii_logo '  Everything reset and removed. Goodbye!'
 					printf "\\n   amtm reboots this router now\\n\\n"
-					sleep 1
 					service reboot >/dev/null 2>&1 &
 					exit 0
 					break;;
@@ -722,19 +782,19 @@ reset_amtm(){
 					printf " work after removing.\\n\\n You have been warned.\\n\\n The router automatically reboots after this.\\n"
 					c_d
 					if [ -f /jffs/scripts/post-mount ]; then
-						sed -i '/mount-entware.div/d' /jffs/scripts/post-mount
+						sed -i '/mount-entware./d' /jffs/scripts/post-mount
 						r_w_e /jffs/scripts/post-mount
 					fi
 					if [ -d /jffs/addons/diversion ]; then
 						rm -f /jffs/addons/diversion/mount-entware.div
 						[ "$(ls -A /jffs/addons/diversion)" ] || rm -rf /jffs/addons/diversion
 					fi
-					[ -L /tmp/opt ] && rmText="Removed all traces of Entware" || rmText="Entware not found but removed all traces if found" ||
+					r_m mount-entware.mod
+					[ -L /tmp/opt ] && rmText="Removed all traces of Entware" || rmText="Entware not found but removed all traces if found"
 					rm_entware
 
 					clear
 					printf "\\n $rmText.\\n amtm reboots this router now\\n\\n"
-					sleep 1
 					service reboot >/dev/null 2>&1 &
 					exit 0
 					break;;
@@ -802,6 +862,7 @@ update_amtm(){
 				unset amtmUpate amtmMD5
 			fi
 			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
+			tpw=
 			exec "$0" " amtm $am"
 		fi
 	fi

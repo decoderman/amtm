@@ -36,7 +36,6 @@ amtm
 | Diversion | thelonelycoder | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480) |
 | Skynet | Adamm | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=14) |
 | FlexQoS | dave14305 | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901) |
-| FreshJR Adaptive QOS | FreshJR | [Link](https://www.snbforums.com/threads/release-freshjr-adaptive-qos-improvements-custom-rules-and-inner-workings.36836/) _deprecated_ |
 | YazFi | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009) |
 | scribe | cmkelley | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7) |
 | x3mRouting | Xentrk | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=9) |
@@ -49,7 +48,6 @@ amtm
 | uiScribe | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=24&starter_id=53009) |
 | DNSCrypt | bigeyes0x0, SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179) |
 | Pixelserv-tls | kvic | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=17) |
-| NVRAM Save/Restore Utility | Xentrk, John9527 & others | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=28) _deprecated_ |
 | YazDHCP | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009) |
 | Vnstat | dev_null | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
 | WireGuard Session Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215) |
@@ -79,5 +77,8 @@ amtm also offers an interface for managing a number of other features:
 | Router date keeper | thelonelycoder
 | amtm and third party script reset/remove options | thelonelycoder
 | Show all cron jobs | thelonelycoder
+| Firmware update notification | thelonelycoder
+| Reboot router command | thelonelycoder
+| Scripts update notification | thelonelycoder
 
-[![amtm v4.0](https://cdn.imgchest.com/files/j7mmcw6w8n7.png "amtm v4.0")](https://cdn.imgchest.com/files/j7mmcw6w8n7.png "amtm v4.0")
+[![amtm 4.2](https://cdn.imgchest.com/files/e4gdc5dxw24.png "amtm 4.2")](https://cdn.imgchest.com/files/e4gdc5dxw24.png "amtm 4.2")

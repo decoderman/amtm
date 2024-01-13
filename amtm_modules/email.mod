@@ -22,7 +22,6 @@ install_email(){
 	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
 	c_d
 
-	check_email_conf
 	g_m email.mod include
 	if [ -f "${add}/email.mod" ]; then
 		email_manage
