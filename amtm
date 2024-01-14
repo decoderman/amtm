@@ -95,7 +95,7 @@ _GetCurrentFWversionInstalled_()
    extVersionStr="$(nvram get extendno)"
    [ -z "$extVersionStr" ] && extVersionStr=0
 
-   theVersionStr="$(nvram get buildno).$extVersionStr"
+   theVersionStr="$(nvram get buildno)_$extVersionStr"
    [ -n "$theBranchVers" ] && theVersionStr="${theBranchVers}.${theVersionStr}"
 
    echo "$theVersionStr"
