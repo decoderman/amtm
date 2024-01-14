@@ -9,7 +9,7 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=4.2
+version=4.2.1
 release="January 13 2024"
 dc_version=3.2 # Disk check
 led_version=2.4 # LED scheduler
@@ -79,6 +79,31 @@ check_email_conf(){
 	fi
 }
 
+##-------------------------------------##
+## Added by Martinski W. [2024-Jan-13] ##
+##-------------------------------------##
+_GetCurrentFWversionInstalled_()
+{
+   local getLongVersion  theBranchVers=""  theVersionStr=""  extVersionStr
+
+   if [ $# -gt 0 ] && [ "$1" = "longvers" ]
+   then getLongVersion=true
+   else getLongVersion=false
+   fi
+   "$getLongVersion" && theBranchVers="$(nvram get firmver | sed 's/\.//g')"
+
+   extVersionStr="$(nvram get extendno)"
+   [ -z "$extVersionStr" ] && extVersionStr=0
+
+   theVersionStr="$(nvram get buildno).$extVersionStr"
+   [ -n "$theBranchVers" ] && theVersionStr="${theBranchVers}.${theVersionStr}"
+
+   echo "$theVersionStr"
+}
+
+##----------------------------------------##
+## Modified by Martinski W. [2024-Jan-13] ##
+##----------------------------------------##
 show_amtm(){
 	s_d_u
 	c_t
@@ -95,7 +120,7 @@ show_amtm(){
 		clear
 		printf "${R_BG}%-27s%s\\n\\n" " amtm $version legacy" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
-		echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+		echo " $model ($(uname -m)) FW-$(_GetCurrentFWversionInstalled_ longvers) @ $(nvram get lan_ipaddr)"
 		OM='Operation Mode:'
 		case "$(nvram get sw_mode)" in
 			1) echo " $OM Wireless router";;
