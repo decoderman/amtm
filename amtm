@@ -84,17 +84,16 @@ check_email_conf(){
 ##----------------------------------------------##
 _GetCurrentFWversionInstalled_()
 {
-   local getLongVersion  theBranchVers=""  theVersionStr=""  extVersionStr
+   local theBranchVers=""  theVersionStr  extVersionStr
 
    extVersionStr="$(nvram get extendno)"
    [ -z "$extVersionStr" ] && extVersionStr=0
    theVersionStr="$(nvram get buildno)_$extVersionStr"
 
    if echo "$theVersionStr" | grep -qE "^388[.]"
-   then getLongVersion=true
-   else getLongVersion=false
-   fi 
-   "$getLongVersion" && theBranchVers="$(nvram get firmver | sed 's/\.//g')"
+   then
+       theBranchVers="$(nvram get firmver | sed 's/\.//g')"
+   fi
    [ -n "$theBranchVers" ] && theVersionStr="${theBranchVers}.${theVersionStr}"
 
    echo "$theVersionStr"
