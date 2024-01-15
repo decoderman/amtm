@@ -90,7 +90,7 @@ _GetCurrentFWversionInstalled_()
    [ -z "$extVersionStr" ] && extVersionStr=0
    theVersionStr="$(nvram get buildno)_$extVersionStr"
 
-   if echo "$theVersionStr" | grep -qE "^388[.]"
+   if [ "$(echo "$theVersionStr" | awk -F '.' '{print $1}')" -ge 388 ]
    then
        theBranchVers="$(nvram get firmver | sed 's/\.//g')"
    fi
