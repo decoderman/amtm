@@ -18,7 +18,7 @@ FlexQoS_installed(){
 			unset localver FlexQoSUpate FlexQoSMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} 3 ${NC} %-9s%-21s%${COR}s\\n" "open" "FlexQoS       $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 3 ${NC} %-9s%-21s%${COR}s\\n" "open" "FlexQoS       $localver" " $upd"
 	case_3(){
 		/jffs/addons/flexqos/flexqos.sh menu
 		sleep 1
@@ -27,15 +27,10 @@ FlexQoS_installed(){
 }
 install_FlexQoS(){
 	p_e_l
-	echo " This installs FlexQoS - Flexible QoS Enhancement Script for Adaptive QoS"
-	echo " on your router."
-	echo
-	echo " Author: dave14305"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901"
+	printf " This installs FlexQoS - Flexible QoS\\n Enhancement Script for Adaptive QoS\\n on your router.\\n\\n"
+	printf " Author: dave14305\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/dave14305/FlexQoS/master/flexqos.sh -o /jffs/addons/flexqos/flexqos.sh --create-dirs && chmod +x /jffs/addons/flexqos/flexqos.sh && sh /jffs/addons/flexqos/flexqos.sh -install
-
 	if [ -f /jffs/addons/flexqos/flexqos.sh ]; then
 		sleep 4
 		show_amtm " FlexQoS installed"

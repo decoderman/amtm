@@ -21,7 +21,7 @@ wireguard_manager_installed(){
 		fi
 	fi
 	[ "$suUpd" = 1 ] && umtext='WireGuard SM'
-	[ -z "$updcheck" ] && printf "${GN_BG} wg${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} wg${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
 	case_wg(){
 		/jffs/addons/wireguard/wg_manager.sh
 		sleep 2
@@ -30,16 +30,10 @@ wireguard_manager_installed(){
 }
 install_wireguard_manager(){
 	p_e_l
-	echo " This installs WireGuard Session Manager"
-	echo " on your router."
-	echo
-	echo " Author: Martineau"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215"
-	echo
-	echo " Contributors: odkrys, Torson, ZebMcKayhan, jobhax, elorimer"
-	echo " Sh0cker54, here1310, defung, The Chief"
+	printf " This installs WireGuard Session Manager\\n on your router.\\n\\n"
+	printf " Author: Martineau\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215\\n\\n"
+	printf " Contributors: odkrys, Torson, ZebMcKayhan, jobhax,\\n elorimer, Sh0cker54, here1310, defung, The Chief\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/MartineauUK/wireguard/main/wg_manager.sh --create-dirs -o /jffs/addons/wireguard/wg_manager.sh && chmod 755 /jffs/addons/wireguard/wg_manager.sh && /jffs/addons/wireguard/wg_manager.sh install
 	sleep 2
 	if [ -f /jffs/addons/wireguard/wg_manager.sh ]; then

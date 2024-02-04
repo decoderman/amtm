@@ -23,7 +23,7 @@ unbound_manager_installed(){
 		fi
 	fi
 	[ "$suUpd" = 1 ] && umtext='unbound Mgr'
-	[ -z "$updcheck" ] && printf "${GN_BG} 7 ${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 7 ${NC} %-9s%-21s%${COR}s\\n" "open" "$umtext    $localver" " $upd"
 	case_7(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -38,15 +38,10 @@ unbound_manager_installed(){
 }
 install_unbound_manager(){
 	p_e_l
-	echo " This installs unbound Manager - Manager/Installer utility for unbound"
-	echo " on your router."
-	echo
-	echo " Author: Martineau"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=5"
-	echo
-	echo " Contributors: rgnldo, dave14305, SomeWhereOverTheRainbow, Cam, Xentrk, thelonelycoder"
+	printf " This installs unbound Manager - Manager/Installer\\n utility for unbound on your router.\\n\\n"
+	printf " Author: Martineau\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=5\\n\\n"
+	printf " Contributors: rgnldo, dave14305, SomeWhereOverTheRainbow,\\n Cam, Xentrk, thelonelycoder\\n"
 	c_d
-
 	mkdir -p /jffs/addons/unbound
 	c_url https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh -o /jffs/addons/unbound/unbound_manager.sh && chmod 755 /jffs/addons/unbound/unbound_manager.sh && /jffs/addons/unbound/unbound_manager.sh
 	sleep 2

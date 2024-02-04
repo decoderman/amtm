@@ -1,11 +1,12 @@
 #!/bin/sh
 #bof
 entware_installed(){
-	c_j_s /jffs/scripts/post-mount
-	t_f /jffs/scripts/post-mount
-	if ! grep -q ". /jffs/addons/amtm/mount-entware.mod" /jffs/scripts/post-mount; then
-		c_nl /jffs/scripts/post-mount
-		sed -i "2s~^~. /jffs/addons/amtm/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
+	if [ ! -f /jffs/scripts/post-mount ] || ! grep -q ". ${add}/mount-entware.mod" /jffs/scripts/post-mount; then
+		c_j_s /jffs/scripts/post-mount
+		sed -i "2s~^~. ${add}/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
+	fi
+	if [ ! -f "${add}"/mount-entware.mod ]; then
+		g_m mount-entware.mod new
 	fi
 
 	get_entware_identifiers(){
@@ -98,7 +99,7 @@ entware_installed(){
 					if [ "$tpu" ]; then
 						echo "- Entware, $(wc -l </tmp/amtm-entware-check) new package(s) available<br>" >>/tmp/amtm-tpu-check
 					else
-						[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
+						[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
 						i=0
 						while read line; do
 							i=$((i+1))
@@ -110,10 +111,10 @@ entware_installed(){
 						echo "EntwareMD5=\"$(md5sum /opt/lib/opkg/status | awk '{print $1}')\"">>"${add}"/availUpd.txt
 					fi
 				else
-					[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
+					[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
 				fi
 			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
-				[ -z "$updcheck" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
+				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
 				a_m " Entware: ${R}All servers failed to respond${NC}"
 				[ "$updcheck" ] && echo "- Entware server unreachable." >>/tmp/amtm-tpu-check
 			fi
@@ -129,8 +130,8 @@ entware_installed(){
 				unset EntwareUpate EntwareMD5 entUpd
 			fi
 		fi
-		[ "$entUpd" = 1 ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpate avail${NC}"
-		[ -z "$entUpd" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
+		[ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpate avail${NC}"
+		[ -z "$entUpd" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi
 
 	case_ep(){
@@ -270,16 +271,9 @@ entware_installed(){
 									esac
 								done
 							else
-								echo
-								echo " This repository for MIPS based routers received"
-								echo " Entware package updates until December 2019,"
-								echo " while the original repo did not."
-								echo
-								echo " The additional backports source is added:"
-								echo " - maurerr.github.io/packages"
-								echo
-								echo " Maintained by @maurer, see this thread for details:"
-								echo " https://www.snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/"
+								printf "\\n This repository for MIPS based routers received\\n Entware package updates until December 2019,\\n"
+								printf " while the original repo did not.\\n\\n This additional backports source is added:\\n - maurerr.github.io/packages\\n\\n"
+								printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n"
 								while true; do
 									printf "\\n Enable it? [1=Yes e=Exit] ";read -r confirm
 									case "$confirm" in

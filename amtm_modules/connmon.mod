@@ -18,7 +18,7 @@ connmon_installed(){
 			unset localver connmonUpate connmonMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} j1${NC} %-9s%-21s%${COR}s\\n" "open" "connmon       $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j1${NC} %-9s%-21s%${COR}s\\n" "open" "connmon       $localver" " $upd"
 	case_j1(){
 		/jffs/scripts/connmon
 		sleep 2
@@ -27,13 +27,9 @@ connmon_installed(){
 }
 install_connmon(){
 	p_e_l
-	echo " This installs connmon - Internet connection monitoring"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009"
+	printf " This installs connmon - Internet connection\\n monitoring on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009\\n"
 	c_d
-
 	c_url https://jackyaz.io/connmon/master/amtm-install/connmon.sh -o /jffs/scripts/connmon && chmod 0755 /jffs/scripts/connmon && /jffs/scripts/connmon install
 	sleep 2
 	if [ -f /jffs/scripts/connmon ]; then

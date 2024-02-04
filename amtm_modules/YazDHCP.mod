@@ -18,7 +18,7 @@ YazDHCP_installed(){
 			unset localver YazDHCPUpate YazDHCPMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} j7${NC} %-9s%-21s%${COR}s\\n" "open" "YazDHCP     $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j7${NC} %-9s%-21s%${COR}s\\n" "open" "YazDHCP     $localver" " $upd"
 	case_j7(){
 		/jffs/scripts/YazDHCP
 		sleep 2
@@ -27,15 +27,10 @@ YazDHCP_installed(){
 }
 install_YazDHCP(){
 	p_e_l
-	echo " This installs YazDHCP - Feature expansion of DHCP assignments"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009"
+	printf " This installs YazDHCP - Feature expansion of\\n DHCP assignments on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009\\n"
 	c_d
-
 	c_url https://jackyaz.io/YazDHCP/master/amtm-install/YazDHCP.sh -o /jffs/scripts/YazDHCP && chmod 0755 /jffs/scripts/YazDHCP && /jffs/scripts/YazDHCP install
-
 	sleep 2
 	if [ -f /jffs/scripts/YazDHCP ]; then
 		show_amtm " YazDHCP installed"

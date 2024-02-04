@@ -15,7 +15,6 @@ setup_Entware(){
 		echo " Checking /jffs/scripts entries"
 
 		c_j_s /jffs/scripts/post-mount
-		t_f /jffs/scripts/post-mount
 		if grep -q "post-mount.div\|mount-entware.div" /jffs/scripts/post-mount; then
 			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
 			sed -i '/mount-entware.div/d' /jffs/scripts/post-mount >/dev/null
@@ -29,7 +28,6 @@ setup_Entware(){
 		fi
 
 		c_j_s /jffs/scripts/services-stop
-		t_f /jffs/scripts/services-stop
 		if ! grep -q "/opt/etc/init.d/rc.unslung stop" /jffs/scripts/services-stop; then
 			echo "/opt/etc/init.d/rc.unslung stop # Added by amtm" >>/jffs/scripts/services-stop
 			echo " services-stop entry added"
@@ -441,13 +439,8 @@ setup_Entware(){
 
 install_Entware(){
 	p_e_l
-	echo " This installs Entware - the ultimate Software repository"
-	echo " on this router."
-	echo
-	echo " Visit https://entware.net to learn more about Entware"
-	echo
-	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
+	printf " This installs Entware - the ultimate Software\\n repository for embedded devices on your router.\\n\\n Visit https://entware.net to learn more about\\n Entware.\\n\\n"
+	printf " Author: thelonelycoder\\n"
 	p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)setup_Entware;break;;[Ee])r_m entware_setup.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;
 }
 #eof

@@ -58,7 +58,7 @@ dnscrypt_installed(){
 			fi
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} di${NC} %-9s%-21s%${COR}s\\n" "open" "$ditext $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} di${NC} %-9s%-21s%${COR}s\\n" "open" "$ditext $localver" " $upd"
 	[ "$su" = 1 -a -z "$updcheck" ] || [ "$dnscrypt_installerPxUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$dptext $localDPver" " $updDP"
 	case_di(){
 		p_e_l
@@ -71,32 +71,23 @@ install_dnscrypt(){
 	if [ -f /opt/etc/AdGuardHome/installer ]; then
 		am=;show_amtm " ! dnscrypt installer is not available to install.\\n AdGuardHome is installed which is incompatible\\n with dnscrypt installer."
 	fi
-	p_e_l
-	echo " This installs dnscrypt installer"
-	echo " on your router."
-	echo
-	echo " Authors: bigeyes0x0, SomeWhereOverTheRainBow"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179"
-
-	c_d
-
 	if [ "$(uname -m)" = mips ]; then
-		am=;show_amtm " dnscrypt install failed,\\n MIPS routers are not supported"
+		am=;show_amtm " dnscrypt install not possible,\\n MIPS routers are not supported"
 	fi
-
 	if [ -f /jffs/scripts/install_stubby.sh ] && [ -f /opt/etc/stubby/stubby.yml ]; then
-		am=;show_amtm " dnscrypt install failed.\\n It is not compatible with Stubby DNS\\n which is installed on this router."
+		am=;show_amtm " dnscrypt install not possible,\\n it is not compatible with Stubby DNS\\n which is installed on this router."
 	fi
-
 	if [ "$(nvram get dnspriv_enable)" = 1 ]; then
-		am=;show_amtm " dnscrypt install failed.\\n DNS-over-TLS (DoT) is enabled in the router\\n WebUI."
+		am=;show_amtm " dnscrypt install not possible,\\n DNS-over-TLS (DoT) is enabled in the router\\n WebUI."
 	fi
-
+	p_e_l
+	printf " This installs dnscrypt installer\\n on your router.\\n\\n"
+	printf " Authors: bigeyes0x0, SomeWhereOverTheRainBow\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179\\n"
+	c_d
 	mkdir -p /jffs/dnscrypt
 	c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer -o /jffs/dnscrypt/installer && chmod 0755 /jffs/dnscrypt/installer
 	/jffs/dnscrypt/installer
-
-	sleep 5
+	sleep 2
 	if [ -f /jffs/dnscrypt/manager ]; then
 		show_amtm " dnscrypt installer installed"
 	else

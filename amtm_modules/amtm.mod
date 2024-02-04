@@ -1,25 +1,25 @@
 #!/bin/sh
 #bof
-
-version=4.2
-release="January 13 2024"
-dc_version=3.2 # Disk check
+version=4.3
+release="February 02 2024"
 led_version=2.4 # LED scheduler
 sh_version=1.3 # Shell History
-rd_version=1.2 # Router date keeper
-fw_version=1.0 # Firmware update notification
+rd_version=1.3 # Router date keeper
+fw_version=1.1 # Firmware update notification
 wl_MD5=a0043933737502238af590de5412d435 # shared-amtm-whitelist
 title="Asuswrt-Merlin Terminal Menu"
 EMAIL_DIR="${add}/mail"
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
-s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;;esac;}; s_d_u
-if [ "$amtmRev" = 1 ]; then g_m amtm_rev1.mod include; elif [ "$amtmRev" -ge 2 ]; then r_m amtm_rev1.mod; fi
-if [ "$amtmRev" -le 3 ]; then g_m amtm_rev3.mod include; elif [ "$amtmRev" -gt 3 ]; then r_m amtm_rev3.mod; fi
-if [ "$amtmRev" = 4 ]; then	g_m amtm_rev4.mod include; elif [ "$amtmRev" -gt 4 ]; then r_m amtm_rev4.mod; fi
-if [ "$amtmRev" = 5 ]; then	g_m amtm_rev5.mod include; elif [ "$amtmRev" -gt 5 ]; then r_m amtm_rev5.mod; fi
-if [ "$amtmRev" = 6 ]; then g_m amtm_rev6.mod include; elif [ "$amtmRev" -gt 6 ]; then r_m amtm_rev6.mod; fi
+s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;dv=y;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;dv=;;esac;}; s_d_u
+if [ "$amtmRev" -lt 7 ]; then
+	if [ "$amtmRev" = 1 ]; then g_m amtm_rev1.mod include; elif [ "$amtmRev" -ge 2 ]; then r_m amtm_rev1.mod; fi
+	if [ "$amtmRev" -le 3 ]; then g_m amtm_rev3.mod include; elif [ "$amtmRev" -gt 3 ]; then r_m amtm_rev3.mod; fi
+	if [ "$amtmRev" = 4 ]; then	g_m amtm_rev4.mod include; elif [ "$amtmRev" -gt 4 ]; then r_m amtm_rev4.mod; fi
+	if [ "$amtmRev" = 5 ]; then	g_m amtm_rev5.mod include; elif [ "$amtmRev" -gt 5 ]; then r_m amtm_rev5.mod; fi
+	if [ "$amtmRev" = 6 ]; then g_m amtm_rev6.mod include; elif [ "$amtmRev" -gt 6 ]; then r_m amtm_rev6.mod; fi
+fi
 # End updates for /usr/sbin/amtm
 
 ascii_logo(){
@@ -36,8 +36,8 @@ ascii_logo(){
 about_amtm(){
 	p_e_l
 	echo " amtm, the $title
- Version $version FW, released on $release
- (Built-in firmware version, revision: $amtmRev)
+ Version $version FW (built-in firmware version), released on $release
+ Firmware file revision: $amtmRev
 
  amtm is a front end that manages popular scripts
  for wireless routers running Asuswrt-Merlin firmware.
@@ -51,13 +51,8 @@ about_amtm(){
  https://diversion.ch/amtm.html
 
  Contributors: Adamm, ColinTaylor, Martineau, Stuart MacDonald,
- RavenSystem
- https://www.snbforums.com/members/adamm.19554
- https://www.snbforums.com/members/colintaylor.27699
- https://www.snbforums.com/members/martineau.13215
- https://www.snbforums.com/members/stuart-macdonald.68945
+ RavenSystem, orionstar, Martinski
 
- amtm License:
  amtm is free to use under the GNU General
  Public License, version 3 (GPL-3.0).
  https://opensource.org/licenses/GPL-3.0"
@@ -69,11 +64,10 @@ about_amtm(){
 c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
 c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
-c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
+c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])[ "$1" ] && r_m "$1";am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to play a game${NC}";}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
 s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
-t_f(){ sed -i '/^[[:space:]]*$/d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";}
 v_c(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
 
 g_i_m(){
@@ -81,8 +75,13 @@ g_i_m(){
 		if [ -d "$i" ]; then
 			g_i_m "$i"
 		elif [ "${i##*.}" = mod ]; then
-			rdl=re
-			g_m "${i##*/}" new
+			case "$(basename ${i})" in
+				FreshJR_QOS.mod)	r_m "$(basename ${i})";;
+				pixelserv-tls.mod)	r_m "$(basename ${i})";;
+				nsrum.mod)			r_m "$(basename ${i})";;
+				*)					rdl=re
+									g_m "${i##*/}" new;;
+			esac
 		fi
 	done
 	s_p "${add}"
@@ -90,15 +89,15 @@ g_i_m(){
 }
 
 check_email_conf(){
-	if [ ! -f "${EMAIL_DIR}/email.conf" ]; then
-		show_amtm " Setup mail settings in em first"
+	if [ ! -f ${EMAIL_DIR}/email.conf -o ! -f ${EMAIL_DIR}/emailpw.enc ]; then
+		[ "$1" ] && r_m "$1";am=
+		show_amtm " Setup mail settings in ${GN_BG} em${NC} first"
 	else
-		unset FROM_ADDRESS TO_NAME TO_ADDRESS USERNAME PASSWORD SMTP PORT PROTOCOL
-		. "${EMAIL_DIR}/email.conf"
-		if [ -z "$FROM_ADDRESS" ] || [ -z "$TO_NAME" ] || [ -z "$TO_ADDRESS" ] || [ -z "$USERNAME" ] || [ ! -f "${EMAIL_DIR}/emailpw.enc" ] || [ -z "$SMTP" ] || [ -z "$PORT" ] || [ -z "$PROTOCOL" ]; then
-			show_amtm " email settings not set or incomplete.\\n Use em to setup mail settings."
-		elif [ "$PASSWORD" = "PUT YOUR PASSWORD HERE" ]; then
-			show_amtm " email password has not been set.\\n Use em to setup mail settings."
+		unset FROM_ADDRESS TO_NAME TO_ADDRESS USERNAME SMTP PORT PROTOCOL
+		. ${EMAIL_DIR}/email.conf
+		if [ -z "$FROM_ADDRESS" -o -z "$TO_NAME" -o -z "$TO_ADDRESS" -o -z "$USERNAME" -o -z "$SMTP" -o -z "$PORT" -o -z "$PROTOCOL" ]; then
+			[ "$1" ] && r_m "$1";am=
+			show_amtm " email settings not set or incomplete.\\n Use ${GN_BG} em${NC} to setup mail settings."
 		fi
 	fi
 }
@@ -118,7 +117,11 @@ show_amtm(){
 		clear
 		printf "${R_BG}%-27s%s\\n\\n" " amtm $version FW" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
-		echo " $model ($(uname -m)) FW-$(nvram get buildno) @ $(nvram get lan_ipaddr)"
+		extendno=$(nvram get extendno)
+		[ "$extendno" = 0 ] && extendno= || extendno=_$extendno
+		[ "$(v_c $(nvram get buildno))" -ge "$(v_c 388)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$(nvram get buildno)$extendno || fwVersion=$(nvram get buildno)$extendno
+		printf " ASUS $model HW: $(uname -m) Kernel: $(uname -r | sed 's/brcmarm//g')\\n FW: $fwVersion IP address: $(nvram get lan_ipaddr)\\n"
+
 		OM='Operation Mode:'
 		case "$(nvram get sw_mode)" in
 			1) echo " $OM Wireless router";;
@@ -128,15 +131,16 @@ show_amtm(){
 			5) echo " $OM AiMesh Node";;
 			*) echo " $OM $(nvram get sw_mode), as-yet-unknown";;
 		esac
+		printf " $(TZ=$(nvram get time_zone_x) date)\\n"
+		[ "$dv" ] && printf " --> Development version $release <--\\n"
 		printf "\\n${R_BG}%-44s ${NC}\\n\\n" " amtm - the $title"
 		if [ -f /opt/bin/opkg ]; then
 			thisDev="$(readlink /tmp/opt | sed 's#/tmp/#/#')"
 			printf "${R_BG}%-44s ${NC}\\n\\n" " $(df -kh ${thisDev%/entware} | xargs | awk '{print "'${thisDev%/entware}' "$2" "$9" "$3" "$10" ("$12")"}')"
 		fi
 		[ "$ss" ] && printf "${GN_BG}%-44s ${NC}\\n\\n" "    Third-party scripts"
-		shared_Diversion_wl=/jffs/addons/shared-whitelists/shared-Diversion-whitelist
 		shared_amtm_wl=/jffs/addons/shared-whitelists/shared-amtm-whitelist
-		if [ ! -f "$shared_Diversion_wl" ]; then
+		if [ ! -f /jffs/addons/shared-whitelists/shared-Diversion-whitelist ]; then
 			if [ ! -f "$shared_amtm_wl" ] || [ "$wl_MD5" != "$(md5sum "$shared_amtm_wl" | awk '{print $1}')" ]; then
 				mkdir -p /jffs/addons/shared-whitelists
 				cat <<-EOF >"$shared_amtm_wl"
@@ -178,12 +182,12 @@ show_amtm(){
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
 	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement
-	spacer
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
+	spacer
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
 	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
-	spacer
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
+	/jffs/scripts/MerlinAU.sh MerlinAU 8 MerlinAU¦-¦The¦Ultimate¦Firmware¦Auto-Updater
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
@@ -196,8 +200,8 @@ show_amtm(){
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
 	spacer
 	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
-	/jffs/scripts/vpnmon-r2.sh vpnmon vp VPNMON-R2¦-¦Monitor¦health¦of¦VPN
-	/jffs/scripts/vpnmon-r3.sh vpnmon_r3 v3 VPNMON-R3¦-¦Monitor¦health¦of¦VPN
+	/jffs/scripts/vpnmon-r3.sh vpnmon vp VPNMON-R3¦-¦Monitor¦health¦of¦WAN¦DW¦VPN
+	/jffs/scripts/vpnmon-r2.sh vpnmon_r2 vp2 VPNMON-R2¦-¦Monitor¦health¦of¦VPN¦(sunsetted)
 	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
 	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
 	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
@@ -210,18 +214,17 @@ show_amtm(){
 	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
-	pixelserv-tls
+	ntps
 	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
-	spacer
 	/jffs/addons/amtm/mail/email.conf email em email¦settings
 	/jffs/addons/amtm/fw_update.mod fw_update fw Firmware¦update¦notification
 	/jffs/addons/amtm/sc_update.mod sc_update sc Scripts¦update¦notification
 	spacer
-	/jffs/addons/amtm/disk-check disk_check dc Disk¦check¦script
+	/jffs/addons/amtm/disk_check.mod disk_check dc Disk¦check¦script
 	fdisk
 	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
+	/jffs/addons/amtm/reboot_scheduler.mod reboot_scheduler rs Reboot¦scheduler
 	spacer
-	rscheduler
 	/jffs/addons/amtm/.ash_history shell_history sh shell¦history¦-¦Keep¦history¦of¦shell¦commands
 	/jffs/addons/amtm/routerdate router_date rd Router¦date¦keeper¦-¦Keeps¦router¦date¦when¦rebooting'
 
@@ -229,123 +232,104 @@ show_amtm(){
 	'
 	set -f
 	for i in $modules; do
-		if [ "$i" = spacer ]; then
-			[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
-			atii=
-		elif [ "$i" = tpucheck ]; then
-			if [ "$tpu" ]; then
-				[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
-				if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
-					sed -i 's:<br>::g' /tmp/amtm-tpu-check
-					if [ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ]; then
-						echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
-						rm -f "${add}"/availUpd.txt
-					fi
-					if [ ! -f /tmp/amtm-no-delete ]; then
-						cat /tmp/amtm-tpu-check
-						rm /tmp/amtm-tpu-check
-					fi
-				fi
-				exit 0
-			fi
-			[ "$dlok" ] && tps=1 || tps=
-			[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
-		elif [ "$i" = pixelserv-tls ]; then
-			if [ -f /opt/bin/pixelserv-tls ]; then
-				if [ ! -f "${add}"/pixelserv-tls.mod ] && [ "$ss" ] && [ -z "$su" ]; then
-					printf "${E_BG} ps${NC} %-9s%s\\n" "use" "pixelserv-tls CA for WebUI"
-				else
-					g_m pixelserv-tls.mod include
-				fi
-				case_ps(){
-					g_m pixelserv-tls.mod include
-					[ -f "${add}"/pixelserv-tls.mod ] && use_ps_ca
-				}
-			else
-				r_m pixelserv-tls.mod
-				case_ps(){
-					show_amtm " Option not available,\\n pixelserv-tls is not installed"
-				}
-			fi
-			[ "$ss" ] && printf "\\n${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
-		elif [ "$i" = fdisk ]; then
-			if [ -f "${add}"/amtm-format-disk.log ]; then
-				atii=1
-				[ "$su" ] || printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
-			else
-				[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
-			fi
-			case_fd(){
-				echo
-				g_m format_disk.mod include
-				[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
-			}
-		elif [ "$i" = rscheduler ]; then
-			if [ -f /jffs/scripts/init-start ] && grep -qE "amtm_RebootScheduler" /jffs/scripts/init-start; then
-				g_m reboot_scheduler.mod include
-				[ -f "${add}"/reboot_scheduler.mod ] && reboot_scheduler_installed || show_amtm menu
-			else
-				[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} rs${NC} %-9s%s\\n" "enable" "Reboot scheduler"
-				r_m reboot_scheduler.mod
-				case_rs(){
-					g_m reboot_scheduler.mod include
-					[ -f "${add}"/reboot_scheduler.mod ] && install_reboot_scheduler || show_amtm menu
-				}
-			fi
-		else
-			scriptloc=$(echo $i | awk '{print $1}')
-			f2=$(echo $i | awk '{print $2}')
-			if [ -f "$scriptloc" ]; then
-				g_m ${f2}.mod include
-				[ -f "${add}/${f2}.mod" ] && ${f2}_installed
-			else
-				f3="$(echo $i | awk '{print $3}')"
-				[ "$(echo $f3 | wc -m)" -gt 2 ] && ssp= || ssp=' '
-				[ "$ss" ] && printf "${E_BG} ${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
-				if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
-					sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
-					[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
-				fi
-				r_m ${f2}.mod
-				case $f3 in
-					1)		case_1(){ c_e Diversion;g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
-					2)		case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
-					3)		case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
-					4)		case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
-					5)		case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
-					6)		case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
-					7)		case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
-					j1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
-					j2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;[ "$dlok" = 1 ] && install_ntpmerlin || show_amtm menu;};;
-					j3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
-					wi)		case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
-					j4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
-					j5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
-					j6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
-					j7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
-					vn)		case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
-					vp)		case_vp(){ c_e VPNMON-R2;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
-					v3)		case_v3(){ c_e VPNMON-R3;g_m vpnmon_r3.mod include;[ "$dlok" = 1 ] && install_vpnmon_r3 || show_amtm menu;};;
-					km)		case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
-					rt)		case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
-					bm)		case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
-					di)		case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
-					wg)		case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
-					ag)		case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
-					wf)		case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
-					vr)		case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
-					ep)		case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
-					g)		case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
-					dc)		case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
-					lc)		case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
-					em)		case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
-					fw)		case_fw(){ g_m fw_update.mod include;[ "$dlok" = 1 ] && install_fw_update || show_amtm menu;};;
-					sc)		case_sc(){ g_m sc_update.mod include;[ "$dlok" = 1 ] && install_sc_update || show_amtm menu;};;
-					sh)		case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
-					rd)		case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
-				esac
-			fi
-		fi
+		case "$i" in
+			spacer) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
+						atii=;;
+			ntps) 		if [ "$ss" ]; then
+							[ -f /opt/bin/opkg ] && nl= || nl=\\n
+							printf "$nl${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
+						else
+							[ "$atii" ] || [ "$ss" ] && echo
+							atii=
+						fi;;
+			tpucheck) 	if [ "$tpu" ]; then
+							[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
+							if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
+								sed -i 's:<br>::g' /tmp/amtm-tpu-check
+								if [ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ]; then
+									echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
+									rm -f "${add}"/availUpd.txt
+								fi
+								if [ ! -f /tmp/amtm-no-delete ]; then
+									cat /tmp/amtm-tpu-check
+									rm /tmp/amtm-tpu-check
+								fi
+							fi
+							exit 0
+						fi
+						[ "$dlok" ] && tps=1 || tps=
+						[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt;;
+			fdisk) 		if [ -f "${add}"/amtm-format-disk.log ]; then
+							atii=1
+							[ "$su" ] || [ -z "$ss" ] && printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
+						else
+							[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
+						fi
+						case_fd(){
+							echo
+							g_m format_disk.mod include
+							[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
+						};;
+			*) 			scriptloc=$(echo $i | awk '{print $1}')
+						f2=$(echo $i | awk '{print $2}')
+						if [ -f "$scriptloc" ]; then
+							g_m ${f2}.mod include
+							[ -f "${add}/${f2}.mod" ] && ${f2}_installed
+						else
+							f3="$(echo $i | awk '{print $3}')"
+							bsp=' '
+							case "$(echo $f3 | wc -m)" in
+								2)	ssp=' ';;
+								3)	ssp=;;
+								4)	unset bsp ssp;;
+							esac
+							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
+							if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
+								sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
+								[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
+							fi
+							r_m ${f2}.mod
+							case $f3 in
+								1)			case_1(){ c_e Diversion;g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
+								2)			case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
+								3)			case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
+								4)			case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
+								5)			case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
+								6)			case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
+								7)			case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
+								8)			case_8(){ g_m MerlinAU.mod include;[ "$dlok" = 1 ] && install_MerlinAU || show_amtm menu;};;
+								[Jj]1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
+								[Jj]2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;[ "$dlok" = 1 ] && install_ntpmerlin || show_amtm menu;};;
+								[Jj]3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
+								[Ww][Ii])	case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
+								[Jj]4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
+								[Jj]5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
+								[Jj]6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
+								[Jj]7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
+								[Vv][Nn])	case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
+								[Vv][Pp])	case_vp(){ c_e VPNMON-R3;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
+								[Vv][Pp]2)	case_vp2(){ c_e VPNMON-R2;g_m vpnmon_r2.mod include;[ "$dlok" = 1 ] && install_vpnmon_r2 || show_amtm menu;};;
+								[Kk][Mm])	case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
+								[Rr][Tt])	case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
+								[Bb][Mm])	case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
+								[Dd][Ii])	case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
+								[Ww][Gg])	case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
+								[Aa][Gg])	case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
+								[Ww][Ff])	case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
+								[Vv][Rr])	case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
+								[Ee][Pp])	case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
+								[Gg])		case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
+								[Dd][Cc])	case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
+								[Ll][Cc])	case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
+								[Ee][Mm])	case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
+								[Ff][Ww])	case_fw(){ g_m fw_update.mod include;[ "$dlok" = 1 ] && install_fw_update || show_amtm menu;};;
+								[Ss][Cc])	case_sc(){ g_m sc_update.mod include;[ "$dlok" = 1 ] && install_sc_update || show_amtm menu;};;
+								[Rr][Ss])	case_rs(){ g_m reboot_scheduler.mod include;[ "$dlok" = 1 ] && install_reboot_scheduler|| show_amtm menu;};;
+								[Ss][Hh])	case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
+								[Rr][Dd])	case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
+							esac
+						fi;;
+		esac
 	done
 	set +f
 
@@ -372,37 +356,37 @@ show_amtm(){
 	fi
 	if [ -f "$swl" ]; then
 		atii=1
-		[ "$su" ] || printf "${GN_BG} sw${NC} %-9s%s ${GN}%s${NC} $swsize\\n" "manage" "Swap file" "$(echo "${swl#/tmp}" | sed 's|/myswap.swp||')"
+		[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} sw${NC} %-9s%s ${GN}%s${NC} $swsize\\n" "manage" "Swap file" "$(echo "${swl#/tmp}" | sed 's|/myswap.swp||')"
 		case_swp(){
 			gms;manage_swap delete
 		}
 	elif [ "$swl" ] && [ "$swpsize" ]; then
 		atii=1
-		[ "$su" ] || printf "${GN_BG}   ${NC} %-9s%s ${GN_BG}%s${NC}\\n" "Swap" "Partition" "${GN_BG}$swl${NC} ${swpsize}M"
+		[ -z "$su" -a -z "$ss" ] && printf "${GN_BG}   ${NC} %-9s%s ${GN_BG}%s${NC}\\n" "Swap" "Partition" "${GN_BG}$swl${NC} ${swpsize}M"
 		case_swp(){
 			show_amtm " amtm does not manage swap partitions"
 		}
 	elif [ "$mpsw" ]; then
 		atii=1
-		[ "$su" ] || printf "${GN_BG} sw${NC} %-9s%s ${GN_BG}%s${NC}\\n" "delete" "Swap files"
+		[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} sw${NC} %-9s%s ${GN_BG}%s${NC}\\n" "delete" "Swap files"
 		case_swp(){
 			gms;manage_swap multidelete
 		}
 	else
-		[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
+		[ "$ss" ] && printf "${E_BG} sw${NC} %-9s%s\\n" "create" "Swap file"
 		case_swp(){
 			gms;manage_swap create
 		}
 	fi
-	[ "$su" ] || printf "${GN_BG} cj${NC} %-9s%s\\n" "show" "all cron jobs"
 
-	[ "$atii" ] || [ "$ss" ] && [ -z "$su" ] && echo
+	[ "$atii" -a -z "$ss" -a -z "$su" ] && echo
 	atii=
 
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} cj${NC} %-9s%s\\n" "show" "all cron jobs"
 	if [ "$ss" ]; then
-		[ "$su" ] || printf "${GN_BG} i ${NC} %-9s%s\\n" "hide" "inactive scripts or tools"
+		[ "$su" ] || printf "${GN_BG} i ${NC} %-9s%s\\n" "hide" "inactive scripts"
 	else
-		[ "$su" ] || printf "${E_BG} i ${NC} %-9s%s\\n" "show" "all available scripts or tools"
+		[ "$su" ] || printf "${E_BG} i ${NC} %-9s%s\\n" "show" "available scripts"
 	fi
 
 	if [ "$su" = 1 ]; then
@@ -418,15 +402,14 @@ show_amtm(){
 		fi
 		printf "${GN_BG} m ${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
 	else
-		[ "$ss" ] || printf "${GN_BG} u ${NC} %-9s%s\\n" "check" "for script updates"
-		[ "$ss" ] || printf "${GN_BG} rr${NC} %-9s%s\\n" "reboot" "router"
 		echo
 		if [ "$amtmUpate" ]; then
 			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          $version" "${E_BG}$amtmUpate${NC}"
 		else
 			echo "    amtm options"
+			[ "$ss" ] || printf "${GN_BG} u ${NC} update   ${GN_BG} rr${NC} reboot\\n"
 		fi
-		echo "${GN_BG} e ${NC} exit     ${GN_BG} t ${NC} theme  ${GN_BG} r ${NC} reset  ${GN_BG} a ${NC} about"
+		printf "${GN_BG} e ${NC} exit     ${GN_BG} t ${NC} theme  ${GN_BG} r ${NC} reset  ${GN_BG} a ${NC} about\\n"
 	fi
 
 	[ "$ss" ] && ssi=1 || ssi=
@@ -465,7 +448,7 @@ show_amtm(){
 				g_i_m "${add}"
 				[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
 				if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
-					sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+					[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 					unset amtmUpate amtmMD5
 				fi
 				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
@@ -511,6 +494,7 @@ show_amtm(){
 			5)					case_5;break;;
 			6)					case_6;break;;
 			7)					case_7;break;;
+			8)					case_8;break;;
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;
@@ -521,11 +505,11 @@ show_amtm(){
 			[Jj]7)				case_j7;break;;
 			[Vv][Nn])			case_vn;break;;
 			[Vv][Pp])			case_vp;break;;
-			[Vv]3)  			case_v3;break;;
+			[Vv][Pp]2)			case_vp2;break;;
 			[Kk][Mm])			case_km;break;;
 			[Rr][Tt])			case_rt;break;;
 			[Bb][Mm])			case_bm;break;;
-			awm)				show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
+			[Aa][Ww][Mm])		show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
@@ -533,10 +517,9 @@ show_amtm(){
 			[Ww][Ff])			case_wf;break;;
 			[Vv][Rr])			case_vr;break;;
 			[Ee][Pp])			case_ep;break;;
-			[Pp][Ss])			case_ps;break;;
 			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
 			[Dd][Cc])			case_dc;break;;
-			dcl|DCL)			s_l_f amtm-disk-check.log;break;;
+			dcl|DCL)			s_l_f disk_check.log;break;;
 			[Ff][Dd])			case_fd;break;;
 			fdl|FDL)			s_l_f amtm-format-disk.log;break;;
 			[Ll][Cc])			c_ntp;case_lc;break;;
@@ -591,9 +574,9 @@ c_j(){
 		echo " (there are no cron jobs set at the moment)"
 		p_e_l
 	else
-		printf " .---------------- minute (0 - 59)\\n |  .------------- hour (0 - 23)\\n |  |  .---------- day of month (1 - 31)\\n"
-		printf " |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...\\n |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat\\n"
-		printf " |  |  |  |  |\\n *  *  *  *  * command to be executed #job_name# ( * = every ... )\\n\\n"
+		printf " .---------------- minute       (0 - 59)\\n |  .------------- hour         (0 - 23)\\n |  |  .---------- day of month (1 - 31)\\n"
+		printf " |  |  |  .------- month        (1 - 12) OR Jan,Feb,mar ...\\n |  |  |  |  .---- day of week  (0 - 6) Sunday = 0 or 7, OR Sun,mon,Tue ...\\n"
+		printf " |  |  |  |  |\\n *  *  *  *  *  command to be executed  #job_name#  ( * = every ... )\\n\\n"
 		cru l | sed -e 's/^/ /'
 	fi
 	p_e_t "return to menu"
@@ -685,11 +668,20 @@ script_check(){
 reset_amtm(){
 	rm_entware() {
 		if [ -f "/jffs/scripts/services-stop" ]; then
-			/opt/etc/init.d/rc.unslung stop
+			[ -f /opt/etc/init.d/rc.unslung ] && /opt/etc/init.d/rc.unslung stop
 			sed -i '/rc.unslung stop/d' /jffs/scripts/services-stop
 			r_w_e /jffs/scripts/services-stop
 		fi
 		rm -rf "$(readlink /tmp/opt)"
+		# if readlink above returns nothing we try it the hard way.
+		opkgFile=$(/usr/bin/find /mnt/*/entware/bin/opkg 2> /dev/null)
+		if [ -f "$opkgFile" ]; then
+			rm -rf "${opkgFile%/bin/opkg}"
+		else
+			opkgUnknown=$(/usr/bin/find /mnt/*/entware*/bin/opkg 2> /dev/null)
+			[ "$opkgUnknown" ] && rm -rf "${opkgUnknown%/bin/opkg}"
+		fi
+		# remove dead /opt if it still exists after all the hard work above
 		if [ -L /tmp/opt ]; then
 			rm -f /tmp/opt 2> /dev/null
 			rm -f /opt 2> /dev/null
@@ -709,8 +701,8 @@ reset_amtm(){
 					printf " However, when found it will remove the Disk\\n check script and log, the Format disk log,\\n the Reboot scheduler, the LED control and\\n"
 					printf " email settings you may have set.\\n"
 					c_d
-					if [ -f /jffs/scripts/pre-mount ] && grep -q "disk-check # Added by amtm" /jffs/scripts/pre-mount; then
-						sed -i '\~disk-check # Added by amtm~d' /jffs/scripts/pre-mount
+					if [ -f /jffs/scripts/pre-mount ] && grep -q "disk_check.mod run # Added by amtm" /jffs/scripts/pre-mount; then
+						sed -i '\~disk_check.mod run # Added by amtm~d' /jffs/scripts/pre-mount
 						r_w_e /jffs/scripts/pre-mount
 					fi
 					if [ -f /jffs/scripts/init-start ] && grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
@@ -774,6 +766,7 @@ reset_amtm(){
 					skynetcfg=$(/usr/bin/find /mnt/*/skynet/skynet.cfg 2> /dev/null)
 					[ -f "$skynetcfg" ] && rm -rf "${skynetcfg%/skynet.cfg}"
 
+					trap '' 2
 					clear
 					ascii_logo '  Everything reset and removed. Goodbye!'
 					printf "\\n   amtm reboots this router now\\n\\n"
@@ -796,6 +789,7 @@ reset_amtm(){
 					[ -L /tmp/opt ] && rmText="Removed all traces of Entware" || rmText="Entware not found but removed all traces if found"
 					rm_entware
 
+					trap '' 2
 					clear
 					printf "\\n $rmText.\\n amtm reboots this router now\\n\\n"
 					service reboot >/dev/null 2>&1 &
@@ -861,7 +855,7 @@ update_amtm(){
 			g_i_m "${add}"
 			[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
 			if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
-				sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+				[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 				unset amtmUpate amtmMD5
 			fi
 			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."

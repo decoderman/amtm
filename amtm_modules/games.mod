@@ -121,15 +121,12 @@ games_installed(){
 }
 install_Games(){
 	p_e_l
-	printf " This provides a list of games to install and\\n play on your router.\\n Fun for the adventurous!\\n\\n Games play directly in the terminal, slower\\n or older routers may come to their limit.\\n You have been warned!\\n"
-	echo
-	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16"
+	printf " This provides a list of games to install and\\n play on your router.\\n\\n Fun for the adventurous ;-)\\n\\n"
+	printf " Games play directly in the terminal, slower\\n or older routers may come to their limit,\\n you have been warned!\\n\\n"
+	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16\\n"
 	c_d
-
 	mkdir -p "${add}"/games
 	touch "${add}"/games/games.conf
-
 	sleep 2
 	if [ -f "${add}"/games/games.conf ]; then
 		more=more

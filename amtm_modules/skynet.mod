@@ -18,7 +18,7 @@ skynet_installed(){
 			unset localver SkynetUpate SkynetMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} 2 ${NC} %-9s%-21s%${COR}s\\n" "open" "Skynet        $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 2 ${NC} %-9s%-21s%${COR}s\\n" "open" "Skynet        $localver" " $upd"
 	case_2(){
 		/jffs/scripts/firewall
 		sleep 2
@@ -27,16 +27,10 @@ skynet_installed(){
 }
 install_skynet(){
 	p_e_l
-	echo " This installs Skynet - Router Firewall & Security Enhancements"
-	echo " on your router."
-	echo
-	echo " Author: Adamm"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=14"
-	echo
-	echo " Regular contributor: SomeWhereOverTheRainBow"
-	echo " https://www.snbforums.com/members/somewhereovertherainbow.64179/"
+	printf " This installs Skynet - Router Firewall & Security\\n Enhancements on your router.\\n\\n"
+	printf " Author: Adamm\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=14\\n\\n"
+	printf " Regular contributors: SomeWhereOverTheRainBow, dave14305\\n"
 	c_d
-
 	if ! ipset -v 2>/dev/null | grep -qE 'v6|v7'; then
 		am=;show_amtm " Skynet install aborted,\\n IPSet version on router not supported:\\n$(ipset -v 2>/dev/null | sed -e 's/^/ /')"
 	elif [ ! -f /lib/modules/"$(uname -r)"/kernel/net/netfilter/ipset/ip_set_hash_ipmac.ko ]; then

@@ -1,5 +1,38 @@
 #!/bin/sh
 #bof
+reboot_scheduler_installed(){
+	[ -z "$su" ] && atii=1
+	rsui="$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6}')"
+	[ "$rsui" = '*' ] && rsui=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $4}')
+	rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print "'$rsui'"" @ "$3":"$2}' | sed -e 's/"//')
+	if [ "$rsui" != '*' ]; then
+		rswc=$(echo $rstext | awk '{print $1}' | wc -m)
+		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
+		if [ "$rswc" = 28 ]; then
+			rstext=$(echo $rstext | awk '{print "daily " $2, $3}')
+		elif [ "$rswc" -ge 20 ]; then
+			dows=$(echo $rstext | awk '{print $1","}')
+			dows="${dows//??,/,}"
+			rstext=$(echo $rstext | awk '{print "'${dows%,}' " $2, $3}')
+		elif [ "$rswc" -gt 8 ]; then
+			dows=$(echo $rstext | awk '{print $1","}')
+			dows="${dows//?,/,}"
+			rstext=$(echo $rstext | awk '{print "'${dows%,}' " $2, $3}')
+		fi
+	fi
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} rs${NC} %-9s%s\\n" "manage" "Reboot scheduler ${GN_BG}${rstext}${NC}"
+	case_rs(){
+		reboot_scheduler manage
+	}
+}
+install_reboot_scheduler(){
+	p_e_l
+	printf " This installs reboot scheduler\\n on your router.\\n\\n"
+	printf " This scheduler is set with a cron job via\\n init-start, as opposed to the WebUI setting\\n which uses an internal mechanism to reboot.\\n\\n"
+	printf " Author: thelonelycoder\\n https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480\\n"
+	c_d reboot_scheduler.mod
+	reboot_scheduler install
+}
 reboot_scheduler(){
 	if [ "$1" = install ]; then
 		if [ "$(nvram get reboot_schedule_enable)" = 1 ]; then
@@ -128,7 +161,6 @@ reboot_scheduler(){
 		done
 
 		c_j_s /jffs/scripts/init-start
-		t_f /jffs/scripts/init-start
 		if ! grep -q "amtm_RebootScheduler" /jffs/scripts/init-start; then
 			echo "cru a amtm_RebootScheduler \"$rsm $rsh $rsdom * $rsdow service reboot\" # Added by amtm" >> /jffs/scripts/init-start
 			rsct=enabled
@@ -161,6 +193,7 @@ reboot_scheduler(){
 				2)			sed -i '\~amtm_RebootScheduler~d' /jffs/scripts/init-start
 							r_w_e /jffs/scripts/init-start
 							cru d amtm_RebootScheduler
+							r_m reboot_scheduler.mod
 							show_amtm " Reboot scheduler removed"
 							break;;
 				[Ee])		show_amtm " Exited reboot scheduler function";break;;
@@ -168,40 +201,5 @@ reboot_scheduler(){
 			esac
 		done
 	fi
-}
-reboot_scheduler_installed(){
-	[ -z "$su" ] && atii=1
-	rsui="$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $6}')"
-	[ "$rsui" = '*' ] && rsui=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print $4}')
-	rstext=$(grep -o "amtm_RebootScheduler .*" /jffs/scripts/init-start 2>/dev/null | awk '{print "'$rsui'"" @ "$3":"$2}' | sed -e 's/"//')
-
-	if [ "$rsui" != '*' ]; then
-		rswc=$(echo $rstext | awk '{print $1}' | wc -m)
-		[ "$(echo $rstext | grep -o ':.*' | wc -m)" -lt "4" ] && rstext=$(echo $rstext | sed -e 's/:/:0/')
-		if [ "$rswc" = 28 ]; then
-			rstext=$(echo $rstext | awk '{print "daily " $2, $3}')
-		elif [ "$rswc" -ge 20 ]; then
-			dows=$(echo $rstext | awk '{print $1","}')
-			dows="${dows//??,/,}"
-			rstext=$(echo $rstext | awk '{print "'${dows%,}' " $2, $3}')
-		elif [ "$rswc" -gt 8 ]; then
-			dows=$(echo $rstext | awk '{print $1","}')
-			dows="${dows//?,/,}"
-			rstext=$(echo $rstext | awk '{print "'${dows%,}' " $2, $3}')
-		fi
-	fi
-	[ -z "$su" ] && printf "${GN_BG} rs${NC} %-9s%s\\n" "manage" "Reboot scheduler ${GN_BG}${rstext}${NC}"
-
-	case_rs(){
-		reboot_scheduler manage
-	}
-}
-install_reboot_scheduler(){
-	p_e_l
-	printf " This installs reboot scheduler\\n on your router.\\n\\n"
-	printf " This scheduler is set with a cron job via\\n init-start, as opposed to the WebUI setting\\n which uses an internal mechanism to reboot.\\n\\n"
-	printf " Author: thelonelycoder\\n https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480\\n"
-	c_d
-	reboot_scheduler install
 }
 #eof

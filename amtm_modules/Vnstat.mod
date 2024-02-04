@@ -17,7 +17,7 @@ Vnstat_installed(){
 			unset localver VnstatUpate VnstatMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "vnStat        $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "vnStat        $localver" " $upd"
 	case_vn(){
 		/jffs/scripts/dn-vnstat
 		sleep 2
@@ -26,15 +26,10 @@ Vnstat_installed(){
 }
 install_Vnstat(){
 	p_e_l
-	echo " This installs vnStat - data use monitoring with email function"
-	echo " on your router."
-	echo
-	echo " Author: dev_null"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=34"
+	printf " This installs vnStat - data use monitoring with\\n email function on your router.\\n\\n"
+	printf " Author: dev_null\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=34\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh -o /jffs/scripts/dn-vnstat && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
-
 	sleep 2
 	if [ -f /jffs/scripts/dn-vnstat ]; then
 		show_amtm " vnStat installed"

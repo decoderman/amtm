@@ -6,20 +6,27 @@ fw_update_installed(){
 		write_fw_update_file
 		a_m " - Firmware update notification script updated to v$fw_version"
 	fi
-	[ -z "$su" ] && printf "${GN_BG} fw${NC} %-9s%-19s%${COR}s\\n" "manage" "Firmware update notification"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} fw${NC} %-9s%-19s%${COR}s\\n" "manage" "Firmware update notification"
 	case_fw(){
 		[ -f "${add}"/fw_update.mod ] && fw_update manage
 		show_amtm menu
 	}
 }
 install_fw_update(){
+	check_email_conf fw_update.mod
 	p_e_l
 	printf " This installs the Firmware update notification script\\n on this router.\\n\\n Receive email notification for newer\\n"
 	printf " Asuswrt-Merlin firmware availability for this\\n router within hours of release.\\n\\n Author: thelonelycoder\\n"
-	p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;r_m fw_update.mod;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done
+	c_d fw_update.mod
 	fw_update install
 }
 fw_update(){
+	rm_fw_files(){
+		r_m fw_update.mod
+		rm -f /jffs/scripts/update-notification
+		am=
+	}
+	
 	if [ "$1" = install ]; then
 		if [ "$(v_c $(nvram get buildno))" -ge "$(v_c 380.65)" ]; then
 			isEligible=
@@ -29,7 +36,6 @@ fw_update(){
 			if [ "$(nvram get firmware_server)" = "https://fwupdate.lostrealm.ca/asuswrt-merlin" ] || [ "$(nvram get firmware_server)" = "https://fwupdate.asuswrt-merlin.net" ] || [ "$isEligible" = 1 ]; then
 				if [ "$(nvram get firmware_check_enable)" = "1" ]; then
 					do_install(){
-						check_email_conf
 						write_fw_update_file
 						[ -f /jffs/scripts/update-notification ] && show_amtm " Firmware update notification installed" || show_amtm " Firmware update notification install failed"
 					}
@@ -45,7 +51,7 @@ fw_update(){
 									1)	rm -f /jffs/scripts/update-notification
 										do_install
 										break;;
-									2)	show_amtm " Exited update notification install";break;;
+									2)	rm_fw_files;show_amtm " Exited update notification install";break;;
 									*)	printf "\\n input is not an option\\n";;
 								esac
 							done
@@ -54,31 +60,24 @@ fw_update(){
 						do_install
 					fi
 				else
-					echo " New firmware version check is not enabled,"
-					echo " you must enable it first:"
-					echo
-					echo " In the router WebUI, go to Administration / Firmware Upgrade"
-					echo " and set 'Scheduled check for new firmware availability' to 'Yes'"
-					echo
-					echo " Or for older firmware versions:"
-					echo " In the router Web UI, go to Tools / Other Settings"
-					echo " and set 'New firmware version check' to 'Yes'"
-					echo " then click 'Apply'"
+					printf " New firmware version check is not enabled,\\n you must enable it first:\\n\\n In the router WebUI, go to Administration / Firmware Upgrade\\n"
+					printf " and set 'Scheduled check for new firmware availability' to 'Yes'\\n\\n Or for older firmware versions:\\n In the router Web UI, go to Tools / Other Settings\\n"
+					printf " and set 'New firmware version check' to 'Yes'\\n then click 'Apply'\\n"
 					p_e_t "return to acknowledge"
-					show_amtm
+					rm_fw_files
+					show_amtm " Cannot install firmware version check"
 				fi
 			else
-				echo " Your firmware does not support Asuswrt-Merlin"
-				echo " update notification"
+				printf " Your firmware does not support Asuswrt-Merlin\\n update notification\\n"
 				p_e_t "return to acknowledge"
-				show_amtm
+				rm_fw_files
+				show_amtm " Cannot install firmware version check"
 			fi
 		else
-			echo " Your firmware ($(nvram get buildno)) does not support"
-			echo " update notification. This feature was introduced"
-			echo " in Asuswrt-Merlin 380.65."
+			printf " Your firmware ($(nvram get buildno)) does not\\n support update notification. This feature was\\n introduced in Asuswrt-Merlin 380.65.\\n"
 			p_e_t "return to acknowledge"
-			show_amtm
+			rm_fw_files
+			show_amtm " Cannot install firmware version check"
 		fi
 	elif [ "$1" = manage ]; then
 		p_e_l
@@ -90,16 +89,12 @@ fw_update(){
 			case "$continue" in
 				1)		check_email_conf
 						/jffs/scripts/update-notification test
-						if [ "$?" = "0" ]; then
+						if [ $? = 0 ]; then
 							echo "${NC}"
 							. /jffs/addons/amtm/mail/email.conf
-							show_amtm " Firmware notification test email sent\\n to $TO_NAME at $TO_ADDRESS"
+							show_amtm " Firmware notification test sent to\\n $TO_NAME at $TO_ADDRESS"
 						else
-							echo "${NC}"
-							echo "${NOK} sending test notification failed"
-							echo
-							echo " Note the curl: error above and check your settings"
-							echo
+							printf "${NC} sending test notification failed\\n Note the curl: error above and check your settings\\n"
 							p_e_t "return to menu"
 							show_amtm
 						fi
@@ -107,8 +102,7 @@ fw_update(){
 				2)		p_e_l
 						printf " This removes the Firmware update notification\\n script.\\n"
 						c_d
-						rm -f "${add}"/fw_update.mod
-						rm -f /jffs/scripts/update-notification
+						rm_fw_files
 						show_amtm " Firmware update notification script removed"
 						break;;
 				[Ee])	show_amtm menu;;
@@ -190,8 +184,6 @@ write_fw_update_file(){
 	fi
 
 	EOF
-
 	[ ! -x /jffs/scripts/update-notification ] && chmod 0755 /jffs/scripts/update-notification
 }
-
 #eof

@@ -18,7 +18,7 @@ rtrmon_installed(){
 			unset localver rtrmonUpate rtrmonMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} rt${NC} %-9s%-21s%${COR}s\\n" "open" "RTRMON      $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} rt${NC} %-9s%-21s%${COR}s\\n" "open" "RTRMON      $localver" " $upd"
 	case_rt(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -34,15 +34,10 @@ rtrmon_installed(){
 }
 install_rtrmon(){
 	p_e_l
-	echo " This installs RTRMON - Monitor your Router's Health"
-	echo " on your router."
-	echo
-	echo " Author: Viktor Jaep"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=37"
+	printf " This installs RTRMON - Monitor your Router's\\n Health on your router.\\n\\n"
+	printf " Author: Viktor Jaep\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=37\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/ViktorJp/RTRMON/main/rtrmon.sh -o /jffs/scripts/rtrmon.sh && chmod a+rx /jffs/scripts/rtrmon.sh && /jffs/scripts/rtrmon.sh -setup
-
 	sleep 2
 	if [ -f /jffs/scripts/rtrmon.sh ]; then
 		show_amtm " RTRMON installed"

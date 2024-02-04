@@ -7,15 +7,7 @@ format_disk(){
 	printf " To be on the safe side, remove all other\\n attached USB devices before continuing.\\n\\n"
 	printf " Authors: ColinTaylor, thelonelycoder, Zonkd\\n"
 	printf " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting\\n https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723\\n"
-	p_e_l
-	while true;do
-		printf " Continue? [1=Yes e=Exit] ";read -r continue
-		case "$continue" in
-			1)		echo;break;;
-			[Ee])	r_m format_disk.mod;am=;show_amtm menu;break;;
-			*)		printf "\\n input is not an option\\n\\n";;
-		esac
-	done
+	c_d format_disk.mod
 
 	select_device(){
 		pts=4

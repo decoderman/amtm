@@ -5,30 +5,29 @@ sc_update_installed(){
 	if ! grep -q "^/bin/sh ${add}/sc_update.mod" /jffs/scripts/services-start 2> /dev/null; then
 		sc_update install
 	fi
-	[ -z "$su" ] && printf "${GN_BG} sc${NC} %-9s%-19s%${COR}s\\n" "manage" "Scripts update notification"
+	[ -z "$su"  -a -z "$ss" ] && printf "${GN_BG} sc${NC} %-9s%-19s%${COR}s\\n" "manage" "Scripts update notification"
 	case_sc(){
 		[ -f "${add}"/sc_update.mod ] && sc_update manage
 		show_amtm menu
 	}
 }
 install_sc_update(){
+	check_email_conf sc_update.mod
 	p_e_l
 	printf " This installs scripts update notification\\n on this router.\\n\\n Receive email notification when updates\\n"
 	printf " are available for installed scripts.\\n\\n Author: thelonelycoder\\n"
-	p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])am=;r_m sc_update.mod;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done
+	c_d sc_update.mod
 	sc_update install
 }
 sc_update(){
 	if [ "$1" = install ]; then
-		check_email_conf
 		c_j_s /jffs/scripts/services-start
-		t_f /jffs/scripts/services-start
 		if ! grep -q "^/bin/sh ${add}/sc_update.mod" /jffs/scripts/services-start; then
 			sed -i "\~sc_update.mod ~d" /jffs/scripts/services-start
 			echo "/bin/sh ${add}/sc_update.mod -set # Added by amtm" >> /jffs/scripts/services-start
 		fi
 		cru a amtm_ScriptsUpdateNotification "10 7 * * Sun /bin/sh ${add}/sc_update.mod -run"
-		show_amtm " Scripts update notification installed"
+		show_amtm " Scripts update notification installed\\n or updated"
 	elif [ "$1" = manage ]; then
 		p_e_l
 		printf " Scripts update notification options\\n\\n The update check runs every Sunday at 07:10\\n\\n"
@@ -39,19 +38,13 @@ sc_update(){
 			case "$continue" in
 				1)		check_email_conf
 						touch /tmp/amtmtest
-						/bin/sh /jffs/addons/amtm/sc_update.mod -run
+						/bin/sh ${add}/sc_update.mod -run
 						if [ "$?" = "0" ]; then
 							echo "${NC}"
 							. /jffs/addons/amtm/mail/email.conf
-							rm /tmp/amtmtest
-							show_amtm " Scripts update notification test email sent\\n to $TO_NAME at $TO_ADDRESS"
+							show_amtm " Scripts update notification test sent to\\n $TO_NAME at $TO_ADDRESS"
 						else
-							rm /tmp/amtmtest
-							echo "${NC}"
-							echo "${NOK} sending test notification failed"
-							echo
-							echo " Note the curl: error above and check your settings"
-							echo
+							printf "${NC} sending test notification failed\\n Note the curl: error above and check your settings\\n"
 							p_e_t "return to menu"
 							show_amtm
 						fi
@@ -62,7 +55,7 @@ sc_update(){
 						cru d amtm_ScriptsUpdateNotification
 						sed -i "\~sc_update.mod ~d" /jffs/scripts/services-start
 						r_w_e /jffs/scripts/services-start
-						rm -f "${add}"/sc_update.mod
+						rm -f ${add}/sc_update.mod
 						show_amtm " Scripts update notification removed"
 						break;;
 				[Ee])	show_amtm menu;;
@@ -74,9 +67,10 @@ sc_update(){
 
 case "${1}" in
 	"") 	;;
-	-set) 	cru a amtm_ScriptsUpdateNotification "10 7 * * Sun /bin/sh ${add}/sc_update.mod -run";;
-	-run) 	if [ -f /jffs/addons/amtm/mail/email.conf ]; then
-				. /jffs/addons/amtm/mail/email.conf
+	-set) 	cru a amtm_ScriptsUpdateNotification "10 7 * * Sun /bin/sh /jffs/addons/amtm/sc_update.mod -run";;
+	-run) 	EMAIL_DIR=/jffs/addons/amtm/mail
+			if [ -f $EMAIL_DIR/email.conf ]; then
+				. $EMAIL_DIR/email.conf
 
 				[ -z "$(nvram get odmpid)" ] && routerModel=$(nvram get productid) || routerModel=$(nvram get odmpid)
 				[ -z "$FRIENDLY_ROUTER_NAME" ] && FRIENDLY_ROUTER_NAME=$routerModel
@@ -123,7 +117,7 @@ case "${1}" in
 					--upload-file /tmp/amtm-mail-body \
 					--ssl-reqd \
 					--crlf \
-					--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in /jffs/addons/amtm/mail/emailpw.enc -pass pass:ditbabot,isoi)" $SSL_FLAG
+					--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in $EMAIL_DIR/emailpw.enc -pass pass:ditbabot,isoi)" $SSL_FLAG
 
 				if [ "$?" = "0" ]; then
 					rm_temp_files

@@ -63,7 +63,7 @@ AdGuardHome_installed(){
 			fi
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} ag${NC} %-9s%-21s%${COR}s\\n" "open" "AdGuardHome    $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ag${NC} %-9s%-21s%${COR}s\\n" "open" "AdGuardHome    $localver" " $upd"
 	[ "$su" = 1 -a -z "$updcheck" ] || [ "$AGHbinUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$AGHext $localAGHver" " $updAGH"
 	case_ag(){
 		/opt/etc/AdGuardHome/installer
@@ -76,13 +76,10 @@ install_AdGuardHome(){
 		am=;show_amtm " ! AdGuardHome is not available to install.\\n dnscrypt installer is installed which is incompatible\\n with AdGuardHome."
 	fi
 	p_e_l
-	echo " This installs AdGuardHome - Asuswrt-Merlin-AdGuardHome-Installer"
-	echo " on your router."
-	echo
-	echo " Author: SomeWhereOverTheRainBow"
-	echo " https://www.snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/#post-733310"
+	printf " This installs AdGuardHome - Asuswrt-Merlin-AdGuardHome-Installer\\n on your router.\\n\\n"
+	printf " Author: SomeWhereOverTheRainBow\\n snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/#post-733310\\n"
 	c_d
-	curl -L -s -k -O https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer && sh installer
+	c_url -O https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer && sh installer
 	sleep 2
 	if [ -f /opt/etc/AdGuardHome/installer ]; then
 		show_amtm " AdGuardHome installed"

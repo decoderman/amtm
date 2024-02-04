@@ -18,7 +18,7 @@ YazFi_installed(){
 			unset localver YazFiUpate YazFiMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} 4 ${NC} %-9s%-21s%${COR}s\\n" "open" "YazFi         $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 4 ${NC} %-9s%-21s%${COR}s\\n" "open" "YazFi         $localver" " $upd"
 	case_4(){
 		/jffs/scripts/YazFi
 		sleep 2
@@ -27,11 +27,8 @@ YazFi_installed(){
 }
 install_YazFi(){
 	p_e_l
-	echo " This installs YazFi - enhanced AsusWRT-Merlin Guest WiFi Networks"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009"
+	printf " This installs YazFi - enhanced Asuswrt-Merlin\\n Guest WiFi Networks on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009\\n"
 	c_d
 	c_url https://jackyaz.io/YazFi/master/amtm-install/YazFi.sh -o /jffs/scripts/YazFi && chmod 0755 /jffs/scripts/YazFi && /jffs/scripts/YazFi install
 	sleep 2

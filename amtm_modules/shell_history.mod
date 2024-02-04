@@ -10,7 +10,7 @@ shell_history_installed(){
 		a_m " - shell history script updated to $sh_version"
 	fi
 
-	[ -z "$su" ] && printf "${GN_BG} sh${NC} %-9s%-19s\\n" "manage" "shell history"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} sh${NC} %-9s%-19s\\n" "manage" "shell history"
 	case_sh(){
 		shell_history manage
 		show_amtm menu
@@ -18,12 +18,10 @@ shell_history_installed(){
 }
 install_shell_history(){
 	p_e_l
-	echo " This installs shell history"
-	echo " on this router."
-	printf "\\n It lets amtm keep a persistent history of\\n shell commands entered on this router.\\n\\n"
+	printf " This installs shell history on your router.\\n\\n"
+	printf " It lets amtm keep a persistent history of\\n shell commands entered on this router.\\n\\n"
 	printf " Use up and down arrow keys to scroll\\n through previous commands.\\n\\n Author: thelonelycoder\\n"
 	c_d
-
 	shell_history install
 	if [ -f "${add}"/shellhistory ]; then
 		show_amtm " shell histroy installed"
@@ -37,7 +35,6 @@ shell_history(){
 	else
 		if [ "$1" = install ]; then
 			c_j_s /jffs/scripts/services-start
-			t_f /jffs/scripts/services-start
 			if ! grep -q "^${add}/shellhistory" /jffs/scripts/services-start; then
 				sed -i "\~shellhistory ~d" /jffs/scripts/services-start
 				echo "${add}/shellhistory # Added by amtm" >> /jffs/scripts/services-start

@@ -18,7 +18,7 @@ spdmerlin_installed(){
 			unset localver spdMerlinUpate spdMerlinMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} j4${NC} %-9s%-21s%${COR}s\\n" "open" "spdMerlin     $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j4${NC} %-9s%-21s%${COR}s\\n" "open" "spdMerlin     $localver" " $upd"
 	case_j4(){
 		/jffs/scripts/spdmerlin
 		sleep 2
@@ -27,13 +27,9 @@ spdmerlin_installed(){
 }
 install_spdmerlin(){
 	p_e_l
-	echo " This installs spdMerlin - Automatic speedtest for AsusWRT Merlin - with graphs"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=19&starter_id=53009"
+	printf " This installs spdMerlin - Automatic speedtest\\n for Asuswrt-Merlin - with graphs\\n on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=19&starter_id=53009\\n"
 	c_d
-
 	c_url https://jackyaz.io/spdMerlin/master/amtm-install/spdmerlin.sh -o "/jffs/scripts/spdmerlin" && chmod 0755 /jffs/scripts/spdmerlin && /jffs/scripts/spdmerlin install
 	sleep 2
 	if [ -f /jffs/scripts/spdmerlin ]; then

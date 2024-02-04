@@ -22,7 +22,7 @@ wicens_installed(){
 		fi
 	fi
 	[ "$suUpd" = 1 ] && witext='WICENS'
-	[ -z "$updcheck" ] && printf "${GN_BG} wi${NC} %-9s%-21s%${COR}s\\n" "open" "$witext  $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} wi${NC} %-9s%-21s%${COR}s\\n" "open" "$witext  $localver" " $upd"
 	case_wi(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -37,15 +37,10 @@ wicens_installed(){
 }
 install_wicens(){
 	p_e_l
-	echo " This installs WICENS - WAN IP Change Email Notification Script"
-	echo " on your router."
-	echo
-	echo " Author: Maverickcdn"
-	echo " https://www.snbforums.com/threads/wicens-wan-ip-change-email-notification-script.69294/"
+	printf " This installs WICENS - WAN IP Change Email\\n Notification Script on your router.\\n\\n"
+	printf " Author: Maverickcdn\\n snbforums.com/threads/wicens-wan-ip-change-email-notification-script.69294/\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/maverickcdn/wicens/master/wicens.sh -o /jffs/scripts/wicens.sh && chmod 755 /jffs/scripts/wicens.sh && /jffs/scripts/wicens.sh
-
 	sleep 2
 	if [ -f /jffs/scripts/wicens.sh ]; then
 		show_amtm " WICENS installed"

@@ -99,7 +99,7 @@ diversion_installed(){
 		fi
 	fi
 
-	[ -z "$updcheck" ] && printf "${GN_BG} 1 ${NC} %-9s%-21s%${COR}s\\n" "open" "Diversion     $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 1 ${NC} %-9s%-21s%${COR}s\\n" "open" "Diversion     $localver" " $upd"
 	case_1(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -114,13 +114,9 @@ diversion_installed(){
 }
 install_diversion(){
 	p_e_l
-	echo " This installs Diversion - the Router Adblocker"
-	echo " on your router."
-	echo
-	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480"
+	printf " This installs Diversion - the Router Adblocker\\n on your router.\\n\\n"
+	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480\\n"
 	c_d
-
 	case "$release" in
 		*XX*) 	remoteurl="http://diversion.test/install";;
 		*) 		remoteurl="https://diversion.ch/install";;

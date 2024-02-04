@@ -3,7 +3,6 @@
 vpn_routing_installed(){
 	scriptname='VPN Routing'
 	scriptgrep='^VERSION='
-
 	devmode=
 	branch=domain_vpn_routing.sh
 	if [ -f /jffs/configs/domain_vpn_routing/global.conf ] && grep -q 'DEVMODE=1' /jffs/configs/domain_vpn_routing/global.conf; then
@@ -25,7 +24,7 @@ vpn_routing_installed(){
 			unset localver VPN_RoutingUpate VPN_RoutingMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} vr${NC} %-9s%-21s%${COR}s\\n" "open" "VPN Routing $devmode $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} vr${NC} %-9s%-21s%${COR}s\\n" "open" "VPN Routing $devmode $localver" " $upd"
 	case_vr(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -40,15 +39,10 @@ vpn_routing_installed(){
 }
 install_vpn_routing(){
 	p_e_l
-	echo " This installs Domain-based VPN Routing - route specific website domains to specific VPN tunnels"
-	echo " on your router."
-	echo
-	echo " Author: Ranger802004"
-	echo " https://www.snbforums.com/threads/domain-based-vpn-routing-script.79264/"
+	printf " This installs Domain-based VPN Routing - route\\n specific website domains to specific VPN\\n tunnels on your router.\\n\\n"
+	printf " Author: Ranger802004\\n snbforums.com/threads/domain-based-vpn-routing-script.79264/\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/Ranger802004/asusmerlin/main/domain_vpn_routing/domain_vpn_routing.sh -o /jffs/scripts/domain_vpn_routing.sh && chmod 755 /jffs/scripts/domain_vpn_routing.sh && sh /jffs/scripts/domain_vpn_routing.sh install
-
 	sleep 2
 	if [ -f /jffs/scripts/domain_vpn_routing.sh ]; then
 		show_amtm " Domain-based VPN Routing installed"

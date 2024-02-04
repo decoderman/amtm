@@ -47,18 +47,19 @@ amtm
 | uiDivStats | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009) |
 | uiScribe | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=24&starter_id=53009) |
 | DNSCrypt | bigeyes0x0, SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179) |
-| Pixelserv-tls | kvic | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=17) |
 | YazDHCP | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009) |
 | Vnstat | dev_null | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
 | WireGuard Session Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215) |
 | Asuswrt-Merlin-AdGuardHome-Installer | SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/) |
-| VPNMON | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
+| VPNMON-R3 | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
+| VPNMON-R2 (Sunsetted)| Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
 | RTRMON | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/) |
 | WICENS | Maverickcdn | [Link](https://www.snbforums.com/threads/wicens-wan-ip-change-email-notification-script.69294/) |
 | KILLMON | Viktor Jaep | [Link](https://www.snbforums.com/threads/killmon-v1-05-feb-20-2023-ip4-ip6-vpn-kill-switch-monitor-configurator.81758/) |
 | Dual WAN Failover | Ranger802004 | [Link](https://www.snbforums.com/threads/dual-wan-failover-v2-0-2-release.83674/) |
 | BACKUPMON | Viktor Jaep | [Link](https://www.snbforums.com/threads/backupmon-v1-22-oct-2-2023-backup-restore-your-router-jffs-nvram-external-usb-drive.86645/) |
 | Domain-based VPN Routing | Ranger802004 | [Link](https://www.snbforums.com/threads/domain-based-vpn-routing-script.79264/) |
+| MerlinAU Firmware Auto-Updater | ExtremeFiretop | [Link](https://www.snbforums.com/threads/introducing-merlinau-the-ultimate-firmware-auto-updater-addon.88577/) |
 
 amtm also offers an interface for managing a number of other features:
 
@@ -81,4 +82,4 @@ amtm also offers an interface for managing a number of other features:
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
 
-[![amtm 4.2](https://cdn.imgchest.com/files/e4gdc5dxw24.png "amtm 4.2")](https://cdn.imgchest.com/files/e4gdc5dxw24.png "amtm 4.2")
+[![amtm 4.3](https://cdn.imgchest.com/files/84jdcnqngd4.png "amtm 4.3")](https://cdn.imgchest.com/files/84jdcnqngd4.png "amtm 4.3")

@@ -36,7 +36,7 @@ led_control_installed(){
 	fi
 	[ "$(nvram get led_disable)" = 1 ] && ledState="${E_BG}off${NC}" || ledState="${GN_BG}on${NC}"
 
-	[ -z "$su" ] && printf "${GN_BG} lc${NC} %-9s%-19s\\n" "manage" "LED control $lcOnOff LED $ledState"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} lc${NC} %-9s%-19s\\n" "manage" "LED control $lcOnOff LED $ledState"
 	case_lc(){
 		led_control_manage
 		show_amtm menu
@@ -44,13 +44,9 @@ led_control_installed(){
 }
 install_led_control(){
 	p_e_l
-	echo " This installs LED control - Scheduled router LED control"
-	echo " on your router."
-	echo
-	echo " Authors: thelonelycoder, RMerlin"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
+	printf " This installs LED control - Scheduled router\\n LED control on your router.\\n\\n"
+	printf " Authors: thelonelycoder, RMerlin\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480\\n"
 	c_d
-
 	tpLED=
 	if [ -f /jffs/scripts/services-start ]; then
 		if grep -q "lightsoff\|ledsoff\|ledcontrol" /jffs/scripts/services-start && ! grep -q "ledcontrol -set # Added by amtm" /jffs/scripts/services-start; then
@@ -282,7 +278,6 @@ led_control_schedule(){
 }
 check_services_start(){
 	c_j_s /jffs/scripts/services-start
-	t_f /jffs/scripts/services-start
 	if ! grep -q "^${add}/ledcontrol -set # Added by amtm" /jffs/scripts/services-start; then
 		echo "${add}/ledcontrol -set # Added by amtm" >> /jffs/scripts/services-start
 	fi
@@ -414,7 +409,7 @@ write_ledcontrol_file(){
 	                        echo "locLastUpd=\"\$locLastUpd\""
 	                        } >${add}/ledcontrol.conf
 	                        logger -s -t "\$caller" "scheduled update of sunset/sunrise time"
-	                        /jffs/addons/amtm/ledcontrol -set
+	                         /jffs/addons/amtm/ledcontrol -set
 	                    else
 	                        logger -s -t "\$caller" "failed to get location code"
 	                    fi

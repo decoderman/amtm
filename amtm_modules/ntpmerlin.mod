@@ -18,7 +18,7 @@ ntpmerlin_installed(){
 			unset localver ntpMerlinUpate ntpMerlinMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} j2${NC} %-9s%-21s%${COR}s\\n" "open" "ntpMerlin     $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j2${NC} %-9s%-21s%${COR}s\\n" "open" "ntpMerlin     $localver" " $upd"
 	case_j2(){
 		/jffs/scripts/ntpmerlin
 		sleep 2
@@ -27,13 +27,9 @@ ntpmerlin_installed(){
 }
 install_ntpmerlin(){
 	p_e_l
-	echo " This installs ntpMerlin - Installer for kvic NTP Daemon"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22&starter_id=53009"
+	printf " This installs ntpMerlin - Installer for kvic\\n NTP Daemon on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22&starter_id=53009\\n"
 	c_d
-
 	c_url https://jackyaz.io/ntpMerlin/master/amtm-install/ntpmerlin.sh -o "/jffs/scripts/ntpmerlin" && chmod 0755 /jffs/scripts/ntpmerlin && /jffs/scripts/ntpmerlin install
 	sleep 2
 	if [ -f /jffs/scripts/ntpmerlin ]; then

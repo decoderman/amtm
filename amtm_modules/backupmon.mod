@@ -18,7 +18,7 @@ backupmon_installed(){
 			unset localver backupmonUpate backupmonMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} bm${NC} %-9s%-21s%${COR}s\\n" "open" "BACKUPMON      $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} bm${NC} %-9s%-21s%${COR}s\\n" "open" "BACKUPMON      $localver" " $upd"
 	case_bm(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -34,13 +34,9 @@ backupmon_installed(){
 }
 install_backupmon(){
 	p_e_l
-	echo " This installs BACKUPMON - Backup/Restore your Routers JFFS, NVRAM and External USB Drive"
-	echo " on your router."
-	echo
-	echo " Author: Viktor Jaep"
-	echo " https://www.snbforums.com/threads/release-backupmon-v1-18-sep-20-2023-backup-restore-your-router-jffs-nvram-external-usb-drive.86645/"
+	printf " This installs BACKUPMON - Backup/Restore\\n JFFS, NVRAM and External USB Drive\\n on your router.\\n\\n"
+	printf " Author: Viktor Jaep\\n snbforums.com/threads/release-backupmon-v1-18-sep-20-2023-backup-restore-your-router-jffs-nvram-external-usb-drive.86645/\\n"
 	c_d
-
 	c_url https://raw.githubusercontent.com/ViktorJp/BACKUPMON/main/backupmon.sh -o /jffs/scripts/backupmon.sh && chmod 755 /jffs/scripts/backupmon.sh && /jffs/scripts/backupmon.sh -setup
 	sleep 2
 	if [ -f /jffs/scripts/backupmon.sh ]; then

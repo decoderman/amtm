@@ -18,7 +18,7 @@ scmerlin_installed(){
 			unset localver scMerlinUpate scMerlinMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} j3${NC} %-9s%-21s%${COR}s\\n" "open" "scMerlin      $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j3${NC} %-9s%-21s%${COR}s\\n" "open" "scMerlin      $localver" " $upd"
 	case_j3(){
 		trap trap_ctrl 2
 		trap_ctrl(){
@@ -33,13 +33,9 @@ scmerlin_installed(){
 }
 install_scmerlin(){
 	p_e_l
-	echo " This installs scMerlin - service and script control menu for AsusWRT-Merlin"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=23&starter_id=53009"
+	printf " This installs scMerlin - service and script\\n control menu for Asuswrt-Merlin\\n on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=23&starter_id=53009\\n"
 	c_d
-
 	c_url https://jackyaz.io/scMerlin/master/amtm-install/scmerlin.sh -o "/jffs/scripts/scmerlin" && chmod 0755 /jffs/scripts/scmerlin && /jffs/scripts/scmerlin install
 	sleep 2
 	if [ -f /jffs/scripts/scmerlin ]; then

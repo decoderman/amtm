@@ -4,7 +4,7 @@ email_installed(){
 	[ -z "$su" ] && atii=1
 	emMan=setup
 	[ -f "${EMAIL_DIR}"/emailpw.enc ] && emMan=open
-	[ -z "$su" ] && printf "${GN_BG} em${NC} %-9s%-19s\\n" "$emMan" "email settings"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} em${NC} %-9s%-19s\\n" "$emMan" "email settings"
 	case_em(){
 		email_manage
 		show_amtm menu
@@ -12,14 +12,8 @@ email_installed(){
 }
 install_email(){
 	p_e_l
-	echo " This sets up email settings"
-	echo " on your router."
-	echo
-	echo " These settings are used by multiple"
-	echo " third-party scripts, including Diversion."
-	echo
-	echo " Author: thelonelycoder"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480"
+	printf " This sets up email settings on your router.\\n\\n These settings are used to send email\\n messages from the router. Multiple scripts\\n use them, including Diversion and amtm itself.\\n\\n"
+	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16&starter_id=25480\\n"
 	c_d
 
 	g_m email.mod include
@@ -176,7 +170,8 @@ email_manage(){
 					PROTOCOL=$value;break;;
 				10)	printf "\\n${R_BG} Enter SSL flag: ${NC} [e=Exit] ";read -r value
 					SSL_FLAG=$value;break;;
-				11)	p_e_l
+				11)	check_email_conf_file
+					p_e_l
 					verbose=
 					printf " This will send a testmail\\n\\n From: $FROM_ADDRESS\\n To:   $TO_NAME <$TO_ADDRESS>\\n\\n"
 					echo " 1. Send testmail"
@@ -257,23 +252,19 @@ write_email_config_file(){
 }
 
 check_email_conf_file(){
-	if [ ! -f "${EMAIL_DIR}/email.conf" ]; then
+	if [ ! -f ${EMAIL_DIR}/email.conf -o ! -f ${EMAIL_DIR}/emailpw.enc ]; then
 		email_manage
 	else
-		unset FROM_ADDRESS TO_NAME TO_ADDRESS USERNAME PASSWORD SMTP PORT PROTOCOL
-		. "${EMAIL_DIR}/email.conf"
-		if [ -z "$FROM_ADDRESS" ] || [ -z "$TO_NAME" ] || [ -z "$TO_ADDRESS" ] || [ -z "$USERNAME" ] || [ ! -f "${EMAIL_DIR}/emailpw.enc" ] || [ -z "$SMTP" ] || [ -z "$PORT" ] || [ -z "$PROTOCOL" ]; then
-			printf "\\n${R_BG} email settings not set or incomplete.${NC}\\n"
-			p_e_t "email settings";email_manage
-		elif [ "$PASSWORD" = "PUT YOUR PASSWORD HERE" ]; then
-			printf "\\n${R_BG} email password has not been set.${NC}\\n"
-			p_e_t "email settings";email_manage
+		unset FROM_ADDRESS TO_NAME TO_ADDRESS USERNAME SMTP PORT PROTOCOL
+		. ${EMAIL_DIR}/email.conf
+		if [ -z "$FROM_ADDRESS" -o -z "$TO_NAME" -o -z "$TO_ADDRESS" -o -z "$USERNAME" -o -z "$SMTP" -o -z "$PORT" -o -z "$PROTOCOL" ]; then
+			printf "\\n${R_BG} email settings not set or incomplete ${NC}\\n"
+			p_e_t "return";email_manage
 		fi
 	fi
 }
 
 send_testmail(){
-	check_email_conf_file
 	. "${EMAIL_DIR}/email.conf"
 	[ -z "$(nvram get odmpid)" ] && routerModel=$(nvram get productid) || routerModel=$(nvram get odmpid)
 	rm -f /tmp/amtm-mail-body

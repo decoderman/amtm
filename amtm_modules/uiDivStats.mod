@@ -23,13 +23,13 @@ uiDivStats_installed(){
 		divV=$(grep '^VERSION' /opt/bin/diversion | sed 's/VERSION=//')
 		if [ "$(v_c $divV)" -ge "$(v_c "5.0")" ]; then
 			if [ "$(v_c $lvtpu)" -gt "$(v_c "3.0.2")" ]; then
-				[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
 				case_j5(){
 					/jffs/scripts/uiDivStats
 					sleep 2
 					show_amtm menu
 				}
-			elif [ -z "$updcheck" ]; then
+			elif [ -z "$updcheck" -a -z "$ss" ]; then
 				if [ -z "$localver" ]; then
 					divStatsV=$upd
 					printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "show" "uiDivStats, incompatible" ""
@@ -46,7 +46,7 @@ uiDivStats_installed(){
 				fi
 			fi
 		else
-			[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+			[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
 			case_j5(){
 				/jffs/scripts/uiDivStats
 				sleep 2
@@ -54,7 +54,7 @@ uiDivStats_installed(){
 			}
 		fi
 	else
-		[ -z "$updcheck" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+		[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
 		case_j5(){
 			/jffs/scripts/uiDivStats
 			sleep 2
@@ -64,13 +64,9 @@ uiDivStats_installed(){
 }
 install_uiDivStats(){
 	p_e_l
-	echo " This installs uiDivStats - WebUI for Diversion statistics"
-	echo " on your router."
-	echo
-	echo " Author: Jack Yaz"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009"
+	printf " This installs uiDivStats - WebUI for Diversion\\n statistics on your router.\\n\\n"
+	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009\\n"
 	c_d
-
 	installOK(){
 		c_url https://jackyaz.io/uiDivStats/master/amtm-install/uiDivStats.sh -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
 		sleep 2

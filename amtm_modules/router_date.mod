@@ -6,7 +6,7 @@ router_date_installed(){
 		write_router_date_file
 		a_m " - Router date keeper script updated to $rd_version"
 	fi
-	[ -z "$su" ] && printf "${GN_BG} rd${NC} %-9s%-19s\\n" "manage" "Router date keeper"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} rd${NC} %-9s%-19s\\n" "manage" "Router date keeper"
 	case_rd(){
 		router_date manage
 		show_amtm menu
@@ -14,12 +14,10 @@ router_date_installed(){
 }
 install_router_date(){
 	p_e_l
-	echo " This installs router date keeper"
-	echo " on this router."
-	printf "\\n Sort of a nerd mode - or for people with OCD.\\n\\n amtm will keep the routers last date when\\n booting or rebooting. The routers system log\\n date entries look more consistent.\\n\\n"
-	printf " Author: thelonelycoder\\n"
+	printf " This installs router date keeper\\n on this router.\\n\\n"
+	printf " Sort of a nerd mode - or for people with OCD.\\n\\n amtm will keep the routers last date when\\n"
+	printf " booting or rebooting. The routers system log\\n date entries look more consistent.\\n\\n Author: thelonelycoder\\n"
 	c_d
-
 	router_date install
 	if [ -f "${add}"/routerdate ]; then
 		show_amtm " Router date keeper installed"
@@ -30,13 +28,11 @@ install_router_date(){
 router_date(){
 	if [ "$1" = install ]; then
 		c_j_s /jffs/scripts/init-start
-		t_f /jffs/scripts/init-start
 		if ! grep -q "^${add}/routerdate" /jffs/scripts/init-start; then
 			sed -i "\~routerdate ~d" /jffs/scripts/init-start
 			echo "${add}/routerdate restore # Added by amtm" >> /jffs/scripts/init-start
 		fi
 		c_j_s /jffs/scripts/services-stop
-		t_f /jffs/scripts/services-stop
 		if ! grep -q "^${add}/routerdate" /jffs/scripts/services-stop; then
 			sed -i "\~routerdate ~d" /jffs/scripts/services-stop
 			echo "${add}/routerdate save # Added by amtm" >> /jffs/scripts/services-stop
@@ -47,7 +43,7 @@ router_date(){
 			cp /etc/TZ "${add}"/TZ
 		fi
 		write_router_date_file
-		cru a amtm_RouterDate "45 */6 * * * /jffs/addons/amtm/routerdate cron"
+		cru a amtm_RouterDate "45 */6 * * * ${add}/routerdate cron"
 
 	elif [ "$1" = manage ]; then
 		p_e_l
@@ -59,7 +55,7 @@ router_date(){
 		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
-				1)		/bin/sh /jffs/addons/amtm/routerdate cron
+				1)		/bin/sh "${add}"/routerdate cron
 						rd="$(/bin/date -u -r "${add}"/routerdate '+%Y-%m-%d %H:%M:%S')"
 						show_amtm " Router date saved as\\n $rd UTC time"
 						break;;
@@ -81,25 +77,22 @@ router_date(){
 write_router_date_file(){
 	cat <<-EOF > "${add}"/routerdate
 	#!/bin/sh
-	# Router date keeper. Coded by thelonelycoder
 	# Script created by amtm $version
 	VERSION=$rd_version
-	NAME="amtm \$(basename "\$0")[\$\$]"
-	[ -f "/jffs/addons/amtm/TZ" ] && export TZ="\$(cat /jffs/addons/amtm/TZ)" || export TZ="\$(nvram get time_zone_x)"
-	SCRIPT_LOC="\$(/usr/bin/readlink -f "\$0")"
-	rd='/bin/date -u -r "\$SCRIPT_LOC" '\''+%Y-%m-%d %H:%M:%S'\'''
+	[ -f "${add}/TZ" ] && export TZ="\$(cat ${add}/TZ)" || export TZ="\$(nvram get time_zone_x)"
+	rd='/bin/date -u -r ${add}/routerdate '\''+%Y-%m-%d %H:%M:%S'\'''
 
 	case \${1} in
-	    save|cron)  /bin/touch "\$SCRIPT_LOC"
-	                printf "%s" "\$(nvram get time_zone_x)" > /jffs/addons/amtm/TZ
+	    save|cron)  /bin/touch ${add}/routerdate
+	                printf "%s" "\$(nvram get time_zone_x)" > ${add}/TZ
 	                [ "\$1" = "save" ] && rdtxt='before reboot' || rdtxt='via cron'
-	                logger -t "\$NAME" "Preserving router date \$rdtxt (\$(eval "\$rd")) UTC time."
+	                logger -t "amtm routerdate" "Preserving router date \$rdtxt (\$(eval "\$rd")) UTC time."
 	                ;;
 	    restore)    if [ "\$(nvram get ntp_ready)" = 0 ]; then
 	                    /bin/date -u -s "\$(eval "\$rd")"
 	                fi
 	                if ! cru l | grep -q "amtm_RouterDate"; then
-	                    cru a amtm_RouterDate "45 */6 * * * /jffs/addons/amtm/routerdate cron"
+	                    cru a amtm_RouterDate "45 */6 * * * ${add}/routerdate cron"
 	                fi
 	                ;;
 	esac

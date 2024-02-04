@@ -5,7 +5,6 @@ check_swap(){
 		if ! grep -q 'do-not-check-swap' /jffs/scripts/post-mount 2> /dev/null; then
 			[ -f /jffs/scripts/post-mount ] && sed -i '\~swapon ~d' /jffs/scripts/post-mount
 			c_j_s /jffs/scripts/post-mount
-			t_f /jffs/scripts/post-mount
 			sed -i "1a swapon $swl # Added by amtm" /jffs/scripts/post-mount
 			swapon "$swl" 2> /dev/null
 			swsize=$(du -h "$swl" | awk '{print $1}')
@@ -82,21 +81,15 @@ check_swap(){
 manage_swap(){
 	if [ -f /jffs/scripts/post-mount ] && grep -q 'do-not-check-swap' /jffs/scripts/post-mount; then
 		p_e_l
-		echo " Found \"do-not-check-swap\" entry in"
-		echo " /jffs/scripts/post-mount. Diversion and amtm"
-		echo " will not auto-correct paths."
+		printf " Found \"do-not-check-swap\" entry in\\n /jffs/scripts/post-mount. Diversion and amtm\\n will not auto-correct paths.\\n"
 	fi
 	if [ "$1" = create ]; then
 		p_e_l
-		echo " This creates a Swap file."
-		echo " A Swap file is useful when the router"
-		echo " runs out of memory (RAM)."
+		printf " This creates a Swap file.\\n\\n A Swap file helps when the router runs\\n out of memory (RAM).\\n\\n"
+		printf " Skynet requires a 2GB swap file while\\n Diversion highly recommends to create one\\n for large(er) blocking lists.\\n\\n Author: thelonelycoder\\n"
 		if [ ! -f /opt/bin/opkg ]; then
-			echo
-			echo " Note: If you plan to install the"
-			echo " Entware ${GN_BG} ep${NC} repository on this router"
-			echo " install it first, this will allow to"
-			echo " show progress on the swap file creation."
+			printf "\\n Note: If you plan to install the\\n Entware ${GN_BG} ep${NC} repository on this router\\n"
+			printf " install it first, this will allow to\\n show progress on the swap file creation.\\n"
 		fi
 		p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])r_m swap.mod;am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;
 
@@ -193,21 +186,19 @@ manage_swap(){
 									nvram commit
 
 									c_j_s /jffs/scripts/post-mount
-									t_f /jffs/scripts/post-mount
 									if grep -q '^swapon.*\.' /jffs/scripts/post-mount; then
 										sed -i '/swapon/d' /jffs/scripts/post-mount >/dev/null
 									fi
 									sed -i "1a swapon $swapDevice/myswap.swp # Added by amtm" /jffs/scripts/post-mount
 
 									c_j_s /jffs/scripts/unmount
-									t_f /jffs/scripts/unmount
 									if ! grep -q "^\[ \"\$(/usr/bin/find \$1/$swapfile" /jffs/scripts/unmount; then
 										sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
 										trim_file /jffs/scripts/unmount
 										echo "[ \"\$(/usr/bin/find \$1/$swapfile 2> /dev/null)\" ] && swapoff \$1/$swapfile # Added by amtm" >> /jffs/scripts/unmount
 									fi
 
-									show_amtm " Swap file created and activated:\\n $(echo "${swapDevice#/tmp}")/myswap.swp";break;;
+									show_amtm " Swap file created and is active at\\n $(echo "${swapDevice#/tmp}")/myswap.swp";break;;
 							[Ee])	show_amtm menu;break;;
 							*)		printf "\\n input is not an option\\n";;
 						esac

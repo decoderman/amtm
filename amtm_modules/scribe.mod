@@ -17,7 +17,7 @@ scribe_installed(){
 			unset localver scribeUpate scribeMD5
 		fi
 	fi
-	[ -z "$updcheck" ] && printf "${GN_BG} 5 ${NC} %-9s%-21s%${COR}s\\n" "open" "scribe        $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 5 ${NC} %-9s%-21s%${COR}s\\n" "open" "scribe        $localver" " $upd"
 	case_5(){
 		/jffs/scripts/scribe
 		sleep 2
@@ -26,11 +26,8 @@ scribe_installed(){
 }
 install_scribe(){
 	p_e_l
-	echo " This installs scribe - syslog-ng and logrotate installer"
-	echo " on your router."
-	echo
-	echo " Author: cmkelley"
-	echo " https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7"
+	printf " This installs scribe - syslog-ng and logrotate\\n installer on your router.\\n\\n"
+	printf " Author: cmkelley\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/cynicastic/scribe/master/scribe -o /jffs/scripts/scribe && chmod 0755 /jffs/scripts/scribe && /jffs/scripts/scribe install
 	sleep 2
