@@ -1,12 +1,12 @@
 #!/bin/sh
 #bof
-version=4.3
-release="February 02 2024"
-led_version=2.4 # LED scheduler
+version=4.4
+release="March 10 2024"
+led_version=2.5 # LED scheduler
 sh_version=1.3 # Shell History
 rd_version=1.3 # Router date keeper
-fw_version=1.1 # Firmware update notification
-wl_MD5=a0043933737502238af590de5412d435 # shared-amtm-whitelist
+fw_version=1.2 # Firmware update notification
+wl_MD5=757e79826a752563375aa4c803599e0f # shared-amtm-whitelist
 title="Asuswrt-Merlin Terminal Menu"
 EMAIL_DIR="${add}/mail"
 
@@ -118,6 +118,7 @@ show_amtm(){
 		printf "${R_BG}%-27s%s\\n\\n" " amtm $version FW" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		extendno=$(nvram get extendno)
+		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-5).."
 		[ "$extendno" = 0 ] && extendno= || extendno=_$extendno
 		[ "$(v_c $(nvram get buildno))" -ge "$(v_c 388)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$(nvram get buildno)$extendno || fwVersion=$(nvram get buildno)$extendno
 		printf " ASUS $model HW: $(uname -m) Kernel: $(uname -r | sed 's/brcmarm//g')\\n FW: $fwVersion IP address: $(nvram get lan_ipaddr)\\n"
@@ -163,13 +164,11 @@ show_amtm(){
 				pkg.entware.net
 				raw.githubusercontent.com
 				small.oisd.nl
-				smallnetbuilder.com
 				snbforums.com
 				someonewhocares.org
 				sourceforge.net
 				urlhaus.abuse.ch
 				www.asuswrt-merlin.net
-				www.smallnetbuilder.com
 				www.snbforums.com
 				EOF
 				a_m " - shared-amtm-whitelist created or updated"
@@ -498,6 +497,7 @@ show_amtm(){
 			[Jj]1)				case_j1;break;;
 			[Jj]2)				case_j2;break;;
 			[Jj]3)				case_j3;break;;
+			[Jj]3u)				case_j3u;break;;
 			[Ww][Ii])			case_wi;break;;
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
@@ -520,6 +520,7 @@ show_amtm(){
 			[Uu])				c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
 			[Dd][Cc])			case_dc;break;;
 			dcl|DCL)			s_l_f disk_check.log;break;;
+			dce|DCE)			[ -f "${add}"/disk_check_err.log ] && rm "${add}"/disk_check_err.log;show_amtm "disk_check_err.log dismissed";break;;
 			[Ff][Dd])			case_fd;break;;
 			fdl|FDL)			s_l_f amtm-format-disk.log;break;;
 			[Ll][Cc])			c_ntp;case_lc;break;;
@@ -555,6 +556,13 @@ show_amtm(){
 			[Rr][Rr]|reboot)	p_e_l   # hidden, reboot router
 								printf " OK then,\\n do you want to reboot this router now?\\n"
 								c_d
+								clear
+								ascii_logo '  Rebooting...'
+								printf "   amtm reboots this router now\\n\\n"
+								service reboot >/dev/null 2>&1 &
+								exit 0
+								break;;
+			[Rr][Nn])			# hidden, reboot router right now
 								clear
 								ascii_logo '  Rebooting...'
 								printf "   amtm reboots this router now\\n\\n"
@@ -600,6 +608,7 @@ s_l_f(){
 				printf " Delete log file now? [1=Yes e=Exit] ";read -r continue
 				case "$continue" in
 					1)		rm "${add}/$1"
+							[ "$1" = disk_check.log ] && rm "${add}"/disk_check_err.log
 							show_amtm " $1 deleted"
 							break;;
 					[Ee])	show_amtm menu;break;;
@@ -728,6 +737,10 @@ reset_amtm(){
 						r_w_e /jffs/scripts/services-start
 						cru d amtm_LEDcontrol_on
 						cru d amtm_LEDcontrol_off
+						if [ "$(nvram get led_disable)" = 1 ]; then
+							nvram set led_disable=0
+							nvram commit
+						fi
 					fi
 					if [ -f /jffs/scripts/services-start ] && grep -q "^${add}/shellhistory" /jffs/scripts/services-start; then
 						sed -i "\~${add}/shellhistory.*~d" /jffs/scripts/services-start
@@ -758,6 +771,12 @@ reset_amtm(){
 						sync; echo 3 > /proc/sys/vm/drop_caches
 						swapoff "$swl"
 						rm -f "$swl"
+					fi
+					if [ -f /jffs/scripts/services-start ] && grep -q "${add}/ledcontrol.*" /jffs/scripts/services-start; then
+						if [ "$(nvram get led_disable)" = 1 ]; then
+							nvram set led_disable=0
+							nvram commit
+						fi
 					fi
 					rm -rf /jffs/configs/*
 					rm -rf /jffs/scripts/*

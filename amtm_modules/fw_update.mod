@@ -26,7 +26,7 @@ fw_update(){
 		rm -f /jffs/scripts/update-notification
 		am=
 	}
-	
+
 	if [ "$1" = install ]; then
 		if [ "$(v_c $(nvram get buildno))" -ge "$(v_c 380.65)" ]; then
 			isEligible=
@@ -88,6 +88,7 @@ fw_update(){
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		check_email_conf
+						echo
 						/jffs/scripts/update-notification test
 						if [ $? = 0 ]; then
 							echo "${NC}"
@@ -166,7 +167,7 @@ write_fw_update_file(){
 	    echo "Your \$FRIENDLY_ROUTER_NAME router (Model type \$routerModel)" >>/tmp/amtm-mail-body
 	    echo >>/tmp/amtm-mail-body
 
-	    /usr/sbin/curl --url \$PROTOCOL://\$SMTP:\$PORT \\
+	    /usr/sbin/curl --url \$PROTOCOL://\$SMTP:\$PORT/\$SMTP \\
 	    --mail-from "\$FROM_ADDRESS" --mail-rcpt "\$TO_ADDRESS" \\
 	    --upload-file /tmp/amtm-mail-body \\
 	    --ssl-reqd \\

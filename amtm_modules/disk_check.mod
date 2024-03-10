@@ -26,7 +26,14 @@ disk_check_installed(){
 		rm -f "${add}"/disk-check
 	fi
 	[ -f "${add}"/disk_check.log ] && dcltext="${GN_BG}dcl${NC} show log" || dcltext=
-	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"
+	if [ -z "$su" -a -z "$ss" ]; then
+		printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"
+		if [ -f "${add}"/disk_check_err.log ]; then
+			printf "    ${R_BG} Disk check found error in device ${NC}\\n"
+			cat "${add}"/disk_check_err.log
+			printf "${E_BG}dce${NC} %-9s%-19s%${COR}s\\n\\n" "Dismiss" "Disk check error" " $dcltext"
+		fi
+	fi
 	case_dc(){
 		disk_check_manage
 		show_amtm menu
@@ -98,9 +105,11 @@ disk_check_manage(){
 								else
 									[ -f "${add}"/disk_check.conf ] && . "${add}"/disk_check.conf
 									if [ "$blkidExclude" ]; then
-										echo blkidExclude="'$(echo "$blkidExclude")$(echo "$exclusion" | grep -o 'UUID=".*"') '" > "${add}"/disk_check.conf
+										sed -i '/blkidExclude/d' "${add}"/disk_check.conf
+										echo blkidExclude="'$(echo "$blkidExclude")$(echo "$exclusion" | grep -o 'UUID=".*"') '" >>"${add}"/disk_check.conf
 									else
-										echo blkidExclude="'$(echo "$exclusion" | grep -o 'UUID=".*"') '" > "${add}"/disk_check.conf
+										sed -i '/blkidExclude/d' "${add}"/disk_check.conf
+										echo blkidExclude="'$(echo "$exclusion" | grep -o 'UUID=".*"') '" >>"${add}"/disk_check.conf
 									fi
 									printf "\\n added exclusion for device:\\n $exclusion\\n"
 								fi
@@ -112,14 +121,14 @@ disk_check_manage(){
 		}
 
 		p_e_l
-		printf " Disk check options\\n\\n 1. Remove Disk check script\\n"
-		unset addexcl blkidExclude
+		unset addexcl blkidExclude dcErrMail
 		[ -f "${add}"/disk_check.conf ] && . "${add}"/disk_check.conf
+		printf " Disk check options\\n\\n 1. Remove Disk check script\\n 2. Disk check error email setting $dcErrMail\\n"
 		if [ "$blkidExclude" ]; then
-			printf " 2. Edit disk check exclusion(s)\\n"
+			printf " 3. Edit disk check exclusion(s)\\n"
 			addexcl=1
 		else
-			printf " 2. Add disk check exclusion\\n"
+			printf " 3. Add disk check exclusion\\n"
 		fi
 
 		while true; do
@@ -132,10 +141,36 @@ disk_check_manage(){
 						r_w_e /jffs/scripts/pre-mount
 						rm -f "${add}"/disk_check.conf
 						rm -f "${add}"/disk_check.log
+						rm -f "${add}"/disk_check_err.log
 						r_m disk_check.mod
 						show_amtm " Disk check and log removed"
 						break;;
-				2)		if [ "$addexcl" ]; then
+				2)		p_e_l
+						printf " This sends an email if an error was logged\\n during the disk check.\\n\\n"
+						if [ "$dcErrMail" ]; then
+							printf " 1. Disable disk check error email\\n"
+						else
+							printf " 1. Enable disk check error email\\n"
+						fi
+						while true;do
+							printf "\\n Enter selection [1-1 e=Exit] ";read -r selection
+							case "$selection" in
+								1)		if [ "$dcErrMail" ]; then
+											sed -i '/dcErrMail/d' "${add}"/disk_check.conf
+											r_w_e "${add}"/disk_check.conf
+											show_amtm " Disk check error email disabled"
+										else
+											check_email_conf
+											echo dcErrMail=on >>"${add}"/disk_check.conf
+											show_amtm " Disk check error email enabled"
+										fi
+										break;;
+								[Ee])	show_amtm " Exited disk check function";;
+								*)		printf "\\n input is not an option\\n";;
+							esac
+						done
+						break;;
+				3)		if [ "$addexcl" ]; then
 							p_e_l
 							printf " The following exclusions are active:\\n\\n"
 
@@ -175,9 +210,11 @@ disk_check_manage(){
 													e)			break;;
 													[$noad])	eval exclusion="\$exclusion$selection"
 																if [ "$i" = 2 ]; then
-																	rm -f "${add}"/disk_check.conf
+																	sed -i '/blkidExclude/d' "${add}"/disk_check.conf
+																	r_w_e "${add}"/disk_check.conf
 																else
-																	echo blkidExclude="'$(echo "$blkidExclude" | sed "s|$exclusion ||")'" > "${add}"/disk_check.conf
+																	sed -i '/blkidExclude/d' "${add}"/disk_check.conf
+																	echo blkidExclude="'$(echo "$blkidExclude" | sed "s|$exclusion ||")'" >>"${add}"/disk_check.conf
 																fi
 																printf "\\n removed exclusion for device:\\n ${GN_BG} $exclusion ${NC}\\n"
 																break;;
@@ -222,7 +259,7 @@ run_disk_check(){
 		exit 0
 	fi
 
-	while [ "$(nvram get ntp_ready)" = "0" ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
+	while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
 		ntptimer=$((ntptimer+1))
 		sleep 1
 	done
@@ -231,7 +268,7 @@ run_disk_check(){
 		text="NTP timeout (${ntptimeout}s) reached, date is router default"
 		printf "\\n$text\\n" >> $CHKLOG
 		logger -t "$TAG" "$text"
-	elif [ "$ntptimer" -gt "0" ]; then
+	elif [ "$ntptimer" -gt 0 ]; then
 		text="Waited ${ntptimer}s for NTP to sync date"
 		printf "\\n$(date) $text\\n" >> $CHKLOG
 		logger -t "$TAG" "$text"
@@ -251,12 +288,12 @@ run_disk_check(){
 		printf "$(date) $text\\n" >> $CHKLOG
 		logger -t "$TAG" "$text"
 		case "$FSTYPE" in
-			Linux*)             CHKCMD="e2fsck -p" ;;
-			Win95* | FAT*)      CHKCMD="fatfsck -a" ;;
-			HPFS/NTFS)          CHKCMD="ntfsck -a" ;;
+			Linux*)             CHKCMD="e2fsck -p";;
+			Win95* | FAT*)      CHKCMD="fatfsck -a";;
+			HPFS/NTFS)          CHKCMD="ntfsck -a";;
 			*)                  text="Unknown filesystem type '$FSTYPE' on $1 - skipping check"
 								printf "$(date) $text\\n" >> $CHKLOG
-								logger -t "$TAG" "$text" ;;
+								logger -t "$TAG" "$text";;
 		esac
 	else
 		text="Probing '$2' on device $1"
@@ -265,8 +302,8 @@ run_disk_check(){
 		case "$2" in
 			"")                 text="Error reading device $1 - skipping check"
 								printf "$(date) $text\\n" >> $CHKLOG
-								logger -t "$TAG" "$text" ;;
-			ext2|ext3|ext4)     CHKCMD="e2fsck -p" ;;
+								logger -t "$TAG" "$text";;
+			ext2|ext3|ext4)     CHKCMD="e2fsck -p";;
 			hfs|hfs+j|hfs+jx)   if [ -x /usr/sbin/chkhfs ]; then
 									CHKCMD="chkhfs -a -f"
 								elif [ -x /usr/sbin/fsck_hfs ]; then
@@ -275,23 +312,24 @@ run_disk_check(){
 									text="Unsupported filesystem '$2' on device $1 - skipping check"
 									printf "$(date) $text\\n" >> $CHKLOG
 									logger -t "$TAG" "$text"
-								fi ;;
+								fi;;
 			ntfs)               if [ -x /usr/sbin/chkntfs ]; then
 									CHKCMD="chkntfs -a -f"
 								elif [ -x /usr/sbin/ntfsck ]; then
 									CHKCMD="ntfsck -a"
-								fi ;;
-			vfat)               CHKCMD="fatfsck -a" ;;
+								fi;;
+			vfat)               CHKCMD="fatfsck -a";;
 			unknown)            text="$1 Unknown filesystem (e.g. exFAT) or no partition table (e.g. blank media) - skipping check"
 								printf "$(date) $text\\n" >> $CHKLOG
-								logger -t "$TAG" "$text" ;;
+								logger -t "$TAG" "$text";;
 			*)                  text="Unexpected filesystem type '$2' for $1 - skipping check"
 								printf "$(date) $text\\n" >> $CHKLOG
-								logger -t "$TAG" "$text" ;;
+								logger -t "$TAG" "$text";;
 		esac
 	fi
 
 	if [ "$CHKCMD" ]; then
+		lcDCL=$(wc -l < $CHKLOG)
 		text="Running disk check with command '$CHKCMD' on $1"
 		printf "$text\\n" >> $CHKLOG
 		logger -t "$TAG" "$text"
@@ -299,6 +337,43 @@ run_disk_check(){
 		text="Disk check done on $1"
 		printf "$(date) $text\\n" >> $CHKLOG
 		logger -t "$TAG" "$text"
+		errDCL=$(tail -n$(($(wc -l < $CHKLOG)-lcDCL)) $CHKLOG | grep 'error')
+		[ "$errDCL" ] && printf "    - $1\\n" >>"${add}"/disk_check_err.log
+		if [ "$errDCL" ] && [ "$dcErrMail" = on -a "$(nvram get ntp_ready)" = 1 ]; then
+			EMAIL_DIR="${add}/mail"
+			. "${EMAIL_DIR}/email.conf"
+			[ -z "$(nvram get odmpid)" ] && routerModel=$(nvram get productid) || routerModel=$(nvram get odmpid)
+			rm -f /tmp/amtm-mail-body
+			echo
+			echo "Subject: amtm Disk check error $(date +"%a %b %d %Y")" >/tmp/amtm-mail-body
+			echo "From: \"amtm\" <$FROM_ADDRESS>" >>/tmp/amtm-mail-body
+			echo "Date: $(date -R)" >>/tmp/amtm-mail-body
+			echo "To: \"$TO_NAME\" <$TO_ADDRESS>" >>/tmp/amtm-mail-body
+			echo >>/tmp/amtm-mail-body
+			echo " The words 'error' were encountered during the disk check, please investigate ASAP." >>/tmp/amtm-mail-body
+			echo >>/tmp/amtm-mail-body
+			echo "Error for device $1:" >>/tmp/amtm-mail-body
+			echo "$(tail -n$(($(wc -l < $CHKLOG)-lcDCL)) $CHKLOG)" >>/tmp/amtm-mail-body
+			echo >>/tmp/amtm-mail-body
+			echo " Very truly yours," >>/tmp/amtm-mail-body
+			echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/amtm-mail-body
+			echo >>/tmp/amtm-mail-body
+
+			/usr/sbin/curl $verbose --url $PROTOCOL://$SMTP:$PORT/$SMTP \
+				--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+				--upload-file /tmp/amtm-mail-body \
+				--ssl-reqd \
+				--crlf \
+				--user "$USERNAME:$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi)" $SSL_FLAG
+
+			if [ "$?" = 0 ]; then
+				logger -t "$TAG" "sent Disk check error email for device $1"
+			else
+				logger -t "$TAG" "Disk check error email sending failed for device $1"
+			fi
+			rm -f /tmp/amtm-mail*
+		fi
+
 	fi
 	exit 0
 }

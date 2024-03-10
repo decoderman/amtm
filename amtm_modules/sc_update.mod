@@ -112,7 +112,7 @@ case "${1}" in
 				echo "Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/amtm-mail-body
 				echo >>/tmp/amtm-mail-body
 
-				/usr/sbin/curl --url $PROTOCOL://$SMTP:$PORT \
+				/usr/sbin/curl --url $PROTOCOL://$SMTP:$PORT/$SMTP \
 					--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 					--upload-file /tmp/amtm-mail-body \
 					--ssl-reqd \

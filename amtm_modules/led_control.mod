@@ -4,6 +4,7 @@ led_control_installed(){
 	[ -z "$su" ] && atii=1
 	if ! grep -qE "^VERSION=$led_version" "${add}"/ledcontrol; then
 		write_ledcontrol_file
+		"${add}"/ledcontrol -upd >/dev/null 2>&1
 		a_m " - LED control script updated to $led_version"
 	fi
 	if [ -f "${add}"/ledcontrol.conf ]; then
@@ -290,9 +291,9 @@ get_dynamic_schedule(){
 	tmpfile=/tmp/$locCode.out
 	c_url "https://weather.com/weather/today/l/$locCode" -o "$tmpfile"
 
-	if grep -q "SunriseSunset" "$tmpfile"; then
-		srise=$(grep SunriseSunset "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm]))' | head -1)
-		sset=$(grep SunriseSunset "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm]))' | tail -1)
+	if grep -q 'Sun Rise' "$tmpfile"; then
+		srise=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))' | tail -1)
+		sset=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))' | tail -1)
 		sunrise=$(/opt/bin/date --date="$srise" +%R)
 		sunset=$(/opt/bin/date --date="$sset" +%R)
 
@@ -386,9 +387,9 @@ write_ledcontrol_file(){
 	                    fi
 	                    tmpfile=/tmp/\$locCode.out
 	                    /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "https://weather.com/weather/today/l/\$locCode" -o "\$tmpfile"
-	                    if grep -q "SunriseSunset" "\$tmpfile"; then
-	                        srise=\$(grep SunriseSunset "\$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm]))' | head -1)
-	                        sset=\$(grep SunriseSunset "\$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm]))' | tail -1)
+	                    if grep -q 'Sun Rise' "\$tmpfile"; then
+	                        srise=\$(grep 'Sun Rise' "\$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))' | tail -1)
+	                        sset=\$(grep 'Sun Rise' "\$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))' | tail -1)
 	                        sunrise=\$(/opt/bin/date --date="\$srise" +%R)
 	                        sunset=\$(/opt/bin/date --date="\$sset" +%R)
 	                        lcOnh=\$(echo \${sunrise:0:2} | sed 's/^0//')

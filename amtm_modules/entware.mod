@@ -138,22 +138,31 @@ entware_installed(){
 		p_e_l
 		echo " Entware package options"
 		echo
-		bpe=
+		sel=4
+		unset bpe bparm five
 		get_entware_identifiers
 
 		printf " This router runs ${GN}Entware $entVersion${NC}\\n Server in use: ${GN}$ENTDOMAIN${NC}\\n"
-		if [ "$(uname -m)" = "mips" ]; then
-			printf "\\n See available packages list here:\\n $ENTURL/Packages.html\\n\\n"
-			if [ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ]; then
-				printf " with updates from ${GN}maurerr.github.io${NC}\\n\\n See available packages list here:\\n https://maurerr.github.io/packages/\\n\\n"
-				bpe="${GN}on${NC}"
-			else
-				printf "\\n"
-				bpe=off
-			fi
-		else
-			printf "\\n See available packages list here:\\n $ENTURL/Packages.html\\n\\n"
-		fi
+		printf "\\n See available packages list here:\\n $ENTURL/Packages.html\\n\\n"
+		case "$(uname -m)" in
+			armv7l)	if [ "$(v_c $(uname -r))" -lt "$(v_c 3.2)" ]; then
+						five=5;sel=5
+						if [ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ]; then
+							printf " with updates from ${GN}maurerr.github.io${NC}\\n\\n See available packages list here:\\n https://maurerr.github.io/entware-armv7-k26/\\n\\n"
+							bparm="${GN}on${NC}"
+						else
+							bparm=off
+						fi
+					fi
+					;;
+			mips)	if [ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ]; then
+						printf " with updates from ${GN}maurerr.github.io${NC}\\n\\n See available packages list here:\\n https://maurerr.github.io/packages/\\n\\n"
+						bpe="${GN}on${NC}"
+					else
+						bpe=off
+					fi
+					;;
+		esac
 
 		echo " 1. Check for updated Entware packages"
 		echo " 2. Show installed Scripts and Entware packages"
@@ -164,9 +173,12 @@ entware_installed(){
 			printf " 3. Select Entware server to use\\n"
 		fi
 		echo " 4. Remove Entware"
+		if [ "$bparm" ]; then
+			printf " 5. Parallel use Entware-backports Repo $bparm\\n"
+		fi
 
 		while true; do
-			printf "\\n Enter selection [1-4 e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-$sel e=Exit] ";read -r continue
 			case "$continue" in
 				1)		echo
 						if ping -c2 -W3 $ENTDOMAIN &> /dev/null; then
@@ -360,6 +372,58 @@ entware_installed(){
 						fi
 						show_amtm menu;break;;
 				4)		reset_amtm;break;;
+				[$five])p_e_l
+						echo " Parallel use of Entware-backports Repo is $bparm"
+						if [ "$bparm" != off ]; then
+							while true; do
+								printf "\\n Disable it? [1=Yes e=Exit] ";read -r confirm
+								case "$confirm" in
+									1)	sed -i '/maurerr.github.io/d' /opt/etc/opkg.conf
+										show_amtm " Entware-backports Repo disabled"
+										break;;
+								[Ee])	show_amtm menu;break;;
+									*)	printf "\\n input is not an option\\n";;
+								esac
+							done
+						else
+							printf "\\n This repository for armv7sf-k2.6 based routers receives\\n Entware package updates until further notice,\\n"
+							printf " while the original repo no longer does.\\n\\n This additional backports source is added:\\n - maurerr.github.io/entware-armv7-k26/\\n\\n"
+							printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n"
+							while true; do
+								printf "\\n Enable it? [1=Yes e=Exit] ";read -r confirm
+								case "$confirm" in
+									1)	opkg update >/dev/null
+										echo " Installing required $entVersion packages: wget-ssl ca-certificates"
+										echo "${GY}"
+										opkg install wget-ssl ca-certificates
+										echo "${NC}"
+										sed -i '2i\src/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf
+										p_e_l
+										echo " Do you want to update and upgrade all packages now?"
+										while true; do
+											printf "\\n Enter your selection [1=Yes 2=No] ";read -r confirm
+											case "$confirm" in
+												1)	echo "${GY}"
+													opkg update >/dev/null
+													opkg upgrade
+													if [ "$?" -ne "1" ]; then
+														a_m " Entware packages action: all packages upgraded"
+													else
+														a_m " ! Entware packages action: upgrade failed, network error"
+													fi
+													echo "${NC}"
+													show_amtm;break;;
+												2)	break;;
+												*)	printf "\\n input is not an option\\n";;
+											esac
+										done
+										show_amtm " Entware-backports Repo enabled";break;;
+								[Ee])	show_amtm menu;break;;
+									*)	printf "\\n input is not an option\\n";;
+								esac
+							done
+						fi
+						show_amtm menu;break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;
 			esac

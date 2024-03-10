@@ -103,7 +103,8 @@ setup_Entware(){
 					INST_URL='https://pkg.entware.net/binaries/mipsel/installer/installer.sh'
 					entVer="Entware (mipsel)"
 					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io';;
-		armv7l)		PART_TYPES='ext2|ext3|ext4'
+		armv7l)		bparm=
+					PART_TYPES='ext2|ext3|ext4'
 					if [ "$(v_c $(uname -r))" -ge "$(v_c 3.2)" ]; then
 						INST_URL='armv7sf-k3.2/installer/generic.sh'
 						entVer="Entware (armv7sf-k3.2)"
@@ -112,6 +113,7 @@ setup_Entware(){
 						INST_URL='armv7sf-k2.6/installer/generic.sh'
 						entVer="Entware (armv7sf-k2.6)"
 						availEntVer=armv7
+						bparm=on
 					fi
 					;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
@@ -125,7 +127,7 @@ setup_Entware(){
 	echo " Running pre-install checks"
 
 	if [ -L /tmp/opt ]; then
-		# dl master check
+		# dl master check, installs into asusware.arm folder
 		if [ "$(nvram get apps_mounted_path)" ] && [ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ]; then
 			if [ -f /opt/etc/init.d/S50downloadmaster ]; then
 				echo "${E_BG} Download Master appears to be installed ${NC}"
@@ -138,7 +140,7 @@ setup_Entware(){
 				p_e_t acknowledge
 				am=;show_amtm " Correct error first before installing Entware"
 			else
-				echo "${E_BG} Correcting invalid Entware or Download Master settings ${NC}"
+				echo "${E_BG} Correcting invalid Download Master settings ${NC}"
 				if [ -L "/tmp/opt" ]; then
 					rm -f /tmp/opt 2> /dev/null
 					rm -f /opt 2> /dev/null
@@ -152,6 +154,7 @@ setup_Entware(){
 				nvram set apps_state_enable=
 				nvram set apps_state_install=
 				nvram set apps_state_switch=
+				nvram set apps_swap_enable=
 				nvram commit
 			fi
 		else
@@ -387,12 +390,28 @@ setup_Entware(){
 	if [ -z "$usePreviousEntware" ]; then
 		echo
 		echo " Installing $entVer, using external script"
+		[ "$bparm" ] && echo " additionally using Entware backports-mirror maurerr.github.io"
 		echo "${GY}"
-		if [ "$(uname -m)" != mips ]; then
-			c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
-		else
-			c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
-		fi
+		case "$(uname -m)" in
+			armv7l)	if [ "$bparm" ]; then
+						c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" \
+						| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
+						echo "${NC}"
+						echo " Installing required $entVersion packages: wget-ssl ca-certificates"
+						echo " for use with Entware backports-mirror https://maurerr.github.io/entware-armv7-k26/"
+						echo "${GY}"
+						opkg install wget-ssl ca-certificates
+						echo "${NC}"
+					else
+						c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
+					fi
+					;;
+			mips)	c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
+					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+					;;
+			*)		c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
+					;;
+		esac
 		echo "${NC}"
 	fi
 
