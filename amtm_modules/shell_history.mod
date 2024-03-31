@@ -24,9 +24,9 @@ install_shell_history(){
 	c_d
 	shell_history install
 	if [ -f "${add}"/shellhistory ]; then
-		show_amtm " shell histroy installed"
+		show_amtm " shell history installed"
 	else
-		am=;show_amtm " shell histroy installation failed"
+		am=;show_amtm " shell history installation failed"
 	fi
 }
 shell_history(){
