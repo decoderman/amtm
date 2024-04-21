@@ -65,8 +65,8 @@ diversion_installed(){
 					remotemd5="$(c_url "$remoteurl/$S_VERSION/diversion" | md5sum | awk '{print $1}')"
 					if [ "$localmd5" != "$remotemd5" ]; then
 						localver="$divver"
-						upd="${E_BG}-> min upd${NC}"
-						aUpd="-> min upd"
+						upd="${E_BG}-> MD5 upd${NC}"
+						aUpd="-> MD5 upd"
 						[ "$updcheck" ] && echo "- Diversion $localver, minor update available" >>/tmp/amtm-tpu-check
 						suUpd=1
 						[ "$webUiOn" = yes ] && webui_set Diversion_update min-upd

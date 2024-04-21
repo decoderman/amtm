@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=4.4
-release="March 10 2024"
+version=4.5
+release="April 21 2024"
 led_version=2.5 # LED scheduler
 sh_version=1.3 # Shell History
 rd_version=1.3 # Router date keeper
@@ -259,8 +259,10 @@ show_amtm(){
 						[ "$dlok" ] && tps=1 || tps=
 						[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt;;
 			fdisk) 		if [ -f "${add}"/amtm-format-disk.log ]; then
-							atii=1
-							[ "$su" ] || [ -z "$ss" ] && printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
+							if [ -z "$su" -a -z "$ss" ]; then
+								atii=1
+								printf "${GN_BG} fd${NC} %-9s%s\\n" "run" "Format disk         ${GN_BG}fdl${NC} show log"
+							fi
 						else
 							[ "$ss" ] && [ -z "$su" ] && printf "${E_BG} fd${NC} %-9s%s\\n" "run" "Format disk"
 						fi
@@ -435,6 +437,7 @@ show_amtm(){
 					amtmUpdText="minor version update applied."
 				fi
 				echo
+				MD5_info
 				while true; do
 					printf " Update amtm now? [1=Yes e=Exit] ";read -r continue
 					case "$continue" in
@@ -469,10 +472,11 @@ show_amtm(){
 	unset sfp dfc
 	rm -f /tmp/amtm-dl
 
-	if [ "$1" = menu ] && [ -z "$am" ]; then
+	if [ "$1" = menu ] && [ -z "$am" ] && [ -z "$MD5Show" ]; then
 		p_e_l
 	else
 		p_e_l
+		MD5_info
 		if [ "$am" ]; then
 			[ "$1" = menu ] && printf "$(echo "$am" | sed 's/^\\n//')\\n" || printf "$1\\n$am\\n"
 			am=
@@ -501,6 +505,7 @@ show_amtm(){
 			[Ww][Ii])			case_wi;break;;
 			[Jj]4)				case_j4;break;;
 			[Jj]5)				case_j5;break;;
+			[Jj]5u)				case_j5u;break;;
 			[Jj]6)				case_j6;break;;
 			[Jj]7)				case_j7;break;;
 			[Vv][Nn])			case_vn;break;;
@@ -591,6 +596,13 @@ c_j(){
 	show_amtm menu
 }
 
+MD5_info(){
+	if [ "$MD5Show" ]; then
+		printf " Info: ${E_BG} MD5 upd ${NC} = Script file hash change.\\n\\n"
+		MD5Show=
+	fi
+}
+
 s_l_f(){
 	if [ -f "${add}/$1" ]; then
 		slfLine=---------------------------------------------------
@@ -649,10 +661,10 @@ script_check(){
 					[ "$remoteurlmd5" ] && remoteurl=$remoteurlmd5
 					remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
 					if [ "$localmd5" != "$remotemd5" ]; then
-						upd="${E_BG}-> min upd${NC}"
-						tpUpd="-> min upd"
+						upd="${E_BG}-> MD5 upd${NC}"
+						tpUpd="-> MD5 upd"
 						[ "$tpu" ] && echo "- $scriptname $localver, minor update available <br>" >>/tmp/amtm-tpu-check
-						suUpd=1
+						suUpd=1;MD5Show=1
 					else
 						localver=
 					fi
@@ -851,10 +863,10 @@ update_amtm(){
 				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 				amtmUpd=1
 			elif [ "$localmd5" != "$remotemd5" ]; then
-				thisrem="${E_BG}-> min upd${NC}"
-				thisUpd="-> min upd"
+				thisrem="${E_BG}-> MD5 upd${NC}"
+				thisUpd="-> MD5 upd"
 				[ "$updcheck" ] && echo "- amtm $version, minor update available" >>/tmp/amtm-tpu-check
-				amtmUpd=2
+				amtmUpd=2;MD5Show=1
 			else
 				thisrem="${GN_BG}$version${NC}"
 				amtmUpd=0

@@ -4,8 +4,8 @@ uiDivStats_installed(){
 	scriptname=uiDivStats
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl=https://jackyaz.io/uiDivStats/master/amtm-version/uiDivStats.sh
-		remoteurlmd5=https://jackyaz.io/uiDivStats/master/amtm-md5/uiDivStats.sh
+		remoteurl=https://raw.githubusercontent.com/decoderman/uiDivStats/master/uiDivStats.sh
+		remoteurlmd5=https://raw.githubusercontent.com/decoderman/uiDivStats/master/uiDivStats.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -18,12 +18,29 @@ uiDivStats_installed(){
 			unset localver uiDivStatsUpate uiDivStatsMD5
 		fi
 	fi
+	
+	show_tlc_update(){
+		if [ -z "$su" -a -z "$tpu" ] && ! grep -q -m1 'decoderman' /jffs/scripts/uiDivStats; then
+			printf "${GN_BG}j5u${NC} %-9s%-21s%${COR}s\\n" "use" "uiDivStats by thelonelycoder" ""
+			case_j5u(){
+				sed -i '/SCRIPT_REPO=/c\SCRIPT_REPO="https://raw.githubusercontent.com/decoderman/$SCRIPT_NAME/$SCRIPT_BRANCH"' /jffs/scripts/uiDivStats
+				sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="master"' /jffs/scripts/uiDivStats
+				sed -i '/^readonly SHARED_REPO=/c\readonly SHARED_REPO="https://raw.githubusercontent.com/decoderman/shared-jy/master"' /jffs/scripts/uiDivStats
+				show_amtm " Now you can use the update function in\\n uiDivStats to update to the latest version."
+			}
+		else
+			case_j5u(){
+				show_amtm " You already set to use the uiDivStats\\n version by thelonelycoder."
+			}
+		fi
+	}
 
 	if [ -f /opt/bin/diversion ]; then
 		divV=$(grep '^VERSION' /opt/bin/diversion | sed 's/VERSION=//')
 		if [ "$(v_c $divV)" -ge "$(v_c "5.0")" ]; then
 			if [ "$(v_c $lvtpu)" -gt "$(v_c "3.0.2")" ]; then
 				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+				show_tlc_update
 				case_j5(){
 					/jffs/scripts/uiDivStats
 					sleep 2
@@ -47,6 +64,7 @@ uiDivStats_installed(){
 			fi
 		else
 			[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+			show_tlc_update
 			case_j5(){
 				/jffs/scripts/uiDivStats
 				sleep 2
@@ -55,6 +73,7 @@ uiDivStats_installed(){
 		fi
 	else
 		[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
+		show_tlc_update
 		case_j5(){
 			/jffs/scripts/uiDivStats
 			sleep 2
@@ -66,24 +85,17 @@ install_uiDivStats(){
 	p_e_l
 	printf " This installs uiDivStats - WebUI for Diversion\\n statistics on your router.\\n\\n"
 	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009\\n"
+	printf " With contributions from: 314eter, thelonelycoder\\n\\n This script is hosted by thelonelycoder\\n"
+	printf " aka decoderman at https://github.com/decoderman/uiDivStats\\n"
 	c_d
-	installOK(){
-		c_url https://jackyaz.io/uiDivStats/master/amtm-install/uiDivStats.sh -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
-		sleep 2
-	}
 
 	if [ -f /opt/bin/diversion ]; then
 		divV=$(grep '^VERSION' /opt/bin/diversion | sed 's/VERSION=//')
 		if [ "$(v_c $divV)" -ge "$(v_c "5.0")" ]; then
-			remoteurl=https://jackyaz.io/uiDivStats/master/amtm-version/uiDivStats.sh
-			divStatsV=$(c_url "$remoteurl" | grep -m1 " SCRIPT_VERSION=" | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
-			if [ "$(v_c $divStatsV)" -gt "$(v_c "3.0.2")" ]; then
-				installOK
-			else
-				am=;show_amtm " The current release of uiDivStats ($divStatsV) is\\n no longer compatible with Diversion $divV.\\n\\n Watch out for a compatibility update of uiDivStats."
-			fi
+			c_url https://raw.githubusercontent.com/decoderman/uiDivStats/master/uiDivStats.sh -o "/jffs/scripts/uiDivStats" && chmod 0755 /jffs/scripts/uiDivStats && /jffs/scripts/uiDivStats install
+			sleep 2
 		else
-			installOK
+			am=;show_amtm " The current release of uiDivStats is\\n no longer compatible with Diversion $divV.\\n\\n Please update Diversion first."
 		fi
 	else
 		am=;show_amtm " uiDivStats installation not possible,\\n Diversion is not installed"
