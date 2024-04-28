@@ -18,7 +18,7 @@ uiDivStats_installed(){
 			unset localver uiDivStatsUpate uiDivStatsMD5
 		fi
 	fi
-	
+
 	show_tlc_update(){
 		if [ -z "$su" -a -z "$tpu" ] && ! grep -q -m1 'decoderman' /jffs/scripts/uiDivStats; then
 			printf "${GN_BG}j5u${NC} %-9s%-21s%${COR}s\\n" "use" "uiDivStats by thelonelycoder" ""
@@ -26,6 +26,9 @@ uiDivStats_installed(){
 				sed -i '/SCRIPT_REPO=/c\SCRIPT_REPO="https://raw.githubusercontent.com/decoderman/$SCRIPT_NAME/$SCRIPT_BRANCH"' /jffs/scripts/uiDivStats
 				sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="master"' /jffs/scripts/uiDivStats
 				sed -i '/^readonly SHARED_REPO=/c\readonly SHARED_REPO="https://raw.githubusercontent.com/decoderman/shared-jy/master"' /jffs/scripts/uiDivStats
+				if grep -q -m1 'v3.0.2' /jffs/scripts/uiDivStats; then
+					sed -i '/^readonly SCRIPT_VERSION=/c\readonly SCRIPT_VERSION="v3.0.3"' /jffs/scripts/uiDivStats
+				fi
 				show_amtm " Now you can use the update function in\\n uiDivStats to update to the latest version."
 			}
 		else
@@ -40,7 +43,6 @@ uiDivStats_installed(){
 		if [ "$(v_c $divV)" -ge "$(v_c "5.0")" ]; then
 			if [ "$(v_c $lvtpu)" -gt "$(v_c "3.0.2")" ]; then
 				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"
-				show_tlc_update
 				case_j5(){
 					/jffs/scripts/uiDivStats
 					sleep 2
@@ -50,6 +52,7 @@ uiDivStats_installed(){
 				if [ -z "$localver" ]; then
 					divStatsV=$upd
 					printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "show" "uiDivStats, incompatible" ""
+					show_tlc_update
 					case_j5(){
 						am=;show_amtm " The current release of uiDivStats ($divStatsV) is\\n no longer compatible with Diversion $divV.\\n\\n Watch out for an update with ${GN_BG} u ${NC} in amtm,\\n it will show when a new version is available."
 					}

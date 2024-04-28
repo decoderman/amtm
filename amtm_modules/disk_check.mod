@@ -132,7 +132,7 @@ disk_check_manage(){
 		fi
 
 		while true; do
-			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		p_e_l
 						printf " This removes the Disk check script, log file\\n and exclusions you may have added.\\n"

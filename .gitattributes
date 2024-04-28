@@ -4,4 +4,4 @@
 *.md	eol=lf
 *.txt	eol=lf
 *.list	eol=lf
-amtm eol=lf
+* text eol=lf

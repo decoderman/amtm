@@ -2,7 +2,7 @@
 #bof
 scmerlin_installed(){
 	scriptname=scMerlin
-	scriptgrep=' SCRIPT_VERSION=\| SCM_VERSION='
+	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/decoderman/scMerlin/master/scmerlin.sh
 		grepcheck=jackyaz
