@@ -737,7 +737,7 @@ script_check(){
 						upd="${E_BG}-> MD5 upd${NC}"
 						tpUpd="-> MD5 upd"
 						[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
-						suUpd=1
+						suUpd=1;MD5Show=1
 					else
 						localver=
 					fi
