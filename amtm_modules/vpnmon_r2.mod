@@ -13,7 +13,7 @@ vpnmon_r2_installed(){
 	script_check
 	if [ -z "$su" -a -z "$tpu" ]; then
 		if [ "$vpnmonUpate" ]; then
-			sed -i '/^vpnmonU.*/d;/^vpnmonM.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^vpnmonU.*/d;/^vpnmonM.*/d' "${add}"/availUpd.txt
 			unset localver vpnmonUpate vpnmonMD5
 		fi
 		if [ "$vpnmon_r2Upate" ]; then

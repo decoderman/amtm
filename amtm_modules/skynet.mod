@@ -13,7 +13,7 @@ skynet_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$SkynetUpate${NC}"
 		if [ "$SkynetMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^Skynet.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^Skynet.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver SkynetUpate SkynetMD5
 		fi

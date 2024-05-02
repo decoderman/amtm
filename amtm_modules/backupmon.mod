@@ -13,7 +13,7 @@ backupmon_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$backupmonUpate${NC}"
 		if [ "$backupmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^backupmon.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^backupmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver backupmonUpate backupmonMD5
 		fi

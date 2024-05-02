@@ -19,7 +19,7 @@ x3mRouting_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$x3mRouting_Selective_RoutingUpate${NC}"
 		if [ "$x3mRouting_Selective_RoutingMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^x3mRouting_Selective_Routing.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^x3mRouting_Selective_Routing.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver x3mRouting_Selective_RoutingUpate x3mRouting_Selective_RoutingMD5
 		fi

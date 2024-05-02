@@ -15,7 +15,7 @@ wicens_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$wicensUpate${NC}"
 		if [ "$wicensMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^wicens.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^wicens.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver wicensUpate wicensMD5
 			witext=$scriptname

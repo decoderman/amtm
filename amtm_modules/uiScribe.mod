@@ -13,7 +13,7 @@ uiScribe_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$uiScribeUpate${NC}"
 		if [ "$uiScribeMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^uiScribe.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^uiScribe.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver uiScribeUpate uiScribeMD5
 		fi

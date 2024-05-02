@@ -22,7 +22,7 @@ WAN_Failover_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$Dual_WAN_FailoverUpate${NC}"
 		if [ "$Dual_WAN_FailoverMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^Dual_WAN_Failover.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^Dual_WAN_Failover.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver Dual_WAN_FailoverUpate Dual_WAN_FailoverMD5
 			dwftext=$scriptname

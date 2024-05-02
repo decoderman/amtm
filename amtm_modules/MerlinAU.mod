@@ -12,7 +12,7 @@ MerlinAU_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$MerlinAUUpate${NC}"
 		if [ "$MerlinAUMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^MerlinAU.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^MerlinAU.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver MerlinAUUpate MerlinAUMD5
 		fi

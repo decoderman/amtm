@@ -48,14 +48,14 @@ AdGuardHome_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$AdGuardHomeUpate${NC}"
 		if [ "$AdGuardHomeMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^AdGuardHome.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^AdGuardHome.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver AdGuardHomeUpate AdGuardHomeMD5
 		fi
 		if [ "$AGHbinUpate" ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
 			if [ "$AGHbinVer" != "$localAGHver" ]; then
-				sed -i '/^AGHbin.*/d' "${add}"/availUpd.txt
+				[ -f "${add}"/availUpd.txt ] && sed -i '/^AGHbin.*/d' "${add}"/availUpd.txt
 				unset AGHbinUpate AGHbinVer
 			else
 				AGHext="AGH bin"

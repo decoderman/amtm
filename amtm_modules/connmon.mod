@@ -13,7 +13,7 @@ connmon_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$connmonUpate${NC}"
 		if [ "$connmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^connmon.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^connmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver connmonUpate connmonMD5
 		fi

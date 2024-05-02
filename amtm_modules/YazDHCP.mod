@@ -13,7 +13,7 @@ YazDHCP_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$YazDHCPUpate${NC}"
 		if [ "$YazDHCPMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^YazDHCP.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^YazDHCP.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver YazDHCPUpate YazDHCPMD5
 		fi

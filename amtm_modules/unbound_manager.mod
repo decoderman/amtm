@@ -16,7 +16,7 @@ unbound_manager_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$unbound_ManagerUpate${NC}"
 		if [ "$unbound_ManagerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^unbound_Manager.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^unbound_Manager.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver unbound_ManagerUpate unbound_ManagerMD5
 			umtext=$scriptname

@@ -42,8 +42,10 @@ dnscrypt_installed(){
 			localver="$lvtpu"
 			upd="${E_BG}$dnscrypt_installerUpate${NC}"
 			if [ "$dnscrypt_installerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				sed -i '/^dnscrypt_installerU.*/d' "${add}"/availUpd.txt
-				sed -i '/^dnscrypt_installerM.*/d' "${add}"/availUpd.txt
+				if [ -f "${add}"/availUpd.txt ]; then
+					sed -i '/^dnscrypt_installerU.*/d' "${add}"/availUpd.txt
+					sed -i '/^dnscrypt_installerM.*/d' "${add}"/availUpd.txt
+				fi
 				unset localver dnscrypt_installerUpate dnscrypt_installerMD5
 				upd="${E_BG}${NC}$lvtpu"
 				ditext="dnscrypt installer"
@@ -53,7 +55,7 @@ dnscrypt_installed(){
 			localDPver="$(/jffs/dnscrypt/dnscrypt-proxy -version)"
 			updDP="${E_BG}$dnscrypt_installerPxUpate${NC}"
 			if [ "$dnscrypt_installerPxVer" != "$localDPver" ]; then
-				sed -i '/^dnscrypt_installerP.*/d' "${add}"/availUpd.txt
+				[ -f "${add}"/availUpd.txt ] && sed -i '/^dnscrypt_installerP.*/d' "${add}"/availUpd.txt
 				unset dnscrypt_installerPxUpate dnscrypt_installerPxVer
 			fi
 		fi

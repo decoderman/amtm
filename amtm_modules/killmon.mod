@@ -13,7 +13,7 @@ killmon_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$killmonUpate${NC}"
 		if [ "$killmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^killmon.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^killmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver killmonUpate killmonMD5
 		fi

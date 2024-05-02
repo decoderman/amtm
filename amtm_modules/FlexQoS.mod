@@ -13,7 +13,7 @@ FlexQoS_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$FlexQoSUpate${NC}"
 		if [ "$FlexQoSMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^FlexQoS.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^FlexQoS.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver FlexQoSUpate FlexQoSMD5
 		fi

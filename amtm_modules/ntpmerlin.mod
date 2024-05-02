@@ -13,7 +13,7 @@ ntpmerlin_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$ntpMerlinUpate${NC}"
 		if [ "$ntpMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^ntpMerlin.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^ntpMerlin.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver ntpMerlinUpate ntpMerlinMD5
 		fi

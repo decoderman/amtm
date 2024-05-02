@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=4.5.1
-release="April 28 2024"
+version=4.5.2
+release="May 02 2024"
 led_version=2.5 # LED scheduler
 sh_version=1.3 # Shell History
 rd_version=1.3 # Router date keeper
@@ -439,8 +439,8 @@ show_amtm(){
 				amtmUpdText="updated from $version to $amtmRemotever"
 				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n See https://diversion.ch for what's new.\\n"
 				if [ "$amtmUpd" = 2 ]; then
-					printf " ${R}A minor amtm update is available!${NC}\\n"
-					amtmUpdText="minor version update applied."
+					printf " ${R}amtm MD5 hash change detected${NC}\\n"
+					amtmUpdText="MD5 update applied."
 				fi
 				echo
 				MD5_info
@@ -647,16 +647,14 @@ script_check(){
 	if [ "$su" = 1 ]; then
 		if c_url "$remoteurl" | grep -qF -m1 "$grepcheck"; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(c_url "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
-			bareLocalver=$(echo $localver | sed 's/[^0-9]*//g')
-			bareRemotever=$(echo $remotever | sed 's/[^0-9]*//g')
 			localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 			upd="${GN_BG}$localver${NC}"
-			if [ "$bareLocalver" -gt "$bareRemotever" ]; then
+			if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
 				upd="${E_BG}<- $remotever${NC}"
 				tpUpd="<- $remotever"
 				[ "$tpu" ] && echo "- $scriptname $localver <- $remotever <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
-			elif [ "$bareLocalver" -lt "$bareRemotever" ]; then
+			elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ]; then
 				upd="${E_BG}-> $remotever${NC}"
 				tpUpd="-> $remotever"
 				[ "$tpu" ] && echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
@@ -670,7 +668,7 @@ script_check(){
 					if [ "$localmd5" != "$remotemd5" ]; then
 						upd="${E_BG}-> MD5 upd${NC}"
 						tpUpd="-> MD5 upd"
-						[ "$tpu" ] && echo "- $scriptname $localver, minor update available <br>" >>/tmp/amtm-tpu-check
+						[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
 						suUpd=1;MD5Show=1
 					else
 						localver=
@@ -689,7 +687,7 @@ script_check(){
 	else
 		localver=
 	fi
-	unset tpUpd localVother remoteVother bareLocalver bareRemotever localmd5 remotemd5 remoteurlmd5
+	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 remoteurlmd5
 }
 
 reset_amtm(){
@@ -871,7 +869,7 @@ update_amtm(){
 			elif [ "$localmd5" != "$remotemd5" ]; then
 				thisrem="${E_BG}-> MD5 upd${NC}"
 				thisUpd="-> MD5 upd"
-				[ "$updcheck" ] && echo "- amtm $version, minor update available" >>/tmp/amtm-tpu-check
+				[ "$updcheck" ] && echo "- amtm $version, MD5 hash change detected" >>/tmp/amtm-tpu-check
 				amtmUpd=2;MD5Show=1
 			else
 				thisrem="${GN_BG}$version${NC}"
@@ -885,7 +883,7 @@ update_amtm(){
 			if [ "$version" != "$amtmRemotever" ]; then
 				a_m "updated from $version to $amtmRemotever"
 			elif [ "$localmd5" != "$remotemd5" ]; then
-				a_m "minor version update applied"
+				a_m "MD5 update applied"
 			else
 				a_m "force updated to $amtmRemotever"
 			fi

@@ -12,7 +12,7 @@ scribe_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$scribeUpate${NC}"
 		if [ "$scribeMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^scribe.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^scribe.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver scribeUpate scribeMD5
 		fi

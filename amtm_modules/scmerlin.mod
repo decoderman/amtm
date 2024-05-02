@@ -12,7 +12,7 @@ scmerlin_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$scMerlinUpate${NC}"
 		if [ "$scMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^scMerlin.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^scMerlin.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver scMerlinUpate scMerlinMD5
 		fi

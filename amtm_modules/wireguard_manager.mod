@@ -15,7 +15,7 @@ wireguard_manager_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$WireGuard_Session_ManagerUpate${NC}"
 		if [ "$WireGuard_Session_ManagerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^WireGuard_Session_Manager.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^WireGuard_Session_Manager.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver WireGuard_Session_ManagerUpate WireGuard_Session_ManagerMD5
 		fi

@@ -13,7 +13,7 @@ YazFi_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$YazFiUpate${NC}"
 		if [ "$YazFiMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^YazFi.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^YazFi.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver YazFiUpate YazFiMD5
 		fi

@@ -18,7 +18,7 @@ diversion_installed(){
 			localver="$lvtpu"
 			upd="${E_BG}$DiversionUpate${NC}"
 			if [ "$DiversionMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				sed -i '/^Diversion.*/d' "${add}"/availUpd.txt
+				[ -f "${add}"/availUpd.txt ] && sed -i '/^Diversion.*/d' "${add}"/availUpd.txt
 				upd="${E_BG}${NC}$lvtpu"
 				unset localver DiversionUpate DiversionMD5
 			fi
@@ -67,7 +67,7 @@ diversion_installed(){
 						localver="$divver"
 						upd="${E_BG}-> MD5 upd${NC}"
 						aUpd="-> MD5 upd"
-						[ "$updcheck" ] && echo "- Diversion $localver, minor update available" >>/tmp/amtm-tpu-check
+						[ "$updcheck" ] && echo "- Diversion $localver, MD5 hash change detected" >>/tmp/amtm-tpu-check
 						suUpd=1
 						[ "$webUiOn" = yes ] && webui_set Diversion_update min-upd
 					else
@@ -90,7 +90,7 @@ diversion_installed(){
 		elif [ "$DiversionUpate" ]; then
 			upd="${E_BG}$DiversionUpate${NC}"
 			if [ "$DiversionMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				sed -i '/^Diversion.*/d' "${add}"/availUpd.txt
+				[ -f "${add}"/availUpd.txt ] && sed -i '/^Diversion.*/d' "${add}"/availUpd.txt
 				upd="${E_BG}${NC}$localver"
 				unset localver DiversionUpate DiversionMD5
 			fi

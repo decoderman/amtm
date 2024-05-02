@@ -19,7 +19,7 @@ vpn_routing_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$VPN_RoutingUpate${NC}"
 		if [ "$VPN_RoutingMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^VPN_Routing.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^VPN_Routing.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver VPN_RoutingUpate VPN_RoutingMD5
 		fi

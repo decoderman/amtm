@@ -126,7 +126,7 @@ entware_installed(){
 			entUpd=1
 			[ "$EntwareUpate" -lt 10 ] && EntwareUpate="$EntwareUpate p" || EntwareUpate="${EntwareUpate}p"
 			if [ "$EntwareMD5" != "$(md5sum /opt/lib/opkg/status | awk '{print $1}')" ]; then
-				sed -i '/^Entware.*/d' "${add}"/availUpd.txt
+				[ -f "${add}"/availUpd.txt ] && sed -i '/^Entware.*/d' "${add}"/availUpd.txt
 				unset EntwareUpate EntwareMD5 entUpd
 			fi
 		fi

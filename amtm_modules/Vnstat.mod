@@ -12,7 +12,7 @@ Vnstat_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$VnstatUpate${NC}"
 		if [ "$VnstatMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^Vnstat.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^Vnstat.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver VnstatUpate VnstatMD5
 		fi

@@ -13,7 +13,7 @@ vpnmon_installed(){
 		localver="$lvtpu"
 		upd="${E_BG}$vpnmon_r3Upate${NC}"
 		if [ "$vpnmon_r3MD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			sed -i '/^vpnmon_r3.*/d' "${add}"/availUpd.txt
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^vpnmon_r3.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
 			unset localver vpnmon_r3Upate vpnmon_r3MD5
 		fi
