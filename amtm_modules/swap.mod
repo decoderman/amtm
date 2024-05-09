@@ -192,10 +192,9 @@ manage_swap(){
 									sed -i "1a swapon $swapDevice/myswap.swp # Added by amtm" /jffs/scripts/post-mount
 
 									c_j_s /jffs/scripts/unmount
-									if ! grep -q "^\[ \"\$(/usr/bin/find \$1/$swapfile" /jffs/scripts/unmount; then
+									if ! grep -q "^swapoff -a" /jffs/scripts/unmount; then
 										sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
-										trim_file /jffs/scripts/unmount
-										echo "[ \"\$(/usr/bin/find \$1/$swapfile 2> /dev/null)\" ] && swapoff \$1/$swapfile # Added by amtm" >> /jffs/scripts/unmount
+										echo "swapoff -a 2>/dev/null # Added by amtm" >> /jffs/scripts/unmount
 									fi
 
 									show_amtm " Swap file created and is active at\\n $(echo "${swapDevice#/tmp}")/myswap.swp";break;;
@@ -210,13 +209,18 @@ manage_swap(){
 
 	elif [ "$1" = delete ]; then
 		p_e_l
-		echo " Swap file found at:"
-		echo " ${GN}$swl${NC}"
+		printf " Swap file found at:\\n ${GN}$swl${NC}\\n"
+		if ! grep -q "^swapoff -a" /jffs/scripts/unmount; then
+			sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
+			echo "swapoff -a 2>/dev/null # Added by amtm" >> /jffs/scripts/unmount
+			printf "\\n Entry in /jffs/scripts/unmount corrected.\\n"
+		fi
 
 		while true; do
 			printf "\\n Delete the Swap file? [1=Yes e=Exit] ";read -r continue
 			case "$continue" in
-				1)		if [ -f "$swl" ]; then
+				1)		sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
+						if [ -f "$swl" ]; then
 							sync; echo 3 > /proc/sys/vm/drop_caches
 							swapoff "$swl"
 							rm "$swl"

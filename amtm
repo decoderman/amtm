@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=4.5.2
-release="May 02 2024"
+version=4.6
+release="May 09 2024"
 led_version=2.5 # LED scheduler
 sh_version=1.3 # Shell History
 rd_version=1.3 # Router date keeper
@@ -167,27 +167,29 @@ show_amtm(){
 	/jffs/scripts/MerlinAU.sh MerlinAU 8 MerlinAU¦-¦The¦Ultimate¦Firmware¦Auto-Updater
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
+	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
+	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
+	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
+	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
+	spacer
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
 	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control
-	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
-	spacer
 	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest
+	spacer
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
 	spacer
-	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
+	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
+	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
+	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
+	spacer
 	/jffs/scripts/vpnmon-r3.sh vpnmon vp VPNMON-R3¦-¦Monitor¦health¦of¦WAN¦DW¦VPN
 	/jffs/scripts/vpnmon-r2.sh vpnmon_r2 vp2 VPNMON-R2¦-¦Monitor¦health¦of¦VPN¦(sunsetted)
-	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
-	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
-	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
-	spacer
-	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
-	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
-	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
-	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
 	/jffs/scripts/domain_vpn_routing.sh  vpn_routing vr Domain-based¦VPN¦Routing
+	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
+	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
+	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor
 	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	tpucheck
@@ -290,6 +292,7 @@ show_amtm(){
 								[Vv][Pp]2)	case_vp2(){ c_e VPNMON-R2;g_m vpnmon_r2.mod include;[ "$dlok" = 1 ] && install_vpnmon_r2 || show_amtm menu;};;
 								[Kk][Mm])	case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
 								[Rr][Tt])	case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
+								[Tt][Mm])	case_tm(){ c_e TAILMON;g_m tailmon.mod include;[ "$dlok" = 1 ] && install_tailmon|| show_amtm menu;};;
 								[Bb][Mm])	case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
 								[Dd][Ii])	case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 								[Ww][Gg])	case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
@@ -490,6 +493,7 @@ show_amtm(){
 			[Vv][Pp]2)			case_vp2;break;;
 			[Kk][Mm])			case_km;break;;
 			[Rr][Tt])			case_rt;break;;
+			[Tt][Mm])			case_tm;break;;
 			[Bb][Mm])			case_bm;break;;
 			[Aa][Ww][Mm])		show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
@@ -625,8 +629,8 @@ s_l_f(){
 			while true; do
 				printf " Delete log file now? [1=Yes e=Exit] ";read -r continue
 				case "$continue" in
-					1)		rm "${add}/$1"
-							[ "$1" = disk_check.log ] && rm "${add}"/disk_check_err.log
+					1)		rm -f "${add}/$1"
+							[ "$1" = disk_check.log ] && rm -f "${add}"/disk_check_err.log
 							show_amtm " $1 deleted"
 							break;;
 					[Ee])	show_amtm menu;break;;

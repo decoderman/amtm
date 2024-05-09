@@ -60,6 +60,7 @@ amtm
 | BACKUPMON | Viktor Jaep | [Link](https://www.snbforums.com/threads/backupmon-v1-22-oct-2-2023-backup-restore-your-router-jffs-nvram-external-usb-drive.86645/) |
 | Domain-based VPN Routing | Ranger802004 | [Link](https://www.snbforums.com/threads/domain-based-vpn-routing-script.79264/) |
 | MerlinAU Firmware Auto-Updater | ExtremeFiretop | [Link](https://www.snbforums.com/threads/introducing-merlinau-the-ultimate-firmware-auto-updater-addon.88577/) |
+| TAILMON Tailscale installer | Viktor Jaep | [Link](https://www.snbforums.com/threads/release-tailmon-v1-0-8-may-3-2024-wireguard-based-tailscale-installer-configurator-and-monitor.89860/) |
 
 amtm also offers an interface for managing a number of other features:
 
