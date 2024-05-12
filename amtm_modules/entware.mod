@@ -138,15 +138,15 @@ entware_installed(){
 		p_e_l
 		echo " Entware package options"
 		echo
-		sel=4
-		unset bpe bparm five
+		sel=5
+		unset bpe bparm pUse
 		get_entware_identifiers
 
 		printf " This router runs ${GN}Entware $entVersion${NC}\\n Server in use: ${GN}$ENTDOMAIN${NC}\\n"
 		printf "\\n See available packages list here:\\n $ENTURL/Packages.html\\n\\n"
 		case "$(uname -m)" in
 			armv7l)	if [ "$(v_c $(uname -r))" -lt "$(v_c 3.2)" ]; then
-						five=5;sel=5
+						pUse=6;sel=6
 						if [ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ]; then
 							printf " with updates from ${GN}maurerr.github.io${NC}\\n\\n See available packages list here:\\n https://maurerr.github.io/entware-armv7-k26/\\n\\n"
 							bparm="${GN}on${NC}"
@@ -172,9 +172,10 @@ entware_installed(){
 		else
 			printf " 3. Select Entware server to use\\n"
 		fi
-		echo " 4. Remove Entware"
+		echo " 4. Entware repair options"
+		echo " 5. Remove Entware"
 		if [ "$bparm" ]; then
-			printf " 5. Parallel use Entware-backports Repo $bparm\\n"
+			printf " 6. Parallel use Entware-backports Repo $bparm\\n"
 		fi
 
 		while true; do
@@ -269,7 +270,7 @@ entware_installed(){
 						show_amtm menu;break;;
 				3)		if [ "$bpe" ]; then
 							p_e_l
-							echo " Parallel use of Entware-backports Repo is $bpe"
+							printf " Parallel use of Entware-backports Repo is $bpe\\n\\n Note if you disable this, Entware\\n repair options might no longer work.\\n"
 							if [ "$bpe" != off ]; then
 								while true; do
 									printf "\\n Disable it? [1=Yes e=Exit] ";read -r confirm
@@ -371,9 +372,85 @@ entware_installed(){
 							selectServer
 						fi
 						show_amtm menu;break;;
-				4)		reset_amtm;break;;
-				[$five])p_e_l
-						echo " Parallel use of Entware-backports Repo is $bparm"
+				4)		p_e_l
+						printf " Entware repair options\\n\\n"
+						printf " 1. Reinstall Entware.\\n    This will make sure all necessary\\n    Entware core files are present.\\n\\n"
+						printf " 2. Reinstall all installed packages.\\n    This may help when some weird errors\\n    occur with Entware packages.\\n    Be aware that certain package config files\\n    will be overwritten by default values.\\n"
+						while true; do
+							printf "\\n Enter your selection [1-2 e=Exit] ";read -r confirm
+							case "$confirm" in
+								1)	p_e_l
+									printf " Stopping Entware services before\\n reinstalling Entware\\n"
+									echo "${GY}"
+									/opt/etc/init.d/rc.unslung stop
+									echo "${NC}"
+
+									echo " Reinstalling Entware"
+									echo "${GY}"
+									case "$(uname -m)" in
+										armv7l)	if [ "$bparm" != off ]; then
+													c_url "$ENTURL/installer/generic.sh" | sed "s#URL=http://bin.entware.net/#URL=https://$ENTDOMAIN/#g" \
+													| sed -e "41 i sed -i 's#http://bin.entware.net/#https://$ENTDOMAIN/#g' /opt/etc/opkg.conf" \
+													| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
+													echo "${NC}"
+													echo " Installing required $entVersion packages: wget-ssl ca-certificates"
+													echo " for use with Entware backports-mirror https://maurerr.github.io/entware-armv7-k26/"
+													echo "${GY}"
+													opkg install wget-ssl ca-certificates
+													echo "${NC}"
+												else
+													c_url "$ENTURL/installer/generic.sh" | sed "s#URL=http://bin.entware.net/#URL=https://$ENTDOMAIN/#g" \
+													| sed -e "41 i sed -i 's#http://bin.entware.net/#https://$ENTDOMAIN/#g' /opt/etc/opkg.conf" | sh
+												fi
+												;;
+										mips)	c_url https://pkg.entware.net/binaries/mipsel/installer/installer.sh | sed 's/http:/https:/g' \
+												| sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
+												| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+												;;
+										*)		c_url "$ENTURL/installer/generic.sh" | sed "s#URL=http://bin.entware.net/#URL=https://$ENTDOMAIN/#g" \
+												| sed -e "41 i sed -i 's#http://bin.entware.net/#https://$ENTDOMAIN/#g' /opt/etc/opkg.conf" | sh
+												;;
+									esac
+									echo "${NC}"
+
+									printf " Re-starting Entware services.\\n Output below may be empty for some.\\n"
+									echo "${GY}"
+									/opt/etc/init.d/rc.unslung start
+									echo "${NC}"
+									p_e_t "return to menu"
+
+									show_amtm " Entware reinstalled"
+									break;;
+								2)	p_e_l
+									printf " Again, be aware that certain package config\\n files will be overwritten by default values\\n and services may not start afterwards.\\n Be sure to have a recent backup ready.\\n"
+									c_d
+									printf " Stopping Entware services before\\n reinstalling all packages\\n"
+									echo "${GY}"
+									/opt/etc/init.d/rc.unslung stop
+									echo "${NC}"
+
+									echo " Reinstalling Entware packages"
+									echo "${GY}"
+									opkg --force-reinstall install $(opkg list_installed | sed 's/ - .*//')
+									echo "${NC}"
+
+									printf " Re-starting Entware services.\\n Output below may be empty for some.\\n"
+									echo "${GY}"
+									/opt/etc/init.d/rc.unslung start
+									echo "${NC}"
+									printf " Entware packages reinstall completed.\\n If any of the services failed to start reinstate\\n previous config file(s) from a backup.\\n"
+									p_e_t "return to menu"
+
+									show_amtm " All Entware packages reinstalled"
+									break;;
+							[Ee])	break;;
+								*)	printf "\\n input is not an option\\n";;
+							esac
+						done
+						show_amtm menu;break;;
+				5)		reset_amtm;break;;
+				[$pUse])p_e_l
+						printf " Parallel use of Entware-backports Repo is $bparm\\n\\n Note if you disable this, Entware\\n repair options might no longer work.\\n"
 						if [ "$bparm" != off ]; then
 							while true; do
 								printf "\\n Disable it? [1=Yes e=Exit] ";read -r confirm

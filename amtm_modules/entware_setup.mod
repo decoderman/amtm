@@ -1,48 +1,6 @@
 #!/bin/sh
 #bof
 setup_Entware(){
-	c_e_folder(){
-		if [ "$(/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" 2>/dev/null | wc -l)" -gt 1 ]; then
-			/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" | while read fdir; do
-				if [ "$fdir" != "$(readlink /tmp/opt)" ] && [ -f "$fdir/bin/opkg" ]; then
-					mv "$fdir" "$(dirname "$fdir")/old.$(basename "$fdir")"
-				fi
-			done
-		fi
-	}
-
-	write_jffsfile(){
-		echo " Checking /jffs/scripts entries"
-
-		c_j_s /jffs/scripts/post-mount
-		if grep -q "post-mount.div\|mount-entware.div" /jffs/scripts/post-mount; then
-			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
-			sed -i '/mount-entware.div/d' /jffs/scripts/post-mount >/dev/null
-		fi
-		if ! grep -q ". /jffs/addons/amtm/mount-entware.mod" /jffs/scripts/post-mount; then
-			c_nl /jffs/scripts/post-mount
-			sed -i "2s~^~. /jffs/addons/amtm/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
-			echo " post-mount entry added"
-		else
-			echo " OK post-mount"
-		fi
-
-		c_j_s /jffs/scripts/services-stop
-		if ! grep -q "/opt/etc/init.d/rc.unslung stop" /jffs/scripts/services-stop; then
-			echo "/opt/etc/init.d/rc.unslung stop # Added by amtm" >>/jffs/scripts/services-stop
-			echo " services-stop entry added"
-		else
-			echo " OK services-stop"
-		fi
-
-		if [ ! -f /jffs/addons/amtm/mount-entware.mod ]; then
-			g_m mount-entware.mod new
-			echo " mount-entware.mod downloaded"
-		else
-			echo " OK mount-entware.mod"
-		fi
-		[ ! -x /jffs/addons/amtm/mount-entware.mod ] && chmod 0755 /jffs/addons/amtm/mount-entware.mod
-	}
 
 	check_device(){
 
@@ -172,7 +130,7 @@ setup_Entware(){
 	echo " Select device to install Entware to"
 	echo
 
-	i=1;noad=;usePreviousEntware=
+	i=1;unset noad usePreviousEntware
 	for mounted in $(/bin/mount | grep -E "$PART_TYPES" | cut -d" " -f3); do
 		echo " $i. ${GN}$mounted${NC}"
 		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
@@ -212,14 +170,10 @@ setup_Entware(){
 
 	if [ -f "$entDev/entware/bin/opkg" ] && grep -q "$availEntVer" "$entDev/entware/etc/opkg.conf"; then
 		p_e_l
-		echo " This device contains a compatible Entware"
-		echo " installation, select what to do."
-		echo
 		echo " ${GN_BG} $entDev ${NC}"
-		echo
-		printf " 1. Reuse previous Entware installation.\\n"
-		printf "    This requires rebooting this router\\n"
-		printf "    after completion.\\n"
+		printf "\\n The above device contains a compatible\\n previous $entVer\\n installation, select what to do.\\n\\n"
+		printf " 1. Reuse compatible Entware installation.\\n    This requires rebooting this router\\n    after completion.\\n"
+		printf "    Entware will be reinstalled to ensure\\n    all core files are present.\\n\\n"
 		printf " 2. New Entware installation\\n"
 		printf " 3. Return to device selection\\n"
 		while true; do
@@ -349,17 +303,15 @@ setup_Entware(){
 
 	p_e_l
 	if [ "$usePreviousEntware" ]; then
-		echo " amtm is now ready to use the previous"
-		echo " Entware installation on"
+		printf " amtm is now ready to reuse the previous\\n $entVer installation on\\n"
+		instN="Reuse previous Entware installation"
 	else
-		echo " amtm is now ready to install"
-		echo " $entVer to"
+		printf " amtm is now ready to install\\n $entVer to\\n"
+		instN="Install Entware now"
 	fi
-	echo
-	echo " ${GN_BG} $entDev ${NC}"
-	echo
+	printf "\\n ${GN_BG} $entDev ${NC}\\n\\n"
 
-	printf " 1. Install Entware now\\n"
+	printf " 1. $instN\\n"
 	printf " 2. Return to device/server selection\\n"
 	while true; do
 		printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
@@ -387,33 +339,32 @@ setup_Entware(){
 
 	ln -sf "$entPath" /tmp/opt
 
-	if [ -z "$usePreviousEntware" ]; then
-		echo
-		echo " Installing $entVer, using external script"
-		[ "$bparm" ] && echo " additionally using Entware backports-mirror maurerr.github.io"
-		echo "${GY}"
-		case "$(uname -m)" in
-			armv7l)	if [ "$bparm" ]; then
-						c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" \
-						| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
-						echo "${NC}"
-						echo " Installing required $entVersion packages: wget-ssl ca-certificates"
-						echo " for use with Entware backports-mirror https://maurerr.github.io/entware-armv7-k26/"
-						echo "${GY}"
-						opkg install wget-ssl ca-certificates
-						echo "${NC}"
-					else
-						c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
-					fi
-					;;
-			mips)	c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
-					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
-					;;
-			*)		c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
-					;;
-		esac
-		echo "${NC}"
-	fi
+	[ -z "$usePreviousEntware" ] && instP=Installing || instP=Reinstalling
+	echo
+	echo " $instP $entVer, using external script"
+	[ "$bparm" ] && echo " additionally using Entware backports-mirror maurerr.github.io"
+	echo "${GY}"
+	case "$(uname -m)" in
+		armv7l)	if [ "$bparm" ]; then
+					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" \
+					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
+					echo "${NC}"
+					echo " Installing required $entVer packages: wget-ssl ca-certificates"
+					echo " for use with Entware backports-mirror https://maurerr.github.io/entware-armv7-k26/"
+					echo "${GY}"
+					opkg install wget-ssl ca-certificates
+					echo "${NC}"
+				else
+					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
+				fi
+				;;
+		mips)	c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
+				| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+				;;
+		*)		c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
+				;;
+	esac
+	echo "${NC}"
 
 	if [ -f /opt/bin/opkg ]; then
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
@@ -422,10 +373,49 @@ setup_Entware(){
 		if [ -f /opt/etc/opkg.conf ] && /usr/sbin/openssl version | awk '$2 ~ /(^0\.)|(^1\.(0\.|1\.0))/ { exit 1 }' && grep -q 'http:' /opt/etc/opkg.conf; then
 			sed -i 's/http:/https:/g' /opt/etc/opkg.conf
 		fi
-		c_e_folder
+
+		if [ "$(/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" 2>/dev/null | wc -l)" -gt 1 ]; then
+			/opt/bin/find /tmp/mnt/*/ -maxdepth 1 -type d -name "entware*" | while read fdir; do
+				if [ "$fdir" != "$(readlink /tmp/opt)" ] && [ -f "$fdir/bin/opkg" ]; then
+					mv "$fdir" "$(dirname "$fdir")/old.$(basename "$fdir")"
+				fi
+			done
+		fi
+
 		cd
-		write_jffsfile
+
+		echo " Checking /jffs/scripts entries"
+
+		c_j_s /jffs/scripts/post-mount
+		if grep -q "post-mount.div\|mount-entware.div" /jffs/scripts/post-mount; then
+			sed -i '/post-mount.div/d' /jffs/scripts/post-mount >/dev/null
+			sed -i '/mount-entware.div/d' /jffs/scripts/post-mount >/dev/null
+		fi
+		if ! grep -q ". /jffs/addons/amtm/mount-entware.mod" /jffs/scripts/post-mount; then
+			c_nl /jffs/scripts/post-mount
+			sed -i "2s~^~. /jffs/addons/amtm/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
+			echo " post-mount entry added"
+		else
+			echo " OK post-mount"
+		fi
+
+		c_j_s /jffs/scripts/services-stop
+		if ! grep -q "/opt/etc/init.d/rc.unslung stop" /jffs/scripts/services-stop; then
+			echo "/opt/etc/init.d/rc.unslung stop # Added by amtm" >>/jffs/scripts/services-stop
+			echo " services-stop entry added"
+		else
+			echo " OK services-stop"
+		fi
+
+		if [ ! -f /jffs/addons/amtm/mount-entware.mod ]; then
+			g_m mount-entware.mod new
+			echo " mount-entware.mod downloaded"
+		else
+			echo " OK mount-entware.mod"
+		fi
+		[ ! -x /jffs/addons/amtm/mount-entware.mod ] && chmod 0755 /jffs/addons/amtm/mount-entware.mod
 		sleep 2
+
 		r_m entware_setup.mod
 
 		if [ "$usePreviousEntware" ]; then

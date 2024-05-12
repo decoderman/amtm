@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
 version=4.6
-release="May 09 2024"
+release="May 12 2024"
 led_version=2.5 # LED scheduler
 sh_version=1.3 # Shell History
 rd_version=1.3 # Router date keeper
