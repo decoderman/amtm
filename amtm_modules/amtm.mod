@@ -1,6 +1,6 @@
 #!/bin/sh
 #bof
-version=4.6
+version=4.7
 release="May 12 2024"
 led_version=2.5 # LED scheduler
 sh_version=1.3 # Shell History
