@@ -1,12 +1,14 @@
 #!/bin/sh
 #bof
 entware_installed(){
-	if [ ! -f /jffs/scripts/post-mount ] || ! grep -q ". ${add}/mount-entware.mod" /jffs/scripts/post-mount; then
-		c_j_s /jffs/scripts/post-mount
-		sed -i "2s~^~. ${add}/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
-	fi
-	if [ ! -f "${add}"/mount-entware.mod ]; then
-		g_m mount-entware.mod new
+	if [ "$cleanup" ]; then
+		if [ ! -f /jffs/scripts/post-mount ] || ! grep -q ". ${add}/mount-entware.mod" /jffs/scripts/post-mount; then
+			c_j_s /jffs/scripts/post-mount
+			sed -i "2s~^~. ${add}/mount-entware.mod # Added by amtm\n~" /jffs/scripts/post-mount
+		fi
+		if [ ! -f "${add}"/mount-entware.mod ]; then
+			g_m mount-entware.mod new
+		fi
 	fi
 
 	get_entware_identifiers(){

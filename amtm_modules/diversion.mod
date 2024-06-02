@@ -6,8 +6,8 @@ diversion_installed(){
 
 	if [ "$(v_c $localVother)" -ge "$(v_c 5.0)" ]; then
 		if [ "$su" = 1 ]; then
-			case "$release" in
-				*XX*) 	remoteurl="http://diversion.test/diversion_adblocking/diversion";;
+			case "$amtmBranch" in
+				LOCAL) 	remoteurl="http://diversion.test/diversion_adblocking/diversion";;
 				*) 		remoteurl="https://diversion.ch/diversion_adblocking/diversion";;
 			esac
 			remoteVother="$(c_url "$remoteurl" | grep ^VERSION | sed -e 's/VERSION=//')"
@@ -33,8 +33,8 @@ diversion_installed(){
 		localver="$divver"
 		upd="${E_BG}${NC}$localver"
 		if [ "$su" = 1 ]; then
-			case "$release" in
-				*XX*) 	remoteurl="http://diversion.test/diversion";;
+			case "$amtmBranch" in
+				LOCAL) 	remoteurl="http://diversion.test/diversion";;
 				*) 		remoteurl="https://diversion.ch/diversion";;
 			esac
 			aUpd=
@@ -117,8 +117,8 @@ install_diversion(){
 	printf " This installs Diversion - the Router Adblocker\\n on your router.\\n\\n"
 	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480\\n"
 	c_d
-	case "$release" in
-		*XX*) 	remoteurl="http://diversion.test/install";;
+	case "$amtmBranch" in
+		LOCAL) 	remoteurl="http://diversion.test/install";;
 		*) 		remoteurl="https://diversion.ch/install";;
 	esac
 	c_url -Os "$remoteurl" && sh install

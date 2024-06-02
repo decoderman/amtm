@@ -2,39 +2,44 @@
 #bof
 led_control_installed(){
 	[ -z "$su" ] && atii=1
-	if ! grep -qE "^VERSION=$led_version" "${add}"/ledcontrol; then
-		write_ledcontrol_file
-		"${add}"/ledcontrol -upd >/dev/null 2>&1
-		a_m " - LED control script updated to $led_version"
-	fi
-	if [ -f "${add}"/ledcontrol.conf ]; then
-		. "${add}"/ledcontrol.conf
+
+	. "${add}"/ledcontrol.conf
+	if [ "$cleanup" ] && ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
+		check_services_start
+		[ -f "${add}"/ledcontrol ] && rm -f "${add}"/ledcontrol
+		cru d amtm_LEDcontrol_on;cru d amtm_LEDcontrol_off;cru d amtm_LEDcontrol_update
 		if [ "$lcMode" = on ]; then
-			if [ "$checkLed" = 1 ]; then
-				ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
-				ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
-				now="$(date +%s)"
-				if [ "$ledsOn" -le "$ledsOff" ]; then
-					[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
-				else
-					[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
-				fi
-				if [ "$setLedsOn" = 1 ]; then
-					[ "$(nvram get led_disable)" = 1 ] && a_m " LEDs are now on, as per schedule"
-				elif [ "$setLedsOn" = 0 ]; then
-					[ "$(nvram get led_disable)" = 0 ] && a_m " LEDs are now off, as per schedule"
-				fi
-				checkLed=
-				"${add}"/ledcontrol -set >/dev/null 2>&1
-			fi
-			[ "$(echo $lcOnm | wc -m)" -lt 3 ] && lcOnmc=$(echo $lcOnm | sed -e 's/^/0/') || lcOnmc=$lcOnm
-			[ "$(echo $lcOffm | wc -m)" -lt 3 ] && lcOffmc=$(echo $lcOffm | sed -e 's/^/0/') || lcOffmc=$lcOffm
-			[ "$locMode" = on ] && lMode=D || lMode=S
-			lcOnOff="${GN_BG}${lcOnh}:${lcOnmc}${NC} ${E_BG}${lcOffh}:${lcOffmc}${NC} $lMode"
-		elif [ "$lcMode" = off ]; then
-			lcOnOff="${E_BG}disabled${NC}"
+			cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+			cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+			[ "$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * Sat,Tue /bin/sh ${add}/led_control.mod -upd"
 		fi
 	fi
+	if [ "$lcMode" = on ]; then
+		if [ "$checkLed" = 1 ]; then
+			ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+			ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+			now="$(date +%s)"
+			if [ "$ledsOn" -le "$ledsOff" ]; then
+				[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+			else
+				[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
+			fi
+			if [ "$setLedsOn" = 1 ]; then
+				[ "$(nvram get led_disable)" = 1 ] && a_m " LEDs are now on, as per schedule"
+			elif [ "$setLedsOn" = 0 ]; then
+				[ "$(nvram get led_disable)" = 0 ] && a_m " LEDs are now off, as per schedule"
+			fi
+			checkLed=
+			/bin/sh "${add}"/led_control.mod -set >/dev/null 2>&1
+		fi
+		[ "$(echo $lcOnm | wc -m)" -lt 3 ] && lcOnmc=$(echo $lcOnm | sed -e 's/^/0/') || lcOnmc=$lcOnm
+		[ "$(echo $lcOffm | wc -m)" -lt 3 ] && lcOffmc=$(echo $lcOffm | sed -e 's/^/0/') || lcOffmc=$lcOffm
+		[ "$locMode" = on ] && lMode=D || lMode=S
+		lcOnOff="${GN_BG}${lcOnh}:${lcOnmc}${NC} ${E_BG}${lcOffh}:${lcOffmc}${NC} $lMode"
+	else
+		lcOnOff="${E_BG}disabled${NC}"
+	fi
+
 	[ "$(nvram get led_disable)" = 1 ] && ledState="${E_BG}off${NC}" || ledState="${GN_BG}on${NC}"
 
 	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} lc${NC} %-9s%-19s\\n" "manage" "LED control $lcOnOff LED $ledState"
@@ -43,6 +48,7 @@ led_control_installed(){
 		show_amtm menu
 	}
 }
+
 install_led_control(){
 	p_e_l
 	printf " This installs LED control - Scheduled router\\n LED control on your router.\\n\\n"
@@ -59,24 +65,26 @@ install_led_control(){
 	fi
 	[ "$tpLED" ] && show_amtm  " LED control install failed, incompatible:\\n$tpLED"
 
-	write_ledcontrol_file
+	lcMode=
+	write_ledcontrol_conf
 
-	if [ -f "${add}"/ledcontrol ]; then
+	if [ -f "${add}"/ledcontrol.conf ]; then
 		a_m " LED control installed"
 		led_control_manage
 	else
 		am=;show_amtm " LED control installation failed"
 	fi
 }
+
 led_control_manage(){
 	p_e_l
 	printf " This controls the router LEDs\\n\\n"
 	printf " Manually setting the LEDs is preserved\\n between reboots, same as the WebUI setting.\\n"
 	printf " However, the LED scheduler has precedence\\n over the manual setting.\\n\\n"
 	printf " Time can be set statically with a set time\\n or dynamically using sunset/sunrise\\n time for your location.\\n\\n"
-	if [ -f "${add}"/ledcontrol.conf ] && [ "$lcMode" = on ]; then
+	if [ "$lcMode" = on ]; then
 		printf " 1. Edit LED scheduler $lcOnOff\\n"
-	elif [ -f "${add}"/ledcontrol.conf ] && [ "$lcMode" = off ]; then
+	elif [ "$lcMode" = off ]; then
 		printf " 1. ${GN}Enable${NC} LED scheduler\\n"
 	else
 		printf " 1. Set daily LED ${GN_BG}on${NC} ${E_BG}off${NC} schedule\\n"
@@ -87,23 +95,31 @@ led_control_manage(){
 		printf " 2. Manually ${R}Disable${NC} LEDs now\\n"
 	fi
 	printf " 3. Remove LED control script\\n"
-	eok=3;noad=
-	if [ -f "${add}"/ledcontrol.conf ] && [ "$lcMode" = on ]; then
-		printf " 4. ${R}Disable${NC} LED scheduler\\n\\n"
+	eok=3;unset noad aura
+	if [ "$lcMode" = on ]; then
+		printf " 4. ${R}Disable${NC} LED scheduler\\n"
 		eok=4;noad=4
+		if [ "$(nvram get ledg_scheme)" ]; then
+			eok=5;aura=5
+			if [ "$auraLED" = on ]; then
+				printf " 5. ${R}Disable${NC} Aura RGB coupling\\n"
+			else
+				printf " 5. ${GN}Enable${NC} Aura RGB coupling\\n"
+			fi
+		else
+			auraLED=
+		fi
 	fi
-	echo
 
 	while true; do
-		printf " Enter option [1-$eok e=Exit] ";read -r continue
+		printf "\\n Enter option [1-$eok e=Exit] ";read -r continue
 		case "$continue" in
-			1)		if [ -f "${add}"/ledcontrol.conf ] && [ "$lcMode" = on ]; then
+			1)		if [ "$lcMode" = on ]; then
 						led_control_schedule
-					elif [ -f "${add}"/ledcontrol.conf ] && [ "$lcMode" = off ]; then
+					elif [ "$lcMode" = off ]; then
 						check_services_start
 						lcMode=on
 						write_ledcontrol_conf
-						write_ledcontrol_file
 						checkLed=1
 						show_amtm " LED control scheduler enabled"
 					else
@@ -111,39 +127,75 @@ led_control_manage(){
 					fi
 					break;;
 			2)		if [ "$(nvram get led_disable)" = 1 ]; then
-						"${add}"/ledcontrol -on -p >/dev/null 2>&1
+						/bin/sh "${add}"/led_control.mod -on -p >/dev/null 2>&1
 						show_amtm " LEDs are now on"
 					else
-						"${add}"/ledcontrol -off -p >/dev/null 2>&1
+						/bin/sh "${add}"/led_control.mod -off -p >/dev/null 2>&1
 						show_amtm " LEDs are now off"
 					fi
 					break;;
 			3)		p_e_l
 					echo " This removes the scheduled LED control"
 					c_d
-					"${add}"/ledcontrol -on -p >/dev/null 2>&1
+					/bin/sh "${add}"/led_control.mod -on -p >/dev/null 2>&1
 					if [ -f /jffs/scripts/services-start ]; then
-						sed -i "\~${add}/ledcontrol.*~d" /jffs/scripts/services-start
+						sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/services-start
 						r_w_e /jffs/scripts/services-start
 					fi
 					cru d amtm_LEDcontrol_on
 					cru d amtm_LEDcontrol_off
 					cru d amtm_LEDcontrol_update
-					rm "${add}"/ledcontrol*
-					unset lcMode locMode locCode locLastUpd
+					rm "${add}"/led*
+					unset lcMode locMode locCode locLastUpd auraLED
 					show_amtm " LED scheduler removed"
 					break;;
 			$noad)	lcMode=off
 					write_ledcontrol_conf
 					[ "$(nvram get led_disable)" = 1 ] && a_m " LEDs are now on"
-					"${add}"/ledcontrol -set >/dev/null 2>&1
+					/bin/sh "${add}"/led_control.mod -set >/dev/null 2>&1
 					show_amtm " LED control scheduler disabled"
 					break;;
+			$aura)	p_e_l
+					printf " Aura RGB coupling setting\\n\\n Select if Aura RGB follows the LED scheduler\\n setting to turn Aura RGB lighting on or off.\\n\\n"
+
+					[ "$(nvram get ledg_scheme)" != 0 ] && echo " Aura RGB is currently enabled in the WebUI." || echo " Aura RGB is currently disabled in the WebUI."
+					echo
+
+					if [ "$auraLED" = on ]; then
+						printf " 1. ${R}Disable${NC} Aura RGB coupling now\\n"
+					else
+						printf " 1. ${GN}Enable${NC} Aura RGB coupling now\\n"
+					fi
+					while true; do
+						printf "\\n Enter option [1-1 e=Exit] ";read -r continue
+						case "$continue" in
+							1)		break;;
+							[Ee])	show_amtm menu;break;;
+							*)		printf "\\n input is not an option\\n";;
+						esac
+					done
+					if [ -z "$auraLED" -o "$auraLED" = off ]; then
+						auraLED=on
+						write_ledcontrol_conf
+						checkLed=1
+						show_amtm " Aura LED coupling enabled"
+					else
+						if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
+							nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+							nvram commit
+							service restart_leds
+						fi
+						auraLED=off
+						write_ledcontrol_conf
+						show_amtm " Aura LED coupling disabled"
+					fi
+					break;;
 			[Ee])	show_amtm menu;break;;
-			*)		printf "\\n input is not an option\\n\\n";;
+			*)		printf "\\n input is not an option\\n";;
 		esac
 	done
 }
+
 led_control_schedule(){
 	p_e_l
 	echo " Select how LEDs are controlled"
@@ -167,9 +219,9 @@ led_control_schedule(){
 		eok=1;noad=
 		printf " ${GY}2. Use Dynamic time\\n    Feature requires Entware installed${NC}\\n"
 	fi
-	echo
+
 	while true; do
-		printf " Enter option [1-$eok e=Exit] ";read -r lcOnh
+		printf "\\n Enter option [1-$eok e=Exit] ";read -r lcOnh
 		case "$lcOnh" in
 				1)	p_e_l
 					echo " The router date is ${GN}$(date +"%b %d %Y %R")${NC}"
@@ -240,7 +292,6 @@ led_control_schedule(){
 							1)		check_services_start
 									lcMode=on
 									locMode=off
-									write_ledcontrol_file
 									write_ledcontrol_conf
 									checkLed=1
 									show_amtm " Static LED control scheduler set"
@@ -273,16 +324,19 @@ led_control_schedule(){
 					fi
 					break;;
 			[Ee])	show_amtm " Exited LED control function";break;;
-				*)	printf "\\n input is not an option\\n\\n";;
+				*)	printf "\\n input is not an option\\n";;
 		esac
 	done
 }
+
 check_services_start(){
 	c_j_s /jffs/scripts/services-start
-	if ! grep -q "^${add}/ledcontrol -set # Added by amtm" /jffs/scripts/services-start; then
-		echo "${add}/ledcontrol -set # Added by amtm" >> /jffs/scripts/services-start
+	if ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
+		sed -i "\~${add}/led.*~d" /jffs/scripts/services-start
+		echo "/bin/sh ${add}/led_control.mod -set # Added by amtm" >> /jffs/scripts/services-start
 	fi
 }
+
 get_dynamic_schedule(){
 	if [ ! -f /opt/bin/date ]; then
 		echo "Installing required Entware package coreutils-date"
@@ -308,7 +362,6 @@ get_dynamic_schedule(){
 		lcMode=on
 		locMode=on
 		locLastUpd="$(date +"%b %d %T")"
-		write_ledcontrol_file
 		write_ledcontrol_conf
 		checkLed=1
 		show_amtm " Dynamic LED control scheduler set"
@@ -316,6 +369,7 @@ get_dynamic_schedule(){
 		show_amtm " Failed to get location code"
 	fi
 }
+
 set_dynamic_schedule(){
 	p_e_l
 	printf " To set a dynamic LED schedule go to\\n https://weather.codes/search/\\n and search for your City or ZIP code.\\n"
@@ -340,6 +394,7 @@ set_dynamic_schedule(){
 		esac
 	done
 }
+
 write_ledcontrol_conf(){
 	cat <<-EOF > "${add}"/ledcontrol.conf
 	# LED control settings file
@@ -351,146 +406,158 @@ write_ledcontrol_conf(){
 	locMode=$locMode
 	locCode=$locCode
 	locLastUpd="$locLastUpd"
+	auraLED=$auraLED
 	EOF
 }
-write_ledcontrol_file(){
-	cat <<-EOF > "${add}"/ledcontrol
-	#!/bin/sh
-	# ledcontrol, router LED control. Coded by thelonelycoder
-	# Script created by amtm $version
 
-	VERSION=$led_version
-	caller="amtm ledcontrol"
-
-	show_help(){
-	    echo
-	    echo "amtm ledcontrol v\$VERSION, router LED control"
-	    echo "path to this file: ${add}/ledcontrol"
-	    echo "usage, use full path:"
-	    echo "ledcontrol -set        Sets cron jobs and LEDs as per schedule"
-	    echo "ledcontrol -on         Turn LEDs on"
-	    echo "ledcontrol -off        Turn LEDs off"
-	    echo "ledcontrol -upd        Update dynamic location time"
-	    echo "ledcontrol -on -p      Turn LEDs on, preserved between reboots"
-	    echo "ledcontrol -off -p     Turn LEDs off, preserved between reboots"
-	    echo
-	}
-
-	[ "\${2}" = -p ] && state="preserved setting" || state="volatile setting"
-	case \${1} in
-	    -upd)   if [ -f ${add}/ledcontrol.conf ]; then
-	                . ${add}/ledcontrol.conf
-	                if [ "\$lcMode" = on ] && [ "\$locMode" = on ]; then
-	                    if [ ! -f /opt/bin/date ]; then
-	                        logger -s -t "\$caller" "scheduled update failed, Entware package /opt/bin/date not found, investigate"
-	                        exit 0
-	                    fi
-	                    tmpfile=/tmp/\$locCode.out
-	                    /usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "https://weather.com/weather/today/l/\$locCode" -o "\$tmpfile"
-	                    if grep -q 'Sun Rise' "\$tmpfile"; then
-	                        srise=\$(grep 'Sun Rise' "\$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))' | tail -1)
-	                        sset=\$(grep 'Sun Rise' "\$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))' | tail -1)
-	                        sunrise=\$(/opt/bin/date --date="\$srise" +%R)
-	                        sunset=\$(/opt/bin/date --date="\$sset" +%R)
-	                        lcOnh=\$(echo \${sunrise:0:2} | sed 's/^0//')
-	                        lcOnm=\$(echo \${sunrise:3:2} | sed 's/^0//')
-	                        lcOffh=\$(echo \${sunset:0:2} | sed 's/^0//')
-	                        lcOffm=\$(echo \${sunset:3:2} | sed 's/^0//')
-	                        rm -f \$tmpfile
-	                        locLastUpd=\$(date +"%b %d %T")
-	                        {
-	                        echo "# LED control settings file"
-	                        echo "lcMode=\$lcMode"
-	                        echo "lcOnh=\$lcOnh"
-	                        echo "lcOnm=\$lcOnm"
-	                        echo "lcOffh=\$lcOffh"
-	                        echo "lcOffm=\$lcOffm"
-	                        echo "locMode=\$locMode"
-	                        echo "locCode=\$locCode"
-	                        echo "locLastUpd=\"\$locLastUpd\""
-	                        } >${add}/ledcontrol.conf
-	                        logger -s -t "\$caller" "scheduled update of sunset/sunrise time"
-	                         /jffs/addons/amtm/ledcontrol -set
-	                    else
-	                        logger -s -t "\$caller" "failed to get location code"
-	                    fi
-	                else
-	                    logger -s -t "\$caller" "dynamic location not enabled"
-	                fi
-	            else
-	                logger -s -t "\$caller" "No LED control conf file found"
-	            fi
-	            ;;
-	    -set)   if [ -f ${add}/ledcontrol.conf ]; then
-	                . ${add}/ledcontrol.conf
-	                if [ "\$lcMode" = on ]; then
-	                    cru a amtm_LEDcontrol_on "\$lcOnm \$lcOnh * * * ${add}/ledcontrol -on"
-	                    cru a amtm_LEDcontrol_off "\$lcOffm \$lcOffh * * * ${add}/ledcontrol -off"
-	                    [ "\$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * Sat,Tue /jffs/addons/amtm/ledcontrol -upd"
-	                    logger -s -t "\$caller" "cron jobs set"
-	                    ntptimer=0
-	                    ntptimeout=20
-	                    while [ "\$(nvram get ntp_ready)" = 0 ] && [ "\$ntptimer" -lt "\$ntptimeout" ]; do
-	                        ntptimer=\$((ntptimer+1))
-	                        sleep 1
-	                    done
-	                    if [ "\$(nvram get ntp_ready)" = 1 ]; then
-	                        ledsOn="\$(date --date="\$lcOnh:\$lcOnm" +%s)"
-	                        ledsOff="\$(date --date="\$lcOffh:\$lcOffm" +%s)"
-	                        now="\$(date +%s)"
-	                        if [ "\$ledsOn" -le "\$ledsOff" ]; then
-	                            [ "\$ledsOn" -le "\$now" -a "\$now" -lt "\$ledsOff" ] && setLedsOn=1 || setLedsOn=0
-	                        else
-	                            [ "\$ledsOn" -gt "\$now" -a "\$now" -ge "\$ledsOff" ] && setLedsOn=0 || setLedsOn=1
-	                        fi
-	                        if [ "\$setLedsOn" = 1 ]; then
-	                            if [ "\$(nvram get led_disable)" = 1 ]; then
-	                                nvram set led_disable=0
-	                                service restart_leds
-	                                logger -s -t "\$caller" "LEDs are now on, as per schedule"
-	                            fi
-	                        elif [ "\$setLedsOn" = 0 ]; then
-	                            if [ "\$(nvram get led_disable)" = 0 ]; then
-	                                nvram set led_disable=1
-	                                service restart_leds
-	                                logger -s -t "\$caller" "LEDs are now off, as per schedule"
-	                            fi
-	                        fi
-	                    else
-	                        logger -s -t "\$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
-	                    fi
-	                elif [ "\$lcMode" = off ]; then
-	                    cru d amtm_LEDcontrol_on
-	                    cru d amtm_LEDcontrol_off
-	                    cru d amtm_LEDcontrol_update
-	                    if [ "\$(nvram get led_disable)" = 1 ]; then
-	                        nvram set led_disable=0
-	                        nvram commit
-	                        service restart_leds
-	                        logger -s -t "\$caller" "LED control is off, LEDs are now on"
-	                    else
-	                        logger -s -t "\$caller" "LED control is off, nothing to do"
-	                    fi
-	                fi
-	            else
-	                logger -s -t "\$caller" "No LED control schedule is set, nothing to do"
-	            fi
-	            ;;
-	     -on)   nvram set led_disable=0
-	            [ "\${2}" = "-p" ] && nvram commit
-	            service restart_leds
-	            logger -s -t "\$caller" "LEDs are now on (\$state)"
-	            ;;
-	    -off)   nvram set led_disable=1
-	            [ "\${2}" = "-p" ] && nvram commit
-	            service restart_leds
-	            logger -s -t "\$caller" "LEDs are now off (\$state)"
-	            ;;
-	       *)   show_help
-	            exit 0
-	            ;;
-	esac
-	EOF
-	[ ! -x "${add}"/ledcontrol ] && chmod 0755 "${add}"/ledcontrol
+set_lc_def(){
+	add=/jffs/addons/amtm
+	caller="amtm LED control"
+	if [ -f "${add}"/ledcontrol.conf ]; then
+		. "${add}"/ledcontrol.conf
+	else
+		logger -s -t "$caller" "No LED control config file found"
+	fi
+	[ "${2}" = -p ] && state="preserved setting" || state="volatile setting"
 }
+
+case "${1}" in
+	"")   	set_lc_def
+			printf "\\namtm LED control - Scheduled router LED control\\nusage, use full file path: sh ${add}/led_control.mod\\n\\n"
+			printf "led_control.mod -set        Sets cron jobs and LEDs as per schedule\\nled_control.mod -on         Turn LEDs on\\n"
+			printf "led_control.mod -off        Turn LEDs off\\nled_control.mod -upd        Update dynamic location time\\n"
+			printf "led_control.mod -on -p      Turn LEDs on, preserved between reboots\\nled_control.mod -off -p     Turn LEDs off, preserved between reboots\\n\\n"
+			;;
+	-upd)   set_lc_def $@
+			if [ "$lcMode" = on ] && [ "$locMode" = on ]; then
+				if [ ! -f /opt/bin/date ]; then
+					logger -s -t "$caller" "scheduled update failed, Entware package /opt/bin/date not found, investigate"
+					exit 0
+				fi
+				tmpfile=/tmp/$locCode.out
+				/usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "https://weather.com/weather/today/l/$locCode" -o "$tmpfile"
+				if grep -q 'Sun Rise' "$tmpfile"; then
+					srise=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))' | tail -1)
+					sset=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))' | tail -1)
+					sunrise=$(/opt/bin/date --date="$srise" +%R)
+					sunset=$(/opt/bin/date --date="$sset" +%R)
+					lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
+					lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
+					lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
+					lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+					rm -f $tmpfile
+					locLastUpd=$(date +"%b %d %T")
+					{
+					echo "# LED control settings file"
+					echo "lcMode=$lcMode"
+					echo "lcOnh=$lcOnh"
+					echo "lcOnm=$lcOnm"
+					echo "lcOffh=$lcOffh"
+					echo "lcOffm=$lcOffm"
+					echo "locMode=$locMode"
+					echo "locCode=$locCode"
+					echo "locLastUpd=\"$locLastUpd\""
+					echo "auraLED=$auraLED"
+					} >"${add}"/ledcontrol.conf
+					logger -s -t "$caller" "scheduled update of sunset/sunrise time"
+					/bin/sh "${add}"/led_control.mod -set
+				else
+					logger -s -t "$caller" "failed to get location code"
+				fi
+			else
+				logger -s -t "$caller" "dynamic location not enabled"
+			fi
+			;;
+	-set)   set_lc_def $@
+			if [ "$lcMode" = on ]; then
+				cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+				cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+				[ "$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * Sat,Tue /bin/sh ${add}/led_control.mod -upd"
+				logger -s -t "$caller" "cron jobs set"
+				ntptimer=0
+				ntptimeout=20
+				while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
+					ntptimer=$((ntptimer+1))
+					sleep 1
+				done
+				if [ "$(nvram get ntp_ready)" = 1 ]; then
+					ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+					ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+					now="$(date +%s)"
+					if [ "$ledsOn" -le "$ledsOff" ]; then
+						[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+					else
+						[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
+					fi
+					if [ "$setLedsOn" = 1 ]; then
+						if [ "$(nvram get led_disable)" = 1 ]; then
+							nvram set led_disable=0
+							if [ "$auraLED" = on -a "$(nvram get ledg_scheme_old)" ]; then
+								service restart_leds
+								nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+								logger -s -t "$caller" "Aura LEDs are now on, as per schedule"
+							fi
+							service restart_leds
+							logger -s -t "$caller" "LEDs are now on, as per schedule"
+						fi
+					elif [ "$setLedsOn" = 0 ]; then
+						if [ "$(nvram get led_disable)" = 0 ]; then
+							if [ "$auraLED" = on ]; then
+								nvram set ledg_scheme=0
+								service restart_leds
+								logger -s -t "$caller" "Aura LEDs are now off, as per schedule"
+								sleep 1
+							fi
+							nvram set led_disable=1
+							service restart_leds
+							logger -s -t "$caller" "LEDs are now off, as per schedule"
+						fi
+					fi
+				else
+					logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
+				fi
+			elif [ "$lcMode" = off ]; then
+				cru d amtm_LEDcontrol_on
+				cru d amtm_LEDcontrol_off
+				cru d amtm_LEDcontrol_update
+				if [ "$(nvram get led_disable)" = 1 ]; then
+					nvram set led_disable=0
+					if [ "$auraLED" = on -a "$(nvram get ledg_scheme_old)" ]; then
+						nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+						logger -s -t "$caller" "LED control is off, Aura LEDs are now on"
+					fi
+					nvram commit
+					service restart_leds
+					logger -s -t "$caller" "LED control is off, LEDs are now on"
+				else
+					logger -s -t "$caller" "LED control is off, nothing to do"
+				fi
+			fi
+			;;
+	 -on)   set_lc_def $@
+			nvram set led_disable=0
+			if [ "$auraLED" = on -a "$(nvram get ledg_scheme_old)" ]; then
+				[ "${2}" = "-p" ] && nvram commit
+				service restart_leds
+				nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+				logger -s -t "$caller" "Aura LEDs are now on ($state)"
+			fi
+			[ "${2}" = "-p" ] && nvram commit
+			service restart_leds
+			logger -s -t "$caller" "LEDs are now on ($state)"
+			;;
+	-off)   set_lc_def $@
+			if [ "$auraLED" = on ]; then
+				nvram set ledg_scheme=0
+				[ "${2}" = "-p" ] && nvram commit
+				service restart_leds
+				sleep 1
+				logger -s -t "$caller" "Aura LEDs are now off ($state)"
+			fi
+			nvram set led_disable=1
+			[ "${2}" = "-p" ] && nvram commit
+			service restart_leds
+			logger -s -t "$caller" "LEDs are now off ($state)"
+			;;
+esac
 #eof

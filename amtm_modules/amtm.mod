@@ -1,18 +1,17 @@
 #!/bin/sh
 #bof
-version=4.7
-release="May 12 2024"
-led_version=2.5 # LED scheduler
-sh_version=1.3 # Shell History
+version=4.8
+release="June 02 2024"
+amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
 wl_MD5=757e79826a752563375aa4c803599e0f # shared-amtm-whitelist
-title="Asuswrt-Merlin Terminal Menu"
 EMAIL_DIR="${add}/mail"
+[ -f "${add}"/amtmBranch ] && . "${add}"/amtmBranch
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
-s_d_u(){ case "$release" in *XX*)amtmURL=http://diversion.test/amtm_fw;dv=y;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;dv=;;esac;}; s_d_u
+s_d_u(){ case "$amtmBranch" in LOCAL)amtmURL=http://diversion.test/amtm_fw;brTxt=$amtmBranch;;BETA)amtmURL=https://diversion.ch/amtm_fw_beta;brTxt=$amtmBranch;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;brTxt=;;esac;};s_d_u
 if [ "$amtmRev" -lt 7 ]; then
 	if [ "$amtmRev" = 1 ]; then g_m amtm_rev1.mod include; elif [ "$amtmRev" -ge 2 ]; then r_m amtm_rev1.mod; fi
 	if [ "$amtmRev" -le 3 ]; then g_m amtm_rev3.mod include; elif [ "$amtmRev" -gt 3 ]; then r_m amtm_rev3.mod; fi
@@ -30,12 +29,12 @@ ascii_logo(){
 	echo "  \_||_|_|_|_|\___)_|_|_|"
 	echo
 	echo " $1"
-	[ "$1" = "  Goodbye" ] && [ -f "${add}/shellhistory" ] && "${add}"/shellhistory &
+	[ "$1" = "  Goodbye" ] && [ -f "${add}"/shell_history.mod ] && /bin/sh "${add}"/shell_history.mod -run >/dev/null 2>&1
 }
 
 about_amtm(){
 	p_e_l
-	echo " amtm, the $title
+	echo " amtm, the $amtmTitle
  Version $version FW (built-in firmware version), released on $release
  amtm firmware file revision: $amtmRev
  Device operation mode NVRAM setting: sw_mode: $(nvram get sw_mode), wlc_psta: $(nvram get wlc_psta)
@@ -116,7 +115,7 @@ show_amtm(){
 	if [ -z "$updcheck" ]; then
 		echo
 		clear
-		printf "${R_BG}%-27s%s\\n\\n" " amtm $version FW" "by thelonelycoder ${NC}"
+		printf "${R_BG}%-27s%s\\n\\n" " amtm $version FW $brTxt" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		extendno=$(nvram get extendno)
 		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-5).."
@@ -139,8 +138,7 @@ show_amtm(){
 			*) echo " $OM sw_mode:$(nvram get sw_mode),wlc_psta:$(nvram get wlc_psta),Unknown";;
 		esac
 		printf " $(TZ=$(nvram get time_zone_x) date)\\n"
-		[ "$dv" ] && printf " --> Development version $release <--\\n"
-		printf "\\n${R_BG}%-44s ${NC}\\n\\n" " amtm - the $title"
+		printf "\\n${R_BG}%-44s ${NC}\\n\\n" " amtm - the $amtmTitle"
 		if [ -f /opt/bin/opkg ]; then
 			thisDev="$(readlink /tmp/opt | sed 's#/tmp/#/#')"
 			printf "${R_BG}%-44s ${NC}\\n\\n" " $(df -kh ${thisDev%/entware} | xargs | awk '{print "'${thisDev%/entware}' "$2" "$9" "$3" "$10" ("$12")"}')"
@@ -183,6 +181,7 @@ show_amtm(){
 			rm -f "$shared_amtm_wl"
 		fi
 	fi
+	[ "$(echo $am | grep 'update')" -o "$(echo $1 | grep 'update')" ] && cleanup=on
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
@@ -229,7 +228,7 @@ show_amtm(){
 	spacer
 	/jffs/addons/amtm/disk_check.mod disk_check dc Disk¦check¦script
 	fdisk
-	/jffs/addons/amtm/ledcontrol led_control lc LED¦control¦-¦Scheduled¦LED¦control
+	/jffs/addons/amtm/ledcontrol.conf led_control lc LED¦control¦-¦Scheduled¦LED¦control
 	/jffs/addons/amtm/reboot_scheduler.mod reboot_scheduler rs Reboot¦scheduler
 	spacer
 	/jffs/addons/amtm/.ash_history shell_history sh shell¦history¦-¦Keep¦history¦of¦shell¦commands
@@ -343,7 +342,7 @@ show_amtm(){
 	done
 	set +f
 
-	unset IFS swl swsize swpsize swtxt mpsw awmUpd
+	unset IFS swl swsize swpsize swtxt mpsw awmUpd cleanup
 	gms(){ g_m swap.mod include;[ "$dlok" = 0 ] && show_amtm menu;}
 	[ -f /jffs/scripts/post-mount ] && swl="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
@@ -577,12 +576,28 @@ show_amtm(){
 								service reboot >/dev/null 2>&1 &
 								exit 0
 								break;;
-			[Rr][Nn])			# hidden, reboot router right now
-								clear
+			[Rr][Nn])			clear # hidden, reboot router right now
 								ascii_logo '  Rebooting...'
 								printf "   amtm reboots this router now\\n\\n"
 								service reboot >/dev/null 2>&1 &
 								exit 0
+								break;;
+			beta)				# hidden, use BETA or RELEASE server
+								if c_url https://diversion.ch/amtm_fw_beta/amtm_fw_beta | grep -q '^# beta'; then
+									c_url -Os https://diversion.ch/amtm_fw_beta/amtm_fw_beta
+									. amtm_fw_beta
+								else
+									show_amtm " No BETA version to test at this time."
+								fi
+								break;;
+			local)				# hidden, only use if you ARE thelonelycoder
+								c_url -Os http://diversion.test/verify
+								if [ -f verify ] && grep -q '01081291' verify; then
+									. verify
+								else
+									rm -f verify
+									show_amtm " You are not thelonelycoder!"
+								fi
 								break;;
 			*)					printf "\\n                    input is not an option\\n\\n";;
 		esac
@@ -600,7 +615,7 @@ c_j(){
 		printf " .---------------- minute       (0 - 59)\\n |  .------------- hour         (0 - 23)\\n |  |  .---------- day of month (1 - 31)\\n"
 		printf " |  |  |  .------- month        (1 - 12) OR Jan,Feb,mar ...\\n |  |  |  |  .---- day of week  (0 - 6) Sunday = 0 or 7, OR Sun,mon,Tue ...\\n"
 		printf " |  |  |  |  |\\n *  *  *  *  *  command to be executed  #job_name#  ( * = every ... )\\n\\n"
-		cru l | sed -e 's/^/ /'
+		cru l | sed 's/^/ /'
 	fi
 	p_e_t "return to menu"
 	show_amtm menu
@@ -748,22 +763,30 @@ reset_amtm(){
 						sed -i '\~routerdate save~d' /jffs/scripts/services-stop
 						r_w_e /jffs/scripts/services-stop
 					fi
-					if [ -f "${add}"/ledcontrol ]; then
-						"${add}"/ledcontrol -on -p >/dev/null 2>&1
-						rm "${add}"/ledcontrol*
-					fi
-					if [ -f /jffs/scripts/services-start ] && grep -q "${add}/ledcontrol.*" /jffs/scripts/services-start; then
-						sed -i "\~${add}/ledcontrol.*~d" /jffs/scripts/services-start
-						r_w_e /jffs/scripts/services-start
+					if [ -f "${add}"/led_control.mod ]; then
+						sh "${add}"/led_control.mod -on -p >/dev/null 2>&1
+						rm "${add}"/led*
+						if [ "$auraLED" ] && [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
+							nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+							nvram commit
+							service restart_leds
+							sleep 1
+						fi
 						cru d amtm_LEDcontrol_on
 						cru d amtm_LEDcontrol_off
+						cru d amtm_LEDcontrol_update
 						if [ "$(nvram get led_disable)" = 1 ]; then
 							nvram set led_disable=0
 							nvram commit
+							service restart_leds
 						fi
 					fi
-					if [ -f /jffs/scripts/services-start ] && grep -q "^${add}/shellhistory" /jffs/scripts/services-start; then
-						sed -i "\~${add}/shellhistory.*~d" /jffs/scripts/services-start
+					if [ -f /jffs/scripts/services-start ] && grep -q "${add}/led.*" /jffs/scripts/services-start; then
+						sed -i "\~${add}/led.*~d" /jffs/scripts/services-start
+						r_w_e /jffs/scripts/services-start
+					fi
+					if [ -f /jffs/scripts/services-start ] && grep -q "^/bin/sh ${add}/shell_history.mod" /jffs/scripts/services-start; then
+						sed -i "\~${add}/shell.*~d" /jffs/scripts/services-start
 						r_w_e /jffs/scripts/services-start
 						rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
 					fi
@@ -792,7 +815,11 @@ reset_amtm(){
 						swapoff "$swl"
 						rm -f "$swl"
 					fi
-					if [ -f /jffs/scripts/services-start ] && grep -q "${add}/ledcontrol.*" /jffs/scripts/services-start; then
+					if [ -f /jffs/scripts/services-start ] && grep -q "${add}/led.*" /jffs/scripts/services-start; then
+						if [ "$auraLED" ] && [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
+							nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+							nvram commit
+						fi
 						if [ "$(nvram get led_disable)" = 1 ]; then
 							nvram set led_disable=0
 							nvram commit
