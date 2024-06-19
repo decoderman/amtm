@@ -33,8 +33,6 @@ install_skynet(){
 	c_d
 	if ! ipset -v 2>/dev/null | grep -qE 'v6|v7'; then
 		am=;show_amtm " Skynet install aborted,\\n IPSet version on router not supported:\\n$(ipset -v 2>/dev/null | sed -e 's/^/ /')"
-	elif [ ! -f /lib/modules/"$(uname -r)"/kernel/net/netfilter/ipset/ip_set_hash_ipmac.ko ]; then
-		am=;show_amtm " Skynet install aborted,\\n IPSet extension not supported, please\\n update router to latest Firmware version."
 	else
 		c_url https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh -o /jffs/scripts/firewall && chmod +x /jffs/scripts/firewall && sh /jffs/scripts/firewall install
 		sleep 2
