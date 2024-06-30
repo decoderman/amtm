@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=4.8.1
-release="June 22 2024"
+version=4.9
+release="June 30 2024"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -120,7 +120,8 @@ show_amtm(){
 		extendno=$(nvram get extendno)
 		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-5).."
 		[ "$extendno" = 0 ] && extendno= || extendno=_$extendno
-		[ "$(v_c $(nvram get buildno))" -ge "$(v_c 388)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$(nvram get buildno)$extendno || fwVersion=$(nvram get buildno)$extendno
+		awmBuildno="$(nvram get buildno)"
+		[ "$(v_c $awmBuildno)" -ge "$(v_c 388)" -o "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$awmBuildno$extendno || fwVersion=$awmBuildno$extendno
 		printf " ASUS $model HW: $(uname -m) Kernel: $(uname -r | sed 's/brcmarm//g')\\n FW: $fwVersion IP address: $(nvram get lan_ipaddr)\\n"
 
 		OM='Operation Mode:'
@@ -933,8 +934,7 @@ update_amtm(){
 
 update_firmware(){
 	[ "$updcheck" ] && rm -f "${add}"/availUpd.txt
-	awmBuildno=$(nvram get buildno)
-	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(v_c $awmBuildno)" -ge "$(v_c 382)" ]; then
+	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(v_c $awmBuildno)" -ge "$(v_c 382)" -o "$(v_c $awmBuildno)" -ge "$(v_c 102)" ]; then
 		awmWSI=$(nvram get webs_state_info)
 		awmInstalled="$awmBuildno.$(nvram get extendno)"
 		if [ "$awmWSI" ]; then
