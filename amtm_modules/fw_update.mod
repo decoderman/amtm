@@ -28,7 +28,7 @@ fw_update(){
 	}
 
 	if [ "$1" = install ]; then
-		if [ "$(v_c $(nvram get buildno))" -ge "$(v_c 380.65)" ]; then
+		if [ "$(v_c $(nvram get buildno))" -ge "$(v_c 380.65)" -o "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
 			isEligible=
 			if [ -f /www/Advanced_FirmwareUpgrade_Content.asp ] && grep -q 'asuswrt-merlin.net/download' /www/Advanced_FirmwareUpgrade_Content.asp; then
 				isEligible=1

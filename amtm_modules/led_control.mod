@@ -34,7 +34,11 @@ led_control_installed(){
 		fi
 		[ "$(echo $lcOnm | wc -m)" -lt 3 ] && lcOnmc=$(echo $lcOnm | sed -e 's/^/0/') || lcOnmc=$lcOnm
 		[ "$(echo $lcOffm | wc -m)" -lt 3 ] && lcOffmc=$(echo $lcOffm | sed -e 's/^/0/') || lcOffmc=$lcOffm
-		[ "$locMode" = on ] && lMode=D || lMode=S
+		if [ "$locMode" = on ]; then
+			[ -z "$lcReverse" ] && lMode=D || lMode=RD
+		else
+			lMode=S
+		fi
 		lcOnOff="${GN_BG}${lcOnh}:${lcOnmc}${NC} ${E_BG}${lcOffh}:${lcOffmc}${NC} $lMode"
 	else
 		lcOnOff="${E_BG}disabled${NC}"
@@ -82,6 +86,12 @@ led_control_manage(){
 	printf " Manually setting the LEDs is preserved\\n between reboots, same as the WebUI setting.\\n"
 	printf " However, the LED scheduler has precedence\\n over the manual setting.\\n\\n"
 	printf " Time can be set statically with a set time\\n or dynamically using sunset/sunrise\\n time for your location.\\n\\n"
+	if [ "$lcMode" = on -a "$locMode" = on ] && [ "$locLocality" ]; then
+		[ -z "$lcReverse" ] && lModeR=  || lModeR=' reverse'
+		printf " Your$lModeR dynamic time location ($lMode) is:\\n $locCode, that's in $locLocality, $locRegion, $locCountry.\\n"
+		printf " https://weather.com/weather/today/l/$locCode\\n\\n"
+	fi
+
 	if [ "$lcMode" = on ]; then
 		printf " 1. Edit LED scheduler $lcOnOff\\n"
 	elif [ "$lcMode" = off ]; then
@@ -234,20 +244,29 @@ led_control_schedule(){
 	unset lcMan lcDyn
 	manEdit=Use
 	dynEdit=Use
+	rDynEdit=Use
 	if [ "$lcMode" = on ] && [ -z "$locMode" -o "$locMode" = off ]; then
 		lcMan=$lcOnOff
 		manEdit=Edit
 	fi
-	if [ "$lcMode" = on ] && [ "$locMode" = on ]; then
-		lcDyn=$lcOnOff
-		dynEdit=Edit
-	fi
+	[ "$lcMode" = on -a "$locMode" = on ] && lcDyn=$lcOnOff
+
 	printf " 1. $manEdit Static time $lcMan\\n"
-	eok=2;noad=2
+	eok=3;noad=2;noadv=3
 	if [ -f /opt/bin/opkg ]; then
-		printf " 2. $dynEdit Dynamic time $lcDyn\\n    This uses the sunset/sunrise time\\n    from weather.com for your location\\n"
+		if [ -z "$lcReverse" ]; then
+			dynEdit=Edit
+			lcDynNR=$lcDyn
+			lcDynR=
+		else
+			rDynEdit=Edit
+			lcDynNR=
+			lcDynR=$lcDyn
+		fi
+		printf " 2. $dynEdit Dynamic time $lcDynNR\\n    This uses the sunset/sunrise time\\n    from weather.com for your location\\n"
+		printf " 3. $rDynEdit reverse Dynamic time $lcDynR\\n    Same as above but with reversed time.\\n    LEDs are on at night and off during the day.\n"
 	else
-		eok=1;noad=
+		eok=1;noad=;noadv=
 		printf " ${GY}2. Use Dynamic time\\n    Feature requires Entware installed${NC}\\n"
 	fi
 
@@ -323,6 +342,8 @@ led_control_schedule(){
 							1)		check_services_start
 									lcMode=on
 									locMode=off
+									unset locLocality locRegion locCountry lcReverse
+									cru d amtm_LEDcontrol_update
 									write_ledcontrol_conf
 									checkLed=1
 									show_amtm " Static LED control scheduler set"
@@ -342,15 +363,41 @@ led_control_schedule(){
 						while true; do
 							printf " Enter option [1-2 e=Exit] ";read -r continue
 							case "$continue" in
-								1)		get_dynamic_schedule
+								1)		lcReverse=
+										get_dynamic_schedule
 										break;;
-								2)		set_dynamic_schedule
+								2)		lcReverse=
+										set_dynamic_schedule
 										break;;
 								[Ee])	show_amtm menu;break;;
 								*)		printf "\\n input is not an option\\n\\n";;
 							esac
 						done
 					else
+						lcReverse=
+						set_dynamic_schedule
+					fi
+					break;;
+			$noadv)	if [ "$locCode" ]; then
+						p_e_l
+						printf " Your weather.com location code is: $locCode\\n Sunset/Sunrise time update every Saturday and Tuesday.\\n Last update on: $locLastUpd\\n\\n"
+						printf " 1. Manually update with existing location code\\n"
+						printf " 2. Set new location code\\n\\n"
+						while true; do
+							printf " Enter option [1-2 e=Exit] ";read -r continue
+							case "$continue" in
+								1)		lcReverse=on
+										get_dynamic_schedule
+										break;;
+								2)		lcReverse=on
+										set_dynamic_schedule
+										break;;
+								[Ee])	show_amtm menu;break;;
+								*)		printf "\\n input is not an option\\n\\n";;
+							esac
+						done
+					else
+						lcReverse=on
 						set_dynamic_schedule
 					fi
 					break;;
@@ -377,25 +424,35 @@ get_dynamic_schedule(){
 	c_url "https://weather.com/weather/today/l/$locCode" -o "$tmpfile"
 
 	if grep -q 'Sun Rise' "$tmpfile"; then
-		srise=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))' | tail -1)
-		sset=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))' | tail -1)
+		srise=$(grep -o '<title>Sun Rise</title>.*am</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*am</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))</p>' | sed 's/<\/p>//;s/>//')
+		sset=$(grep -o '<title>Sunset</title>.*pm</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*pm</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))</p>' | sed 's/<\/p>//;s/>//')
 		sunrise=$(/opt/bin/date --date="$srise" +%R)
 		sunset=$(/opt/bin/date --date="$sset" +%R)
 
-		lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
-		lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
-		lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
-		lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+		if [ -z "$lcReverse" ]; then
+			lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
+			lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
+			lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
+			lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+		else
+			lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
+			lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
+			lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
+			lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
+		fi
+
+		locLocality="$(grep 'addressLocality' "$tmpfile" | cut -d '"' -f4)"
+		locRegion="$(grep 'addressRegion' "$tmpfile" | cut -d '"' -f4)"
+		locCountry="$(grep -m 1 'addressCountry' "$tmpfile" | cut -d '"' -f4)"
 
 		rm -f $tmpfile
 
 		check_services_start
 		lcMode=on
 		locMode=on
-		locLastUpd="$(date +"%b %d %T")"
 		write_ledcontrol_conf
 		checkLed=1
-		show_amtm " Dynamic LED control scheduler set"
+		show_amtm " Dynamic LED control scheduler set for\\n $locCode, that's in $locLocality, $locRegion, $locCountry."
 	else
 		show_amtm " Failed to get location code"
 	fi
@@ -411,7 +468,7 @@ set_dynamic_schedule(){
 		case "$continue" in
 			1)		p_e_l
 					while true; do
-						printf " Enter your location code and press Enter ";read -r locCode
+						printf " Enter location code and press Enter: ";read -r locCode
 						case "$continue" in
 							1)		get_dynamic_schedule
 									break;;
@@ -436,7 +493,11 @@ write_ledcontrol_conf(){
 	lcOffm=$lcOffm
 	locMode=$locMode
 	locCode=$locCode
-	locLastUpd="$locLastUpd"
+	lcReverse=$lcReverse
+	locLocality="$locLocality"
+	locRegion="$locRegion"
+	locCountry="$locCountry"
+	locLastUpd="$(date +"%b %d %T")"
 	auraLED=$auraLED
 	EOF
 }
@@ -469,28 +530,26 @@ case "${1}" in
 				tmpfile=/tmp/$locCode.out
 				/usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "https://weather.com/weather/today/l/$locCode" -o "$tmpfile"
 				if grep -q 'Sun Rise' "$tmpfile"; then
-					srise=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))' | tail -1)
-					sset=$(grep 'Sun Rise' "$tmpfile" | grep -oE '((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))' | tail -1)
+					srise=$(grep -o '<title>Sun Rise</title>.*am</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*am</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))</p>' | sed 's/<\/p>//;s/>//')
+					sset=$(grep -o '<title>Sunset</title>.*pm</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*pm</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))</p>' | sed 's/<\/p>//;s/>//')
 					sunrise=$(/opt/bin/date --date="$srise" +%R)
 					sunset=$(/opt/bin/date --date="$sset" +%R)
-					lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
-					lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
-					lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
-					lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+					if [ -z "$lcReverse" ]; then
+						lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
+						lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
+						lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
+						lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+					else
+						lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
+						lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
+						lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
+						lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
+					fi
+					locLocality="$(grep 'addressLocality' "$tmpfile" | cut -d '"' -f4)"
+					locRegion="$(grep 'addressRegion' "$tmpfile" | cut -d '"' -f4)"
+					locCountry="$(grep -m 1 'addressCountry' "$tmpfile" | cut -d '"' -f4)"
 					rm -f $tmpfile
-					locLastUpd=$(date +"%b %d %T")
-					{
-					echo "# LED control settings file"
-					echo "lcMode=$lcMode"
-					echo "lcOnh=$lcOnh"
-					echo "lcOnm=$lcOnm"
-					echo "lcOffh=$lcOffh"
-					echo "lcOffm=$lcOffm"
-					echo "locMode=$locMode"
-					echo "locCode=$locCode"
-					echo "locLastUpd=\"$locLastUpd\""
-					echo "auraLED=$auraLED"
-					} >"${add}"/ledcontrol.conf
+					write_ledcontrol_conf
 					logger -s -t "$caller" "scheduled update of sunset/sunrise time"
 					/bin/sh "${add}"/led_control.mod -set
 				else

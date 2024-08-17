@@ -96,6 +96,13 @@ manage_swap(){
 		while true; do
 			case "$continue" in
 				1)	p_e_l
+					if [ -f "$swl" -a "$deleteSwap" ]; then
+						sync; echo 3 > /proc/sys/vm/drop_caches
+						swapoff "$swl"
+						rm "$swl"
+					fi
+					deleteSwap=
+
 					echo " Listing compatible device(s) for a Swap file"
 					echo
 					i=1;noad=
@@ -207,17 +214,19 @@ manage_swap(){
 			esac
 		done
 
-	elif [ "$1" = delete ]; then
+	elif [ "$1" = manage ]; then
 		p_e_l
-		printf " Swap file found at:\\n ${GN}$swl${NC}\\n"
+		printf " Swap file options\\n\\n"
+		printf " A $swsize Swap file was found at:\\n ${GN}$swl${NC}\\n"
 		if ! grep -q "^swapoff -a" /jffs/scripts/unmount; then
 			sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
 			echo "swapoff -a 2>/dev/null # Added by amtm" >> /jffs/scripts/unmount
 			printf "\\n Entry in /jffs/scripts/unmount corrected.\\n"
 		fi
+		printf "\\n 1. Delete the Swap file\\n 2. Change Swap file size\\n"
 
 		while true; do
-			printf "\\n Delete the Swap file? [1=Yes e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		sed -i '/swapoff/d' /jffs/scripts/unmount >/dev/null
 						if [ -f "$swl" ]; then
@@ -231,6 +240,9 @@ manage_swap(){
 							sed -i '\~swapon ~d' /jffs/scripts/post-mount
 							show_amtm " No Swap file found at\\n $swl"
 						fi
+						break;;
+				2)		deleteSwap=1
+						manage_swap create
 						break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;
