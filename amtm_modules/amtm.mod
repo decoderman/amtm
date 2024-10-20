@@ -1,11 +1,11 @@
 #!/bin/sh
 #bof
-version=4.9.1
-release="August 17 2024"
+version=4.9.2
+release="October 20 2024"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
-wl_MD5=757e79826a752563375aa4c803599e0f # shared-amtm-whitelist
+wl_MD5=d5a4016f25e6773f929b5219405fbe7d # shared-amtm-whitelist
 EMAIL_DIR="${add}/mail"
 [ -f "${add}"/amtmBranch ] && . "${add}"/amtmBranch
 
@@ -63,6 +63,7 @@ about_amtm(){
 
 c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
 c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
+c_url(){ [ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])[ "$1" ] && r_m "$1";am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to play a game${NC}";}
@@ -165,6 +166,7 @@ show_amtm(){
 				mirrors.bfsu.edu.cn
 				oisd.nl
 				onedrive.live.com
+				openstreetmap.org
 				pgl.yoyo.org
 				pkg.entware.net
 				raw.githubusercontent.com
@@ -172,6 +174,7 @@ show_amtm(){
 				snbforums.com
 				someonewhocares.org
 				sourceforge.net
+				sunrisesunset.io
 				urlhaus.abuse.ch
 				www.asuswrt-merlin.net
 				www.snbforums.com

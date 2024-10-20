@@ -4,14 +4,24 @@ led_control_installed(){
 	[ -z "$su" ] && atii=1
 
 	. "${add}"/ledcontrol.conf
-	if [ "$cleanup" ] && ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
-		check_services_start
-		[ -f "${add}"/ledcontrol ] && rm -f "${add}"/ledcontrol
-		cru d amtm_LEDcontrol_on;cru d amtm_LEDcontrol_off;cru d amtm_LEDcontrol_update
-		if [ "$lcMode" = on ]; then
-			cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
-			cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
-			[ "$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * Sat,Tue /bin/sh ${add}/led_control.mod -upd"
+	if [ "$cleanup" ]; then
+		if ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
+			check_services_start
+			[ -f "${add}"/ledcontrol ] && rm -f "${add}"/ledcontrol
+			cru d amtm_LEDcontrol_on;cru d amtm_LEDcontrol_off;cru d amtm_LEDcontrol_update
+			if [ "$lcMode" = on ]; then
+				cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+				cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+			fi
+		fi
+		if [ "$locMode" = on ] && grep -q "locCode" "${add}"/ledcontrol.conf; then
+			cru d amtm_LEDcontrol_on;cru d amtm_LEDcontrol_off;cru d amtm_LEDcontrol_update
+			lcMode=off
+			write_ledcontrol_conf
+			/bin/sh "${add}"/led_control.mod -set >/dev/null 2>&1
+			unset lcMode locMode locLat locLong locLastUpd auraLED
+			rm -f "${add}"/ledcontrol.conf
+			a_m "\\n - Dynamic LED control disabled, run setup again."
 		fi
 	fi
 	if [ "$lcMode" = on ]; then
@@ -80,16 +90,18 @@ install_led_control(){
 	fi
 }
 
+c_url(){ [ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
+loc_url(){ [ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsN --connect-timeout 10 --retry 3 --max-time 12 "$@";}
+
 led_control_manage(){
 	p_e_l
 	printf " This controls the router LEDs\\n\\n"
 	printf " Manually setting the LEDs is preserved\\n between reboots, same as the WebUI setting.\\n"
 	printf " However, the LED scheduler has precedence\\n over the manual setting.\\n\\n"
 	printf " Time can be set statically with a set time\\n or dynamically using sunset/sunrise\\n time for your location.\\n\\n"
-	if [ "$lcMode" = on -a "$locMode" = on ] && [ "$locLocality" ]; then
+	if [ "$lcMode" = on -a "$locMode" = on ]; then
 		[ -z "$lcReverse" ] && lModeR=  || lModeR=' reverse'
-		printf " Your$lModeR dynamic time location ($lMode) is:\\n $locCode, that's in $locLocality, $locRegion, $locCountry.\\n"
-		printf " https://weather.com/weather/today/l/$locCode\\n\\n"
+		printf " Your$lModeR dynamic time coordinate ($lMode) is:\\n $locLat,$locLong\\n The time zone is: $locTimezone\\n The location is: $locName.\\n\\n"
 	fi
 
 	if [ "$lcMode" = on ]; then
@@ -165,15 +177,20 @@ led_control_manage(){
 					fi
 					nvram commit
 					service restart_leds
-					if [ -f /jffs/scripts/services-start ]; then
+					if [ -f /jffs/scripts/services-start ] && grep -q "led_control.mod" /jffs/scripts/services-start; then
 						sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/services-start
 						r_w_e /jffs/scripts/services-start
+					fi
+					if [ -f /jffs/scripts/post-mount ] && grep -q "led_control.mod" /jffs/scripts/post-mount; then
+						sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/post-mount
+						r_w_e /jffs/scripts/post-mount
 					fi
 					cru d amtm_LEDcontrol_on
 					cru d amtm_LEDcontrol_off
 					cru d amtm_LEDcontrol_update
+					cru d amtm_LEDcontrol_set
 					rm "${add}"/led*
-					unset lcMode locMode locCode locLastUpd auraLED
+					unset lcMode locMode locLat locLong locLastUpd auraLED
 					show_amtm " LED scheduler removed"
 					break;;
 			$noad)	lcMode=off
@@ -263,7 +280,7 @@ led_control_schedule(){
 			lcDynNR=
 			lcDynR=$lcDyn
 		fi
-		printf " 2. $dynEdit Dynamic time $lcDynNR\\n    This uses the sunset/sunrise time\\n    from weather.com for your location\\n"
+		printf " 2. $dynEdit Dynamic time $lcDynNR\\n    This uses the sunset/sunrise time\\n    from sunrisesunset.io for your coordinates\\n"
 		printf " 3. $rDynEdit reverse Dynamic time $lcDynR\\n    Same as above but with reversed time.\\n    LEDs are on at night and off during the day.\n"
 	else
 		eok=1;noad=;noadv=
@@ -342,8 +359,7 @@ led_control_schedule(){
 							1)		check_services_start
 									lcMode=on
 									locMode=off
-									unset locLocality locRegion locCountry lcReverse
-									cru d amtm_LEDcontrol_update
+									unset locName lcReverse
 									write_ledcontrol_conf
 									checkLed=1
 									show_amtm " Static LED control scheduler set"
@@ -355,11 +371,11 @@ led_control_schedule(){
 						esac
 					done
 					break;;
-			$noad)	if [ "$locCode" ]; then
+			$noad)	if [ "$locLat" -a "$locLong" ]; then
 						p_e_l
-						printf " Your weather.com location code is: $locCode\\n Sunset/Sunrise time update every Saturday and Tuesday.\\n Last update on: $locLastUpd\\n\\n"
-						printf " 1. Manually update with existing location code\\n"
-						printf " 2. Set new location code\\n\\n"
+						printf " Your coordinates are: $locLat,$locLong\\n\\n Sunset/Sunrise time update is automatic.\\n Last update on: $locLastUpd\\n Next update on: $locNextUpdate\\n\\n"
+						printf " 1. Manually update with existing coordinates\\n"
+						printf " 2. Set new coordinates\\n\\n"
 						while true; do
 							printf " Enter option [1-2 e=Exit] ";read -r continue
 							case "$continue" in
@@ -378,11 +394,11 @@ led_control_schedule(){
 						set_dynamic_schedule
 					fi
 					break;;
-			$noadv)	if [ "$locCode" ]; then
+			$noadv)	if [ "$locLat" -a "$locLong" ]; then
 						p_e_l
-						printf " Your weather.com location code is: $locCode\\n Sunset/Sunrise time update every Saturday and Tuesday.\\n Last update on: $locLastUpd\\n\\n"
-						printf " 1. Manually update with existing location code\\n"
-						printf " 2. Set new location code\\n\\n"
+						printf " Your coordinates are: $locLat,$locLong\\n\\n Sunset/Sunrise time update is automatic.\\n Last update on: $locLastUpd\\n Next update on: $locNextUpdate\\n\\n"
+						printf " 1. Manually update with existing coordinates\\n"
+						printf " 2. Set new coordinates\\n\\n"
 						while true; do
 							printf " Enter option [1-2 e=Exit] ";read -r continue
 							case "$continue" in
@@ -408,74 +424,75 @@ led_control_schedule(){
 }
 
 check_services_start(){
-	c_j_s /jffs/scripts/services-start
-	if ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
-		sed -i "\~${add}/led.*~d" /jffs/scripts/services-start
-		echo "/bin/sh ${add}/led_control.mod -set # Added by amtm" >> /jffs/scripts/services-start
+	if [ "$locMode" = on ]; then
+		if [ -f /jffs/scripts/services-start ] && grep -q "led_control.mod" /jffs/scripts/services-start; then
+			sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/services-start
+			r_w_e /jffs/scripts/services-start
+		fi
+		c_j_s /jffs/scripts/post-mount
+		if ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/post-mount; then
+			sed -i "\~${add}/led.*~d" /jffs/scripts/post-mount
+			echo "/bin/sh ${add}/led_control.mod -set # Added by amtm" >> /jffs/scripts/post-mount
+		fi
+	else
+		if [ -f /jffs/scripts/post-mount ] && grep -q "led_control.mod" /jffs/scripts/post-mount; then
+			sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/post-mount
+			r_w_e /jffs/scripts/post-mount
+		fi
+		c_j_s /jffs/scripts/services-start
+		if ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
+			sed -i "\~${add}/led.*~d" /jffs/scripts/services-start
+			echo "/bin/sh ${add}/led_control.mod -set # Added by amtm" >> /jffs/scripts/services-start
+		fi
 	fi
 }
 
 get_dynamic_schedule(){
-	if [ ! -f /opt/bin/date ]; then
-		echo "Installing required Entware package coreutils-date"
-		opkg install coreutils-date
-	fi
-	tmpfile=/tmp/$locCode.out
-	c_url "https://weather.com/weather/today/l/$locCode" -o "$tmpfile"
-
-	if grep -q 'Sun Rise' "$tmpfile"; then
-		srise=$(grep -o '<title>Sun Rise</title>.*am</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*am</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))</p>' | sed 's/<\/p>//;s/>//')
-		sset=$(grep -o '<title>Sunset</title>.*pm</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*pm</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))</p>' | sed 's/<\/p>//;s/>//')
-		sunrise=$(/opt/bin/date --date="$srise" +%R)
-		sunset=$(/opt/bin/date --date="$sset" +%R)
-
-		if [ -z "$lcReverse" ]; then
-			lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
-			lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
-			lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
-			lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
-		else
-			lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
-			lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
-			lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
-			lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
-		fi
-
-		locLocality="$(grep 'addressLocality' "$tmpfile" | cut -d '"' -f4)"
-		locRegion="$(grep 'addressRegion' "$tmpfile" | cut -d '"' -f4)"
-		locCountry="$(grep -m 1 'addressCountry' "$tmpfile" | cut -d '"' -f4)"
-
-		rm -f $tmpfile
-
-		check_services_start
 		lcMode=on
 		locMode=on
+		check_services_start
 		write_ledcontrol_conf
+		rm -f "${add}"/ledcontrol.json
+		/bin/sh "${add}"/led_control.mod -set
 		checkLed=1
-		show_amtm " Dynamic LED control scheduler set for\\n $locCode, that's in $locLocality, $locRegion, $locCountry."
-	else
-		show_amtm " Failed to get location code"
-	fi
+		. "${add}"/ledcontrol.conf
+		locName=$(loc_url "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$locLat&lon=$locLong&zoom=10" | jq '.display_name' | sed 's/"//g')
+		[ "$locName" = null ] && locName=Unknown
+		write_ledcontrol_conf
+		show_amtm " Dynamic LED control set for coordinates\\n $locLat,$locLong\\n in $locName."
 }
 
 set_dynamic_schedule(){
 	p_e_l
-	printf " To set a dynamic LED schedule go to\\n https://weather.codes/search/\\n and search for your City or ZIP code.\\n"
-	printf " The dynamic time will be updated every\\n Saturday and Tuesday.\\n\\n"
-	printf " For example, the location code for Luzern,\\n Switzerland is SZXX0021\\n\\n"
+	printf " To set a dynamic LED schedule enter the complete\\n longitude and latitude coordinates for your location.\\n\\n"
+	printf " Using Google maps, tap or click on desired\\n location and copy the complete coordinates.\\n\\n"
+	printf " Or get your coordinates from https://sunrisesunset.io\\n Search for your City and copy the complete\\n"
+	printf " longitude and latitude coordinates shown\\n below your City name.\\n\\n"
+	printf " For example, the complete latitude and longitude\\n coordinates for Luzern, Switzerland are\\n 47.05048, 8.30635\\n\\n"
 	while true; do
-		printf " Ready to enter code? [1=Yes e=Exit] ";read -r continue
+		printf " Ready to enter coordinates? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)		p_e_l
-					while true; do
-						printf " Enter location code and press Enter: ";read -r locCode
-						case "$continue" in
-							1)		get_dynamic_schedule
-									break;;
-							[Ee])	show_amtm menu;break;;
-							*)		printf "\\n input is not an option\\n\\n";;
-						esac
-					done
+					coords_loop(){
+						while true; do
+							printf " Enter complete coordinates and press Enter: ";read -r coordinate
+							case "$coordinate" in
+								[Ee])	show_amtm menu;break;;
+								*)		coordinate=$(echo $coordinate | sed 's/ //g')
+										if echo "$coordinate" | grep -P -q '^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$'; then
+											locLat=$(echo $coordinate | cut -d',' -f1)
+											locLong=$(echo $coordinate | cut -d',' -f2)
+											get_dynamic_schedule
+										else
+											p_e_l
+											printf " Entry is not a valid coordinate.\\n\\n"
+											coords_loop
+										fi
+										break;;
+							esac
+						done
+					}
+					coords_loop
 					break;;
 			[Ee])	show_amtm menu;break;;
 			*)		printf "\\n input is not an option\\n\\n";;
@@ -492,12 +509,13 @@ write_ledcontrol_conf(){
 	lcOffh=$lcOffh
 	lcOffm=$lcOffm
 	locMode=$locMode
-	locCode=$locCode
+	locLat=$locLat
+	locLong=$locLong
 	lcReverse=$lcReverse
-	locLocality="$locLocality"
-	locRegion="$locRegion"
-	locCountry="$locCountry"
+	locName="$locName"
+	locTimezone="$locTimezone"
 	locLastUpd="$(date +"%b %d %T")"
+	locNextUpdate="$locNextUpdate"
 	auraLED=$auraLED
 	EOF
 }
@@ -508,6 +526,19 @@ set_lc_def(){
 	v_c(){ echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }';}
 	if [ -f "${add}"/ledcontrol.conf ]; then
 		. "${add}"/ledcontrol.conf
+		if [ "$locMode" = on ]; then
+			if [ ! -f /opt/bin/date ]; then
+				logger -s -t "$caller" "Installing required Entware package coreutils-date"
+				opkg install coreutils-date
+			fi
+			if [ ! -f /opt/bin/jq ]; then
+				logger -s -t "$caller" "Installing required Entware package jq, a JSON processor"
+				opkg install jq
+			fi
+			jsonFile="${add}"/ledcontrol.json
+			todayDate=$(date +'%Y-%m-%d')
+			nextMonthDate=$(/opt/bin/date -d "next month" +'%Y-%m-%d')
+		fi
 	else
 		logger -s -t "$caller" "No LED control config file found"
 	fi
@@ -518,84 +549,120 @@ case "${1}" in
 	"")   	set_lc_def
 			printf "\\namtm LED control - Scheduled router LED control\\nusage, use full file path: sh ${add}/led_control.mod\\n\\n"
 			printf "led_control.mod -set        Sets cron jobs and LEDs as per schedule\\nled_control.mod -on         Turn LEDs on\\n"
-			printf "led_control.mod -off        Turn LEDs off\\nled_control.mod -upd        Update dynamic location time\\n"
+			printf "led_control.mod -off        Turn LEDs off\\n"
 			printf "led_control.mod -on -p      Turn LEDs on, preserved between reboots\\nled_control.mod -off -p     Turn LEDs off, preserved between reboots\\n\\n"
-			;;
-	-upd)   set_lc_def $@
-			if [ "$lcMode" = on ] && [ "$locMode" = on ]; then
-				if [ ! -f /opt/bin/date ]; then
-					logger -s -t "$caller" "scheduled update failed, Entware package /opt/bin/date not found, investigate"
-					exit 0
-				fi
-				tmpfile=/tmp/$locCode.out
-				/usr/sbin/curl -fsNL --connect-timeout 10 --retry 3 --max-time 12 "https://weather.com/weather/today/l/$locCode" -o "$tmpfile"
-				if grep -q 'Sun Rise' "$tmpfile"; then
-					srise=$(grep -o '<title>Sun Rise</title>.*am</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*am</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Aa][Mm]))</p>' | sed 's/<\/p>//;s/>//')
-					sset=$(grep -o '<title>Sunset</title>.*pm</p>' "$tmpfile" | grep -o '<p class="TwcSunChart--dateValue--2WK2q">.*pm</p>'| grep -oE '>((1[0-2]|0?[1-9]):([0-5][0-9]) ?([Pp][Mm]))</p>' | sed 's/<\/p>//;s/>//')
-					sunrise=$(/opt/bin/date --date="$srise" +%R)
-					sunset=$(/opt/bin/date --date="$sset" +%R)
-					if [ -z "$lcReverse" ]; then
-						lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
-						lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
-						lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
-						lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
-					else
-						lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
-						lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
-						lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
-						lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
-					fi
-					locLocality="$(grep 'addressLocality' "$tmpfile" | cut -d '"' -f4)"
-					locRegion="$(grep 'addressRegion' "$tmpfile" | cut -d '"' -f4)"
-					locCountry="$(grep -m 1 'addressCountry' "$tmpfile" | cut -d '"' -f4)"
-					rm -f $tmpfile
-					write_ledcontrol_conf
-					logger -s -t "$caller" "scheduled update of sunset/sunrise time"
-					/bin/sh "${add}"/led_control.mod -set
-				else
-					logger -s -t "$caller" "failed to get location code"
-				fi
-			else
-				logger -s -t "$caller" "dynamic location not enabled"
-			fi
 			;;
 	-set)   set_lc_def $@
 			if [ "$lcMode" = on ]; then
-				cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
-				cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
-				[ "$locMode" = on ] && cru a amtm_LEDcontrol_update "15 3 * * Sat,Tue /bin/sh ${add}/led_control.mod -upd"
-				logger -s -t "$caller" "cron jobs set"
 				ntptimer=0
 				ntptimeout=20
 				while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
 					ntptimer=$((ntptimer+1))
 					sleep 1
 				done
-				if [ "$(nvram get ntp_ready)" = 1 ]; then
-					ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
-					ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
-					now="$(date +%s)"
-					if [ "$ledsOn" -le "$ledsOff" ]; then
-						[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+				if [ "$locMode" = on ]; then
+					cru a amtm_LEDcontrol_set "10 0 * * * /bin/sh ${add}/led_control.mod -set"
+					if [ "$(nvram get ntp_ready)" = 1 ]; then
+						if [ -f "$jsonFile" ] && grep -q "$todayDate" $jsonFile; then
+							sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')
+							sunset=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunset"" $jsonFile | sed 's/"//g')
+
+							if [ -z "$lcReverse" ]; then
+								lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
+								lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
+								lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
+								lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+							else
+								lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
+								lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
+								lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
+								lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
+							fi
+							write_ledcontrol_conf
+
+							cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+							cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+
+							logger -s -t "$caller" "cron jobs set for today"
+
+							ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+							ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+							now="$(date +%s)"
+							if [ "$ledsOn" -le "$ledsOff" ]; then
+								[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+							else
+								[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
+							fi
+							if [ "$setLedsOn" = 1 ]; then
+								if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
+									/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
+								fi
+							elif [ "$setLedsOn" = 0 ]; then
+								if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
+									/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
+								fi
+							fi
+						else
+							c_url "https://api.sunrisesunset.io/json?lat=$locLat&lng=$locLong&time_format=24&date_start=$todayDate&date_end=$nextMonthDate" -o "$jsonFile"
+
+							if grep -q "results" "$jsonFile"; then
+								sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')
+								sunset=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunset"" $jsonFile | sed 's/"//g')
+								locTimezone=$(jq ".results[] | select(.date == \"$todayDate\") | ".timezone"" $jsonFile | sed 's/"//g')
+
+								if [ -z "$lcReverse" ]; then
+									lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
+									lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
+									lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
+									lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+								else
+									lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
+									lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
+									lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
+									lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
+								fi
+
+								locNextUpdate=$(/opt/bin/date -d "next month" +'%B %d, %Y')
+								write_ledcontrol_conf
+								logger -s -t "$caller" "updated sunset/sunrise time"
+								/bin/sh "${add}"/led_control.mod -set
+							else
+								logger -s -t "$caller" "failed to get location file"
+							fi
+						fi
 					else
-						[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
-					fi
-					if [ "$setLedsOn" = 1 ]; then
-						if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
-							/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
-						fi
-					elif [ "$setLedsOn" = 0 ]; then
-						if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
-							/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
-						fi
+						logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
 					fi
 				else
-					logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
+					cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+					cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+					logger -s -t "$caller" "cron jobs set"
+					if [ "$(nvram get ntp_ready)" = 1 ]; then
+						ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+						ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+						now="$(date +%s)"
+						if [ "$ledsOn" -le "$ledsOff" ]; then
+							[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+						else
+							[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
+						fi
+						if [ "$setLedsOn" = 1 ]; then
+							if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
+								/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
+							fi
+						elif [ "$setLedsOn" = 0 ]; then
+							if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
+								/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
+							fi
+						fi
+					else
+						logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
+					fi
 				fi
 			elif [ "$lcMode" = off ]; then
 				cru d amtm_LEDcontrol_on
 				cru d amtm_LEDcontrol_off
-				cru d amtm_LEDcontrol_update
+				cru d amtm_LEDcontrol_set
 				if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ] || [ "$auraLED" = on ]; then
 					nvram set led_disable=0
 					nvram set AllLED=1
