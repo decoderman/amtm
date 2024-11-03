@@ -56,12 +56,14 @@ setup_Entware(){
 		fi
 	}
 
+	useMaurer=
 	case "$(uname -m)" in
 		mips)		PART_TYPES='ext2|ext3'
 					INST_URL='https://pkg.entware.net/binaries/mipsel/installer/installer.sh'
 					entVer="Entware (mipsel)"
-					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io';;
-		armv7l)		bparm=
+					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io'
+					useMaurer=on;;
+		armv7l)
 					PART_TYPES='ext2|ext3|ext4'
 					if [ "$(v_c $(uname -r))" -ge "$(v_c 3.2)" ]; then
 						INST_URL='armv7sf-k3.2/installer/generic.sh'
@@ -71,7 +73,7 @@ setup_Entware(){
 						INST_URL='armv7sf-k2.6/installer/generic.sh'
 						entVer="Entware (armv7sf-k2.6)"
 						availEntVer=armv7
-						bparm=on
+						useMaurer=on
 					fi
 					;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
@@ -126,6 +128,30 @@ setup_Entware(){
 
 	echo " Pre-install checks passed"
 
+	if [ "$useMaurer" ]; then
+		p_e_l
+		printf " The Entware repository for your router no\\n longer reiceives updates from the Entware team.\\n\\n"
+		printf " However, there's an Entware packports repository available\\n by @maurer with selected updates for some packages.\\n For more info see here:\\n"
+		case "$(uname -m)" in
+			mips)		printf " snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n";;
+			armv7l)		printf " snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n";;
+		esac
+		printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
+		printf " The use of the Entware packports repository can be\\n enabled at any time after installation.\\n\\n"
+		printf " 1. Use original Entware repository only.\\n"
+		printf " 2. Use Entware backports repository by @maurer in parallel.\\n"
+
+		while true; do
+			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+			case "$continue" in
+				1)			useMaurer=;break;;
+				2)			break;;
+				[Ee])		r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
+				*)			printf "\\n input is not an option\\n";;
+			esac
+		done
+	fi
+
 	p_e_l
 	echo " Select device to install Entware to"
 	echo
@@ -134,8 +160,11 @@ setup_Entware(){
 	for mounted in $(/bin/mount | grep -E "$PART_TYPES" | cut -d" " -f3); do
 		echo " $i. ${GN}$mounted${NC}"
 		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
-			echo "    Found compatible previous Entware"
-			echo "    installation on this device."
+			usePrevOK=1
+			if grep -q 'maurerr.github.io' "$mounted/entware/etc/opkg.conf" && [ -z "$useMaurer" ]; then
+				usePrevOK=
+			fi
+			[ "$usePrevOK" ] && printf "    Found compatible previous Entware\\n    installation on this device.\\n"
 		fi
 		eval mounts$i="$mounted"
 		noad="${noad}${i} "
@@ -168,7 +197,8 @@ setup_Entware(){
 
 	echo " Device checks passed"
 
-	if [ -f "$entDev/entware/bin/opkg" ] && grep -q "$availEntVer" "$entDev/entware/etc/opkg.conf"; then
+
+	if [ -f "$entDev/entware/bin/opkg" -a "$usePrevOK" ] && grep -q "$availEntVer" "$entDev/entware/etc/opkg.conf"; then
 		p_e_l
 		echo " ${GN_BG} $entDev ${NC}"
 		printf "\\n The above device contains a compatible\\n previous $entVer\\n installation, select what to do.\\n\\n"
@@ -342,10 +372,10 @@ setup_Entware(){
 	[ -z "$usePreviousEntware" ] && instP=Installing || instP=Reinstalling
 	echo
 	echo " $instP $entVer, using external script"
-	[ "$bparm" ] && echo " additionally using Entware backports-mirror maurerr.github.io"
+	[ "$useMaurer" ] && echo " additionally using Entware backports-mirror maurerr.github.io"
 	echo "${GY}"
 	case "$(uname -m)" in
-		armv7l)	if [ "$bparm" ]; then
+		armv7l)	if [ "$useMaurer" ]; then
 					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" \
 					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
 					echo "${NC}"
@@ -358,8 +388,12 @@ setup_Entware(){
 					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
 				fi
 				;;
-		mips)	c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
-				| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+		mips)	if [ "$useMaurer" ]; then
+					c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
+					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+				else
+					c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
+				fi
 				;;
 		*)		c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
 				;;

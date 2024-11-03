@@ -288,9 +288,10 @@ entware_installed(){
 							else
 								printf "\\n This repository for MIPS based routers received\\n Entware package updates until December 2019,\\n"
 								printf " while the original repo did not.\\n\\n This additional backports source is added:\\n - maurerr.github.io/packages\\n\\n"
-								printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n"
+								printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n"
+								printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
 								while true; do
-									printf "\\n Enable it? [1=Yes e=Exit] ";read -r confirm
+									printf " Enable it? [1=Yes e=Exit] ";read -r confirm
 									case "$confirm" in
 										1)	sed -i '2i\src/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf
 											p_e_l
@@ -405,9 +406,14 @@ entware_installed(){
 													| sed -e "41 i sed -i 's#http://bin.entware.net/#https://$ENTDOMAIN/#g' /opt/etc/opkg.conf" | sh
 												fi
 												;;
-										mips)	c_url https://pkg.entware.net/binaries/mipsel/installer/installer.sh | sed 's/http:/https:/g' \
-												| sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
-												| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+										mips)	if [ "$bpe" = off ]; then
+													c_url https://pkg.entware.net/binaries/mipsel/installer/installer.sh | sed 's/http:/https:/g' \
+													| sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
+												else
+													c_url https://pkg.entware.net/binaries/mipsel/installer/installer.sh | sed 's/http:/https:/g' \
+													| sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
+													| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+												fi
 												;;
 										*)		c_url "$ENTURL/installer/generic.sh" | sed "s#URL=http://bin.entware.net/#URL=https://$ENTDOMAIN/#g" \
 												| sed -e "41 i sed -i 's#http://bin.entware.net/#https://$ENTDOMAIN/#g' /opt/etc/opkg.conf" | sh
@@ -467,9 +473,10 @@ entware_installed(){
 						else
 							printf "\\n This repository for armv7sf-k2.6 based routers receives\\n Entware package updates until further notice,\\n"
 							printf " while the original repo no longer does.\\n\\n This additional backports source is added:\\n - maurerr.github.io/entware-armv7-k26/\\n\\n"
-							printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n"
+							printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n"
+							printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
 							while true; do
-								printf "\\n Enable it? [1=Yes e=Exit] ";read -r confirm
+								printf " Enable it? [1=Yes e=Exit] ";read -r confirm
 								case "$confirm" in
 									1)	opkg update >/dev/null
 										echo " Installing required $entVersion packages: wget-ssl ca-certificates"

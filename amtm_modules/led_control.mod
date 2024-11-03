@@ -5,15 +5,6 @@ led_control_installed(){
 
 	. "${add}"/ledcontrol.conf
 	if [ "$cleanup" ]; then
-		if ! grep -q "^/bin/sh ${add}/led_control.mod -set # Added by amtm" /jffs/scripts/services-start; then
-			check_services_start
-			[ -f "${add}"/ledcontrol ] && rm -f "${add}"/ledcontrol
-			cru d amtm_LEDcontrol_on;cru d amtm_LEDcontrol_off;cru d amtm_LEDcontrol_update
-			if [ "$lcMode" = on ]; then
-				cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
-				cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
-			fi
-		fi
 		if [ "$locMode" = on ] && grep -q "locCode" "${add}"/ledcontrol.conf; then
 			cru d amtm_LEDcontrol_on;cru d amtm_LEDcontrol_off;cru d amtm_LEDcontrol_update
 			lcMode=off
@@ -40,7 +31,8 @@ led_control_installed(){
 				[ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ] && a_m " LEDs are now off, as per schedule"
 			fi
 			checkLed=
-			/bin/sh "${add}"/led_control.mod -set >/dev/null 2>&1
+			[ -z "$runSet" ] && /bin/sh "${add}"/led_control.mod -set
+			runSet=
 		fi
 		[ "$(echo $lcOnm | wc -m)" -lt 3 ] && lcOnmc=$(echo $lcOnm | sed -e 's/^/0/') || lcOnmc=$lcOnm
 		[ "$(echo $lcOffm | wc -m)" -lt 3 ] && lcOffmc=$(echo $lcOffm | sed -e 's/^/0/') || lcOffmc=$lcOffm
@@ -102,6 +94,8 @@ led_control_manage(){
 	if [ "$lcMode" = on -a "$locMode" = on ]; then
 		[ -z "$lcReverse" ] && lModeR=  || lModeR=' reverse'
 		printf " Your$lModeR dynamic time coordinate ($lMode) is:\\n $locLat,$locLong\\n The time zone is: $locTimezone\\n The location is: $locName.\\n\\n"
+		printf " Last update on: $locLastUpd\\n Next update on: $locNextUpdate\\n\\n"
+
 	fi
 
 	if [ "$lcMode" = on ]; then
@@ -142,19 +136,26 @@ led_control_manage(){
 						check_services_start
 						lcMode=on
 						write_ledcontrol_conf
-						if [ "$auraLED" = on ]; then
-							if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 0 ]; then
-								nvram set ledg_night_mode=1
-							else
-								if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
-									nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+						runSet=0
+						/bin/sh "${add}"/led_control.mod -set
+						. "${add}"/ledcontrol.conf
+						if [ "$lcMode" = on ]; then
+							if [ "$auraLED" = on ]; then
+								if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 0 ]; then
+									nvram set ledg_night_mode=1
+								else
+									if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
+										nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+									fi
 								fi
+								nvram commit
+								service restart_leds
 							fi
-							nvram commit
-							service restart_leds
+							checkLed=1
+							show_amtm " LED control scheduler enabled"
+						else
+							show_amtm " LED control scheduler could not be enabled"
 						fi
-						checkLed=1
-						show_amtm " LED control scheduler enabled"
 					else
 						led_control_schedule
 					fi
@@ -272,11 +273,11 @@ led_control_schedule(){
 	eok=3;noad=2;noadv=3
 	if [ -f /opt/bin/opkg ]; then
 		if [ -z "$lcReverse" ]; then
-			dynEdit=Edit
+			[ "$locMode" = on ] && dynEdit=Edit
 			lcDynNR=$lcDyn
 			lcDynR=
 		else
-			rDynEdit=Edit
+			[ "$locMode" = on ] && rDynEdit=Edit
 			lcDynNR=
 			lcDynR=$lcDyn
 		fi
@@ -448,18 +449,52 @@ check_services_start(){
 }
 
 get_dynamic_schedule(){
-		lcMode=on
-		locMode=on
-		check_services_start
+	lcMode=on
+	locMode=on
+	check_services_start
+	write_ledcontrol_conf
+	rm -f "${add}"/ledcontrol.json
+	/bin/sh "${add}"/led_control.mod -set
+	checkLed=1
+	. "${add}"/ledcontrol.conf
+	locName=$(loc_url "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$locLat&lon=$locLong&zoom=10" | jq '.display_name' | sed 's/"//g')
+	[ "$locName" = null ] && locName=Unknown
+	write_ledcontrol_conf
+	show_amtm " Dynamic LED control set for coordinates\\n $locLat,$locLong\\n in $locName."
+}
+
+get_json_file(){
+	getCount=$((getCount+1))
+	if [ "$getCount" -lt 4 ]; then
+		[ "$getCount" -gt 1 ] && sleep 1
+		c_url "https://api.sunrisesunset.io/json?lat=$locLat&lng=$locLong&time_format=24&date_start=$todayDate&date_end=$nextMonthDate" -o "$jsonFile"
+
+		if grep -q "results" "$jsonFile"; then
+			sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')
+			sunset=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunset"" $jsonFile | sed 's/"//g')
+			if [ "$sunrise" = null -o "$sunset" = null ]; then
+				logger -s -t "$caller" "failed to extract sunrise or sunset time"
+				get_json_file
+			else
+
+				locTimezone=$(jq ".results[] | select(.date == \"$todayDate\") | ".timezone"" $jsonFile | sed 's/"//g')
+				set_dynamic_led
+				locNextUpdate=$(/opt/bin/date -d "next month" +'%B %d, %Y')
+				locLastUpd="$(date +"%B %d %T")"
+				write_ledcontrol_conf
+				logger -s -t "$caller" "updated sunset/sunrise time"
+				/bin/sh "${add}"/led_control.mod -set
+			fi
+		else
+			logger -s -t "$caller" "failed to get location file"
+		fi
+	else
+		logger -s -t "$caller" "failed to extract sunrise or sunset time after three attempts, dynamic LEDs set to OFF"
+		getCount=
+		lcMode=off
 		write_ledcontrol_conf
-		rm -f "${add}"/ledcontrol.json
 		/bin/sh "${add}"/led_control.mod -set
-		checkLed=1
-		. "${add}"/ledcontrol.conf
-		locName=$(loc_url "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$locLat&lon=$locLong&zoom=10" | jq '.display_name' | sed 's/"//g')
-		[ "$locName" = null ] && locName=Unknown
-		write_ledcontrol_conf
-		show_amtm " Dynamic LED control set for coordinates\\n $locLat,$locLong\\n in $locName."
+	fi
 }
 
 set_dynamic_schedule(){
@@ -473,13 +508,17 @@ set_dynamic_schedule(){
 		printf " Ready to enter coordinates? [1=Yes e=Exit] ";read -r continue
 		case "$continue" in
 			1)		p_e_l
+					if [ ! -f /opt/bin/grep ]; then
+						logger -s -t "$caller" "Installing required Entware package grep"
+						opkg install grep
+					fi
 					coords_loop(){
 						while true; do
 							printf " Enter complete coordinates and press Enter: ";read -r coordinate
 							case "$coordinate" in
 								[Ee])	show_amtm menu;break;;
 								*)		coordinate=$(echo $coordinate | sed 's/ //g')
-										if echo "$coordinate" | grep -P -q '^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$'; then
+										if echo "$coordinate" | /opt/bin/grep -P -q '^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$'; then
 											locLat=$(echo $coordinate | cut -d',' -f1)
 											locLong=$(echo $coordinate | cut -d',' -f2)
 											get_dynamic_schedule
@@ -500,6 +539,20 @@ set_dynamic_schedule(){
 	done
 }
 
+set_dynamic_led(){
+	if [ -z "$lcReverse" ]; then
+		lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
+		lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
+		lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
+		lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+	else
+		lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
+		lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
+		lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
+		lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
+	fi
+}
+
 write_ledcontrol_conf(){
 	cat <<-EOF > "${add}"/ledcontrol.conf
 	# LED control settings file
@@ -514,7 +567,7 @@ write_ledcontrol_conf(){
 	lcReverse=$lcReverse
 	locName="$locName"
 	locTimezone="$locTimezone"
-	locLastUpd="$(date +"%b %d %T")"
+	locLastUpd="$locLastUpd"
 	locNextUpdate="$locNextUpdate"
 	auraLED=$auraLED
 	EOF
@@ -530,6 +583,10 @@ set_lc_def(){
 			if [ ! -f /opt/bin/date ]; then
 				logger -s -t "$caller" "Installing required Entware package coreutils-date"
 				opkg install coreutils-date
+			fi
+			if [ ! -f /opt/bin/grep ]; then
+				logger -s -t "$caller" "Installing required Entware package grep"
+				opkg install grep
 			fi
 			if [ ! -f /opt/bin/jq ]; then
 				logger -s -t "$caller" "Installing required Entware package jq, a JSON processor"
@@ -567,68 +624,37 @@ case "${1}" in
 							sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')
 							sunset=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunset"" $jsonFile | sed 's/"//g')
 
-							if [ -z "$lcReverse" ]; then
-								lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
-								lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
-								lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
-								lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
+							if [ "$sunrise" = null -o "$sunset" = null ]; then
+								get_json_file
 							else
-								lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
-								lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
-								lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
-								lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
-							fi
-							write_ledcontrol_conf
+								set_dynamic_led
+								write_ledcontrol_conf
 
-							cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
-							cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+								cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+								cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
 
-							logger -s -t "$caller" "cron jobs set for today"
+								logger -s -t "$caller" "cron jobs set for today"
 
-							ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
-							ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
-							now="$(date +%s)"
-							if [ "$ledsOn" -le "$ledsOff" ]; then
-								[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
-							else
-								[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
-							fi
-							if [ "$setLedsOn" = 1 ]; then
-								if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
-									/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
+								ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+								ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+								now="$(date +%s)"
+								if [ "$ledsOn" -le "$ledsOff" ]; then
+									[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+								else
+									[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
 								fi
-							elif [ "$setLedsOn" = 0 ]; then
-								if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
-									/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
+								if [ "$setLedsOn" = 1 ]; then
+									if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
+										/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
+									fi
+								elif [ "$setLedsOn" = 0 ]; then
+									if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
+										/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
+									fi
 								fi
 							fi
 						else
-							c_url "https://api.sunrisesunset.io/json?lat=$locLat&lng=$locLong&time_format=24&date_start=$todayDate&date_end=$nextMonthDate" -o "$jsonFile"
-
-							if grep -q "results" "$jsonFile"; then
-								sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')
-								sunset=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunset"" $jsonFile | sed 's/"//g')
-								locTimezone=$(jq ".results[] | select(.date == \"$todayDate\") | ".timezone"" $jsonFile | sed 's/"//g')
-
-								if [ -z "$lcReverse" ]; then
-									lcOnh=$(echo ${sunrise:0:2} | sed 's/^0//')
-									lcOnm=$(echo ${sunrise:3:2} | sed 's/^0//')
-									lcOffh=$(echo ${sunset:0:2} | sed 's/^0//')
-									lcOffm=$(echo ${sunset:3:2} | sed 's/^0//')
-								else
-									lcOnh=$(echo ${sunset:0:2} | sed 's/^0//')
-									lcOnm=$(echo ${sunset:3:2} | sed 's/^0//')
-									lcOffh=$(echo ${sunrise:0:2} | sed 's/^0//')
-									lcOffm=$(echo ${sunrise:3:2} | sed 's/^0//')
-								fi
-
-								locNextUpdate=$(/opt/bin/date -d "next month" +'%B %d, %Y')
-								write_ledcontrol_conf
-								logger -s -t "$caller" "updated sunset/sunrise time"
-								/bin/sh "${add}"/led_control.mod -set
-							else
-								logger -s -t "$caller" "failed to get location file"
-							fi
+							get_json_file
 						fi
 					else
 						logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
