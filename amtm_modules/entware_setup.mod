@@ -6,7 +6,7 @@ setup_Entware(){
 
 		check_device_nok(){
 		rm -rf "$1/rw_test"
-		am=;show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable"
+		r_m entware_setup.mod;am=;show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable"
 		}
 
 		mkdir -p $1/rw_test
@@ -39,7 +39,7 @@ setup_Entware(){
 			echo " Free space on $1: $(( ${free} / 1024)) MB"
 			echo
 			p_e_t aknowledge
-			am=;show_amtm " Not enough free space available on\\n $1."
+			r_m entware_setup.mod;am=;show_amtm " Not enough free space available on\\n $1."
 
 		elif [ "$free" -gt "$minsize" ] && [ "$free" -le "$maxsize" ]; then
 			echo " Device $1"
@@ -63,8 +63,7 @@ setup_Entware(){
 					entVer="Entware (mipsel)"
 					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io'
 					useMaurer=on;;
-		armv7l)
-					PART_TYPES='ext2|ext3|ext4'
+		armv7l)		PART_TYPES='ext2|ext3|ext4'
 					if [ "$(v_c $(uname -r))" -ge "$(v_c 3.2)" ]; then
 						INST_URL='armv7sf-k3.2/installer/generic.sh'
 						entVer="Entware (armv7sf-k3.2)"
@@ -74,13 +73,12 @@ setup_Entware(){
 						entVer="Entware (armv7sf-k2.6)"
 						availEntVer=armv7
 						useMaurer=on
-					fi
-					;;
+					fi;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
 					INST_URL='aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)"
 					availEntVer='armv8\|aarch64';;
-		*)			am=;show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
+		*)			r_m entware_setup.mod;am=;show_amtm " $(uname -m) is an unsupported platform to install Entware on";;
 	esac
 
 	p_e_l
@@ -98,7 +96,7 @@ setup_Entware(){
 				echo
 				echo "${E_BG} Correct above error first before installing Entware ${NC}"
 				p_e_t acknowledge
-				am=;show_amtm " Correct error first before installing Entware"
+				r_m entware_setup.mod;am=;show_amtm " Correct error first before installing Entware"
 			else
 				echo "${E_BG} Correcting invalid Download Master settings ${NC}"
 				if [ -L "/tmp/opt" ]; then
