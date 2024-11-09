@@ -267,19 +267,19 @@ setup_Entware(){
 		else
 			echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
 		fi
-		server=mirrors.bfsu.edu.cn
+		server=mirrors.cernet.edu.cn
 		if ping -c2 -W3 $server &> /dev/null; then
 			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
 			if [ -s /tmp/Packages.gz ]; then
 				es=$((es+1))
-				echo " ${es}. ${GN}$server${NC} - Mirror by Beijing Foreign Studies University"
+				echo " ${es}. ${GN}$server${NC} - Mirrors by CERNET"
 				eval servers$es="$server"
 			else
-				echo "    ${R}$server${NC} failed, mirror by Beijing Foreign Studies University"
+				echo "    ${R}$server${NC} failed, mirrors by CERNET"
 			fi
 			rm -f /tmp/Packages.gz
 		else
-			echo "    ${R}$server${NC} failed, mirror by Beijing Foreign Studies University"
+			echo "    ${R}$server${NC} failed, mirrors by CERNET"
 		fi
 
 		selectServer() {

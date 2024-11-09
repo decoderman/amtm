@@ -164,6 +164,7 @@ show_amtm(){
 				localhost.localdomain
 				maurerr.github.io
 				mirrors.bfsu.edu.cn
+				mirrors.cernet.edu.cn
 				oisd.nl
 				onedrive.live.com
 				openstreetmap.org
