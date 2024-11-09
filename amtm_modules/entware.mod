@@ -55,10 +55,10 @@ entware_installed(){
 						echo 'ailed to' >/tmp/amtm-entware-check
 					fi
 				fi
-				server=mirrors.bfsu.edu.cn
+				server=mirrors.cernet.edu.cn
 				if [ "$ENTDOMAIN" != "$server" ] && [ -z "$serverOK" ]; then
 					if  ping -c2 -W3 $server &> /dev/null; then
-						printf "- Using Entware server ${GN}$server${NC},\\n  Mirror by Beijing Foreign Studies University\\n"
+						printf "- Using Entware server ${GN}$server${NC},\\n  Mirrors by CERNET\\n"
 						change_opkg_server $server
 						opkg_update
 						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
@@ -340,13 +340,13 @@ entware_installed(){
 							else
 								echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
 							fi
-							server=mirrors.bfsu.edu.cn
+							server=mirrors.cernet.edu.cn
 							if ping -c2 -W3 $server &> /dev/null; then
 								es=$((es+1))
-								echo " ${es}. ${GN}$server${NC} - Mirror by Beijing Foreign Studies University"
+								echo " ${es}. ${GN}$server${NC} - Mirrors by CERNET"
 								eval servers$es="$server/entware"
 							else
-								echo "    ${R}$server${NC} failed, mirror by Beijing Foreign Studies University"
+								echo "    ${R}$server${NC} failed, mirrors by CERNET"
 							fi
 
 							selectServer() {
