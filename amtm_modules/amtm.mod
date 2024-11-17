@@ -1,11 +1,11 @@
 #!/bin/sh
 #bof
-version=4.9.3
-release="November 03 2024"
+version=5.0
+release="November 17 2024"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
-wl_MD5=d5a4016f25e6773f929b5219405fbe7d # shared-amtm-whitelist
+wl_MD5=1cbf962ffa4593150bd1612352b1d131 # shared-amtm-whitelist
 EMAIL_DIR="${add}/mail"
 [ -f "${add}"/amtmBranch ] && . "${add}"/amtmBranch
 
@@ -151,13 +151,13 @@ show_amtm(){
 			if [ ! -f "$shared_amtm_wl" ] || [ "$wl_MD5" != "$(md5sum "$shared_amtm_wl" | awk '{print $1}')" ]; then
 				mkdir -p /jffs/addons/shared-whitelists
 				cat <<-EOF >"$shared_amtm_wl"
-				1drv.ms
 				asuswrt-merlin.net
 				asuswrt.lostrealm.ca
 				big.oisd.nl
 				bin.entware.net
 				codeload.github.com
 				diversion.ch
+				drv.ms
 				entware.diversion.ch
 				entware.net
 				fwupdate.asuswrt-merlin.net
@@ -165,6 +165,8 @@ show_amtm(){
 				maurerr.github.io
 				mirrors.bfsu.edu.cn
 				mirrors.cernet.edu.cn
+				mirrors.cqupt.edu.cn
+				mirrors.nju.edu.cn
 				oisd.nl
 				onedrive.live.com
 				openstreetmap.org

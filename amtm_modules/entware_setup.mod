@@ -237,50 +237,32 @@ setup_Entware(){
 	testEntwareServer() {
 		p_e_l
 		printf " Testing Entware servers availability\\n\\n"
-
 		es=
-		server=bin.entware.net
-		if ping -c2 -W3 $server &> /dev/null; then
-			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
-			if [ -s /tmp/Packages.gz ]; then
-				es=$((es+1))
-				echo " ${es}. ${GN}$server${NC} - Primary server by Entware team (recommended)"
-				eval servers$es="$server"
+		entServer='bin.entware.net Primary¦server¦by¦Entware¦team¦(recommended) primary¦server
+		entware.diversion.ch Mirror¦by¦thelonelycoder mirror¦by¦thelonelycoder
+		mirrors.cernet.edu.cn/entware Multiple¦mirrors¦by¦CERNET¦(China¦Education¦and¦Research¦Network) mirrors¦by¦CERNET'
+		IFS='
+		'
+		set -f
+		for i in $entServer; do
+			i1=$(echo $i | awk '{print $1}')
+			if curl -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
+
+				c_url https://$i1/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
+				if [ -s /tmp/Packages.gz ]; then
+					es=$((es+1))
+					printf " ${es}. %-$(( 22 + $COR ))s%s\\n" "${GN}$i1${NC}" "- $(echo $i | awk '{print $2}' | sed 's/¦/ /g')"
+					eval entServers$es="$i1"
+				else
+					printf "    %-$(( 22 + $COR ))s%s\\n" "${R}$i1${NC}" "Packages.gz download failed, $(echo $i | awk '{print $3}' | sed 's/¦/ /g')"
+				fi
+				rm -f /tmp/Packages.gz
 			else
-				echo "    ${R}$server${NC} failed, primary server"
+				printf "    %-$(( 22 + $COR ))s%s\\n" "${R}$i1${NC}" "failed, $(echo $i | awk '{print $3}' | sed 's/¦/ /g')"
 			fi
-			rm -f /tmp/Packages.gz
-		else
-			echo "    ${R}$server${NC} failed, primary server"
-		fi
-		server=entware.diversion.ch
-		if ping -c2 -W3 $server &> /dev/null; then
-			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
-			if [ -s /tmp/Packages.gz ]; then
-				es=$((es+1))
-				echo " ${es}. ${GN}$server${NC} - Mirror by thelonelycoder"
-				eval servers$es="$server"
-			else
-				echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
-			fi
-			rm -f /tmp/Packages.gz
-		else
-			echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
-		fi
-		server=mirrors.cernet.edu.cn
-		if ping -c2 -W3 $server &> /dev/null; then
-			c_url https://$server/$(echo $INST_URL | cut -d/ -f1)/Packages.gz -o /tmp/Packages.gz
-			if [ -s /tmp/Packages.gz ]; then
-				es=$((es+1))
-				echo " ${es}. ${GN}$server${NC} - Mirrors by CERNET"
-				eval servers$es="$server"
-			else
-				echo "    ${R}$server${NC} failed, mirrors by CERNET"
-			fi
-			rm -f /tmp/Packages.gz
-		else
-			echo "    ${R}$server${NC} failed, mirrors by CERNET"
-		fi
+		done
+		set +f
+		IFS=
 
 		selectServer() {
 			if [ -z "$es" ]; then
@@ -288,11 +270,11 @@ setup_Entware(){
 				p_e_t return
 				show_amtm " Sorry, no Entware servers responded."
 			else
-				printf "\\n Select Entware server to use [1-$es e=Exit] ";read -r server
-				case "$server" in
-					1|2|3) 	if [ "$server" -ge 1 ] && [ "$server" -le "$es" ]; then
-								eval server="\$servers$server"
-								INST_URL="https://$server/$INST_URL"
+				printf "\\n Select Entware server to use [1-$es e=Exit] ";read -r selection
+				case "$selection" in
+					1|2|3) 	if [ "$selection" -ge 1 ] && [ "$selection" -le "$es" ]; then
+								eval entServer="\$entServers$selection"
+								INST_URL="https://$entServer/$INST_URL"
 							else
 								printf "\\n input is not an option\\n"
 								selectServer
@@ -313,19 +295,19 @@ setup_Entware(){
 	else
 		p_e_l
 		printf " Testing Entware server availability\\n\\n"
-		server=pkg.entware.net
-		if ping -c2 -W3 $server &> /dev/null; then
-			c_url https://pkg.entware.net/binaries/mipsel/Packages.gz -o /tmp/Packages.gz
+		entServer=pkg.entware.net
+		if curl -IsL https://$entServer | head -n 1 | grep 'OK\|Found' >/dev/null; then
+			c_url https://$entServer/binaries/mipsel/Packages.gz -o /tmp/Packages.gz
 			if [ -s /tmp/Packages.gz ]; then
-				echo " ${GN}$server${NC} responded"
+				echo " ${GN}$entServer${NC} responded"
 			else
 				r_m entware_setup.mod
-				am=;show_amtm " Entware ${R}$server${NC} failed"
+				am=;show_amtm " Entware ${R}$entServer${NC} failed"
 			fi
 			rm -f /tmp/Packages.gz
 		else
 			r_m entware_setup.mod
-				am=;show_amtm " Entware ${R}$server${NC} failed"
+				am=;show_amtm " Entware ${R}$entServer${NC} failed"
 		fi
 	fi
 
@@ -374,7 +356,7 @@ setup_Entware(){
 	echo "${GY}"
 	case "$(uname -m)" in
 		armv7l)	if [ "$useMaurer" ]; then
-					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" \
+					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$entServer/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$entServer/#g' /opt/etc/opkg.conf" \
 					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
 					echo "${NC}"
 					echo " Installing required $entVer packages: wget-ssl ca-certificates"
@@ -383,7 +365,7 @@ setup_Entware(){
 					opkg install wget-ssl ca-certificates
 					echo "${NC}"
 				else
-					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
+					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$entServer/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$entServer/#g' /opt/etc/opkg.conf" | sh
 				fi
 				;;
 		mips)	if [ "$useMaurer" ]; then
@@ -393,7 +375,7 @@ setup_Entware(){
 					c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
 				fi
 				;;
-		*)		c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$server/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$server/#g' /opt/etc/opkg.conf" | sh
+		*)		c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$entServer/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$entServer/#g' /opt/etc/opkg.conf" | sh
 				;;
 	esac
 	echo "${NC}"

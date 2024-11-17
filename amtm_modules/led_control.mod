@@ -99,6 +99,9 @@ led_control_manage(){
 	fi
 
 	if [ "$lcMode" = on ]; then
+		if [ -z "$lcOnh" -o -z "$lcOnm" -o -z "$lcOffh" -o -z "$lcOffm" ]; then
+			printf " Warning: ${R}One or more LED on/off times are incomplete!${NC}\\n\\n"
+		fi
 		printf " 1. Edit LED scheduler $lcOnOff\\n"
 	elif [ "$lcMode" = off ]; then
 		printf " 1. ${GN}Enable${NC} LED scheduler\\n"
@@ -133,28 +136,32 @@ led_control_manage(){
 			1)		if [ "$lcMode" = on ]; then
 						led_control_schedule
 					elif [ "$lcMode" = off ]; then
-						check_services_start
-						lcMode=on
-						write_ledcontrol_conf
-						runSet=0
-						/bin/sh "${add}"/led_control.mod -set
-						. "${add}"/ledcontrol.conf
-						if [ "$lcMode" = on ]; then
-							if [ "$auraLED" = on ]; then
-								if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 0 ]; then
-									nvram set ledg_night_mode=1
-								else
-									if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
-										nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+						if [ "$lcOnh" -a "$lcOnm" -a "$lcOffh" -a "$lcOffm" ]; then
+							check_services_start
+							lcMode=on
+							write_ledcontrol_conf
+							runSet=0
+							/bin/sh "${add}"/led_control.mod -set
+							. "${add}"/ledcontrol.conf
+							if [ "$lcMode" = on ]; then
+								if [ "$auraLED" = on ]; then
+									if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 0 ]; then
+										nvram set ledg_night_mode=1
+									else
+										if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
+											nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+										fi
 									fi
+									nvram commit
+									service restart_leds
 								fi
-								nvram commit
-								service restart_leds
+								checkLed=1
+								show_amtm " LED control scheduler enabled"
+							else
+								show_amtm " LED control scheduler could not be enabled"
 							fi
-							checkLed=1
-							show_amtm " LED control scheduler enabled"
 						else
-							show_amtm " LED control scheduler could not be enabled"
+							led_control_schedule
 						fi
 					else
 						led_control_schedule
@@ -263,11 +270,18 @@ led_control_schedule(){
 	manEdit=Use
 	dynEdit=Use
 	rDynEdit=Use
-	if [ "$lcMode" = on ] && [ -z "$locMode" -o "$locMode" = off ]; then
-		lcMan=$lcOnOff
-		manEdit=Edit
+	if [ "$lcMode" = on ]; then
+		if [ -z "$locMode" -o "$locMode" = off ]; then
+			lcMan=$lcOnOff
+			manEdit=Edit
+		fi
+		[ "$locMode" = on ] && lcDyn=$lcOnOff
+		if [ -z "$lcOnh" -o -z "$lcOnm" -o -z "$lcOffh" -o -z "$lcOffm" ]; then
+			printf " Warning: ${R}One or more LED on/off times are incomplete!${NC}\\n\\n"
+		fi
 	fi
-	[ "$lcMode" = on -a "$locMode" = on ] && lcDyn=$lcOnOff
+
+
 
 	printf " 1. $manEdit Static time $lcMan\\n"
 	eok=3;noad=2;noadv=3
@@ -469,20 +483,19 @@ get_json_file(){
 		[ "$getCount" -gt 1 ] && sleep 1
 		c_url "https://api.sunrisesunset.io/json?lat=$locLat&lng=$locLong&time_format=24&date_start=$todayDate&date_end=$nextMonthDate" -o "$jsonFile"
 
-		if grep -q "results" "$jsonFile"; then
+		if grep -q "OK" "$jsonFile"; then
 			sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')
 			sunset=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunset"" $jsonFile | sed 's/"//g')
 			if [ "$sunrise" = null -o "$sunset" = null ]; then
 				logger -s -t "$caller" "failed to extract sunrise or sunset time"
 				get_json_file
 			else
-
 				locTimezone=$(jq ".results[] | select(.date == \"$todayDate\") | ".timezone"" $jsonFile | sed 's/"//g')
 				set_dynamic_led
 				locNextUpdate=$(/opt/bin/date -d "next month" +'%B %d, %Y')
 				locLastUpd="$(date +"%B %d %T")"
 				write_ledcontrol_conf
-				logger -s -t "$caller" "updated sunset/sunrise time"
+				logger -s -t "$caller" "updated sunset/sunrise time file"
 				/bin/sh "${add}"/led_control.mod -set
 			fi
 		else
@@ -580,21 +593,29 @@ set_lc_def(){
 	if [ -f "${add}"/ledcontrol.conf ]; then
 		. "${add}"/ledcontrol.conf
 		if [ "$locMode" = on ]; then
-			if [ ! -f /opt/bin/date ]; then
-				logger -s -t "$caller" "Installing required Entware package coreutils-date"
-				opkg install coreutils-date
+			if [ -f /opt/bin/opkg ]; then
+				if [ ! -f /opt/bin/date ]; then
+					logger -s -t "$caller" "Installing required Entware package coreutils-date"
+					opkg install coreutils-date
+				fi
+				if [ ! -f /opt/bin/grep ]; then
+					logger -s -t "$caller" "Installing required Entware package grep"
+					opkg install grep
+				fi
+				if [ ! -f /opt/bin/jq ]; then
+					logger -s -t "$caller" "Installing required Entware package jq, a JSON processor"
+					opkg install jq
+				fi
+				jsonFile="${add}"/ledcontrol.json
+				todayDate=$(date +'%Y-%m-%d')
+				nextMonthDate=$(/opt/bin/date -d "next month" +'%Y-%m-%d')
+			else
+				logger -s -t "$caller" "Entware is missing, disabling LED control"
+				lcMode=off
+				locMode=off
+				write_ledcontrol_conf
+				/bin/sh "${add}"/led_control.mod -set
 			fi
-			if [ ! -f /opt/bin/grep ]; then
-				logger -s -t "$caller" "Installing required Entware package grep"
-				opkg install grep
-			fi
-			if [ ! -f /opt/bin/jq ]; then
-				logger -s -t "$caller" "Installing required Entware package jq, a JSON processor"
-				opkg install jq
-			fi
-			jsonFile="${add}"/ledcontrol.json
-			todayDate=$(date +'%Y-%m-%d')
-			nextMonthDate=$(/opt/bin/date -d "next month" +'%Y-%m-%d')
 		fi
 	else
 		logger -s -t "$caller" "No LED control config file found"
@@ -628,29 +649,33 @@ case "${1}" in
 								get_json_file
 							else
 								set_dynamic_led
-								write_ledcontrol_conf
+								if [ "$lcOnh" -a "$lcOnm" -a "$lcOffh" -a "$lcOffm" ]; then
+									write_ledcontrol_conf
 
-								cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
-								cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+									cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+									cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
 
-								logger -s -t "$caller" "cron jobs set for today"
+									logger -s -t "$caller" "cron jobs set for today"
 
-								ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
-								ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
-								now="$(date +%s)"
-								if [ "$ledsOn" -le "$ledsOff" ]; then
-									[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+									ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+									ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+									now="$(date +%s)"
+									if [ "$ledsOn" -le "$ledsOff" ]; then
+										[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+									else
+										[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
+									fi
+									if [ "$setLedsOn" = 1 ]; then
+										if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
+											/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
+										fi
+									elif [ "$setLedsOn" = 0 ]; then
+										if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
+											/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
+										fi
+									fi
 								else
-									[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
-								fi
-								if [ "$setLedsOn" = 1 ]; then
-									if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
-										/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
-									fi
-								elif [ "$setLedsOn" = 0 ]; then
-									if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
-										/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
-									fi
+									get_json_file
 								fi
 							fi
 						else
@@ -660,29 +685,36 @@ case "${1}" in
 						logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
 					fi
 				else
-					cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
-					cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
-					logger -s -t "$caller" "cron jobs set"
-					if [ "$(nvram get ntp_ready)" = 1 ]; then
-						ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
-						ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
-						now="$(date +%s)"
-						if [ "$ledsOn" -le "$ledsOff" ]; then
-							[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+					if [ "$lcOnh" -a "$lcOnm" -a "$lcOffh" -a "$lcOffm" ]; then
+						cru a amtm_LEDcontrol_on "$lcOnm $lcOnh * * * /bin/sh ${add}/led_control.mod -on"
+						cru a amtm_LEDcontrol_off "$lcOffm $lcOffh * * * /bin/sh ${add}/led_control.mod -off"
+						logger -s -t "$caller" "cron jobs set"
+						if [ "$(nvram get ntp_ready)" = 1 ]; then
+							ledsOn="$(date --date="$lcOnh:$lcOnm" +%s)"
+							ledsOff="$(date --date="$lcOffh:$lcOffm" +%s)"
+							now="$(date +%s)"
+							if [ "$ledsOn" -le "$ledsOff" ]; then
+								[ "$ledsOn" -le "$now" -a "$now" -lt "$ledsOff" ] && setLedsOn=1 || setLedsOn=0
+							else
+								[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
+							fi
+							if [ "$setLedsOn" = 1 ]; then
+								if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
+									/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
+								fi
+							elif [ "$setLedsOn" = 0 ]; then
+								if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
+									/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
+								fi
+							fi
 						else
-							[ "$ledsOn" -gt "$now" -a "$now" -ge "$ledsOff" ] && setLedsOn=0 || setLedsOn=1
-						fi
-						if [ "$setLedsOn" = 1 ]; then
-							if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
-								/bin/sh "${add}"/led_control.mod -on >/dev/null 2>&1
-							fi
-						elif [ "$setLedsOn" = 0 ]; then
-							if [ "$(nvram get led_disable)" = 0 -o "$(nvram get AllLED)" = 1 ]; then
-								/bin/sh "${add}"/led_control.mod -off >/dev/null 2>&1
-							fi
+							logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
 						fi
 					else
-						logger -s -t "$caller" "NTP not ready after 20s timeout, LEDs will switch state with cron"
+						logger -s -t "$caller" "Unable to set LED jobs, missing one or more on/off times, disablind LED control"
+						lcMode=off
+						write_ledcontrol_conf
+						/bin/sh "${add}"/led_control.mod -set
 					fi
 				fi
 			elif [ "$lcMode" = off ]; then

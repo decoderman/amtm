@@ -16,6 +16,9 @@ entware_installed(){
 		ENTDOMAIN=$(echo $ENTURL | awk -F'/' '{print $1FS$2FS$3}' | sed 's%http.*://%%')
 		entVersion=
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="${ENTURL##*/}"
+		entServer='bin.entware.net Primary¦server¦by¦Entware¦team¦(recommended) primary¦server¦by¦Entware¦team
+		entware.diversion.ch Mirror¦by¦thelonelycoder mirror¦by¦thelonelycoder
+		mirrors.cernet.edu.cn/entware Multiple¦mirrors¦by¦CERNET¦(China¦Education¦and¦Research¦Network) multiple¦mirrors¦by¦CERNET'
 	}
 	get_entware_identifiers
 
@@ -31,50 +34,36 @@ entware_installed(){
 			}
 			serverOK=
 			if [ "$ENTDOMAIN" != pkg.entware.net ]; then
-				server=bin.entware.net
-				if [ "$ENTDOMAIN" != "$server" ]; then
-					if ping -c2 -W3 $server &> /dev/null; then
-						printf "- Using Entware server ${GN}$server${NC},\\n  Primary server by Entware team\\n"
-						change_opkg_server $server
-						opkg_update
-						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
-					else
-						printf "- Entware server ${R}$server${NC} unreachable\\n"
-						echo 'ailed to' >/tmp/amtm-entware-check
+				es=
+				IFS='
+				'
+				set -f
+				for i in $entServer; do
+					if [ -z "$serverOK" ]; then
+						i1=$(echo $i | awk '{print $1}')
+						if [ "$ENTDOMAIN" != "$i1" ]; then
+							if curl -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
+								printf "- Using Entware server ${GN}$i1${NC},\\n  $(echo $i | awk '{print $2}' | sed 's/¦/ /g')\\n"
+								change_opkg_server $i1
+								opkg_update
+								[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
+							else
+								printf "- Entware server ${R}$i1${NC} unreachable\\n"
+								echo 'ailed to' >/tmp/amtm-entware-check
+							fi
+						fi
 					fi
-				fi
-				server=entware.diversion.ch
-				if [ "$ENTDOMAIN" != "$server" ] && [ -z "$serverOK" ]; then
-					if ping -c2 -W3 $server &> /dev/null; then
-						printf "- Using Entware server ${GN}$server${NC},\\n  Mirror by thelonelycoder\\n"
-						change_opkg_server $server
-						opkg_update
-						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
-					else
-						printf "- Entware server ${R}$server${NC} unreachable\\n"
-						echo 'ailed to' >/tmp/amtm-entware-check
-					fi
-				fi
-				server=mirrors.cernet.edu.cn
-				if [ "$ENTDOMAIN" != "$server" ] && [ -z "$serverOK" ]; then
-					if  ping -c2 -W3 $server &> /dev/null; then
-						printf "- Using Entware server ${GN}$server${NC},\\n  Mirrors by CERNET\\n"
-						change_opkg_server $server
-						opkg_update
-						[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
-					else
-						printf "- Entware server ${R}$server${NC} unreachable\\n"
-						echo 'ailed to' >/tmp/amtm-entware-check
-					fi
-				fi
+				done
+				set +f
+				IFS=
 			else
 				if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
-					server=maurerr.github.io
-					if ping -c2 -W3 $server &> /dev/null; then
-						printf "- Using Entware server ${GN}$server${NC},\\n  entware-backports-mirror\\n"
+					entServer=maurerr.github.io
+					if curl -IsL https://$entServer | head -n 1 | grep 'OK\|Found' >/dev/null; then
+						printf "- Using Entware server ${GN}$entServer${NC},\\n  entware-backports-mirror\\n"
 						opkg update >/tmp/amtm-entware-check 2>&1
 					else
-						printf "- Entware server ${R}$server${NC} unreachable\\n"
+						printf "- Entware server ${R}$entServer${NC} unreachable\\n"
 						echo 'ailed to' >/tmp/amtm-entware-check
 					fi
 				else
@@ -83,7 +72,7 @@ entware_installed(){
 			fi
 		}
 
-		if ping -c2 -W3 $ENTDOMAIN &> /dev/null; then
+		if curl -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
 			opkg_update
 			if grep -q 'ailed to' /tmp/amtm-entware-check; then
 				use_alternate_server
@@ -184,7 +173,7 @@ entware_installed(){
 			printf "\\n Enter selection [1-$sel e=Exit] ";read -r continue
 			case "$continue" in
 				1)		echo
-						if ping -c2 -W3 $ENTDOMAIN &> /dev/null; then
+						if curl -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
 							if $(opkg update | grep -q 'pdated list'); then
 								if [ "$(opkg list-upgradable)" ]; then
 									p_e_l
@@ -322,32 +311,22 @@ entware_installed(){
 						else
 							p_e_l
 							printf " Testing Entware servers, current server in\\n use: ${GN}$ENTDOMAIN${NC}\\n\\n"
-
 							es=
-							server=bin.entware.net
-							if ping -c2 -W3 $server &> /dev/null; then
-								es=$((es+1))
-								echo " ${es}. ${GN}$server${NC} - Primary server by Entware team (recommended)"
-								eval servers$es="$server"
-							else
-								echo "    ${R}$server${NC} failed, primary server"
-							fi
-							server=entware.diversion.ch
-							if ping -c2 -W3 $server &> /dev/null; then
-								es=$((es+1))
-								echo " ${es}. ${GN}$server${NC} - Mirror by thelonelycoder"
-								eval servers$es="$server"
-							else
-								echo "    ${R}$server${NC} failed, mirror by thelonelycoder"
-							fi
-							server=mirrors.cernet.edu.cn
-							if ping -c2 -W3 $server &> /dev/null; then
-								es=$((es+1))
-								echo " ${es}. ${GN}$server${NC} - Mirrors by CERNET"
-								eval servers$es="$server/entware"
-							else
-								echo "    ${R}$server${NC} failed, mirrors by CERNET"
-							fi
+							IFS='
+							'
+							set -f
+							for i in $entServer; do
+								i1=$(echo $i | awk '{print $1}')
+								if curl -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
+									es=$((es+1))
+									printf " ${es}. %-$(( 22 + $COR ))s%s\\n" "${GN}$i1${NC}" "- $(echo $i | awk '{print $2}' | sed 's/¦/ /g')"
+									eval entServers$es="$i1"
+								else
+									printf "    %-$(( 22 + $COR ))s%s\\n" "${R}$i1${NC}" "failed, $(echo $i | awk '{print $3}' | sed 's/¦/ /g')"
+								fi
+							done
+							set +f
+							IFS=
 
 							selectServer() {
 								if [ -z "$es" ]; then
@@ -355,12 +334,12 @@ entware_installed(){
 									p_e_t return
 									show_amtm " Sorry, no Entware servers responded."
 								else
-									printf "\\n Select Entware server to use [1-$es e=Exit] ";read -r server
-									case "$server" in
-										1|2|3) 	if [ "$server" -ge 1 ] && [ "$server" -le "$es" ]; then
-													eval server="\$servers$server"
-													sed -i "1s#.*#src\/gz entware https://$server/$entVersion#" /opt/etc/opkg.conf
-													show_amtm " Entware server $server set."
+									printf "\\n Select Entware server to use [1-$es e=Exit] ";read -r selection
+									case "$selection" in
+										1|2|3) 	if [ "$selection" -ge 1 ] && [ "$selection" -le "$es" ]; then
+													eval entServer="\$entServers$selection"
+													sed -i "1s#.*#src\/gz entware https://$entServer/$entVersion#" /opt/etc/opkg.conf
+													show_amtm " Entware server $entServer set."
 												else
 													printf "\\n input is not an option\\n"
 													selectServer
