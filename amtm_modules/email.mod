@@ -41,12 +41,12 @@ email_manage(){
 		echo " address without 2FA (not recommended)."
 		echo
 		echo " Common SMTP Server settings"
-		echo " Provider    Server                 Port Protocol"
-		echo " ------------------------------------------------"
-		echo " Gmail       smtp.gmail.com         465  smtps"
-		echo " mail.com    smtp.mail.com          587  smtp"
-		echo " Yahoo!      smtp.mail.yahoo.com    465  smtps"
-		echo " outlook.com smtp-mail.outlook.com  587  smtp"
+		echo " Provider    Server                 Port     Protocol"
+		echo " ----------------------------------------------------"
+		echo " Gmail       smtp.gmail.com         465 or 587  smtps"
+		echo " mail.com    smtp.mail.com          465 or 587  smtps"
+		echo " Yahoo!      smtp.mail.yahoo.com    465 or 587  smtps"
+		echo " outlook.com smtp-mail.outlook.com  587         smtp"
 	}
 	writePW=
 	if [ ! -f "${EMAIL_DIR}/email.conf" ]; then

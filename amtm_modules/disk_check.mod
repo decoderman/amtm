@@ -244,7 +244,8 @@ run_disk_check(){
 	CHKLOG="${add}"/disk_check.log
 	CHKCMD=
 	ntptimer=0
-	ntptimeout=100
+	ntptsync=0
+	ntptimeout=10
 	TZ=$(cat /etc/TZ); export TZ
 
 	[ -f "${add}"/disk_check.conf ] && . "${add}"/disk_check.conf
@@ -262,6 +263,12 @@ run_disk_check(){
 	while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
 		ntptimer=$((ntptimer+1))
 		sleep 1
+		if [ "$ntptsync" -lt "$ntptimeout" ]; then
+			logger -t "$TAG" "trying force-sync of NTP, restarting service, sync counter at $ntptsync"
+			service restart_ntpc
+			ntptsync=$((ntptsync+1))
+			sleep 5
+		fi
 	done
 
 	if [ "$ntptimer" -ge "$ntptimeout" ]; then

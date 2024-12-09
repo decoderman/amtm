@@ -109,9 +109,9 @@ led_control_manage(){
 		printf " 1. Set daily LED ${GN_BG}on${NC} ${E_BG}off${NC} schedule\\n"
 	fi
 	if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ]; then
-		printf " 2. Manually ${GN}Enable${NC} LEDs now\\n"
+		printf " 2. Manually ${GN}Enable${NC} LEDs now (volatile)\\n"
 	else
-		printf " 2. Manually ${R}Disable${NC} LEDs now\\n"
+		printf " 2. Manually ${R}Disable${NC} LEDs now (volatile)\\n"
 	fi
 	printf " 3. Remove LED control script\\n"
 	eok=3;unset noad aura
@@ -633,11 +633,21 @@ case "${1}" in
 	-set)   set_lc_def $@
 			if [ "$lcMode" = on ]; then
 				ntptimer=0
-				ntptimeout=20
+				ntptsync=0
+				ntptimeout=10
+
 				while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
+					#NTP_lock $(basename "$0")
 					ntptimer=$((ntptimer+1))
 					sleep 1
+					if [ "$ntptsync" -lt "$ntptimeout" ]; then
+						logger -t "$TAG" "trying force-sync of NTP, restarting service, sync counter at $ntptsync"
+						service restart_ntpc
+						ntptsync=$((ntptsync+1))
+						sleep 5
+					fi
 				done
+
 				if [ "$locMode" = on ]; then
 					cru a amtm_LEDcontrol_set "10 0 * * * /bin/sh ${add}/led_control.mod -set"
 					if [ "$(nvram get ntp_ready)" = 1 ]; then
@@ -740,6 +750,14 @@ case "${1}" in
 					logger -s -t "$caller" "LED control is off, LEDs are now on"
 				else
 					logger -s -t "$caller" "LED control is off, nothing to do"
+				fi
+				if [ -f /jffs/scripts/services-start ] && grep -q "led_control.mod" /jffs/scripts/services-start; then
+					sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/services-start
+					r_w_e /jffs/scripts/services-start
+				fi
+				if [ -f /jffs/scripts/post-mount ] && grep -q "led_control.mod" /jffs/scripts/post-mount; then
+					sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/post-mount
+					r_w_e /jffs/scripts/post-mount
 				fi
 			fi
 			;;

@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=5.0
-release="November 17 2024"
+version=5.1
+release="December 09 2024"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
