@@ -637,7 +637,6 @@ case "${1}" in
 				ntptimeout=10
 
 				while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
-					#NTP_lock $(basename "$0")
 					ntptimer=$((ntptimer+1))
 					sleep 1
 					if [ "$ntptsync" -lt "$ntptimeout" ]; then

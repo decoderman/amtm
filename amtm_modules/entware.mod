@@ -23,6 +23,7 @@ entware_installed(){
 	get_entware_identifiers
 
 	atii=1
+	[ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl
 	if [ "$su" = 1 ]; then
 		opkg_update(){
 			opkg update >/tmp/amtm-entware-check 2>&1
@@ -42,7 +43,7 @@ entware_installed(){
 					if [ -z "$serverOK" ]; then
 						i1=$(echo $i | awk '{print $1}')
 						if [ "$ENTDOMAIN" != "$i1" ]; then
-							if curl -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
+							if $curlv -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
 								printf "- Using Entware server ${GN}$i1${NC},\\n  $(echo $i | awk '{print $2}' | sed 's/¦/ /g')\\n"
 								change_opkg_server $i1
 								opkg_update
@@ -59,7 +60,7 @@ entware_installed(){
 			else
 				if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
 					entServer=maurerr.github.io
-					if curl -IsL https://$entServer | head -n 1 | grep 'OK\|Found' >/dev/null; then
+					if $curlv -IsL https://$entServer | head -n 1 | grep 'OK\|Found' >/dev/null; then
 						printf "- Using Entware server ${GN}$entServer${NC},\\n  entware-backports-mirror\\n"
 						opkg update >/tmp/amtm-entware-check 2>&1
 					else
@@ -72,7 +73,7 @@ entware_installed(){
 			fi
 		}
 
-		if curl -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
+		if $curlv -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
 			opkg_update
 			if grep -q 'ailed to' /tmp/amtm-entware-check; then
 				use_alternate_server
@@ -173,7 +174,7 @@ entware_installed(){
 			printf "\\n Enter selection [1-$sel e=Exit] ";read -r continue
 			case "$continue" in
 				1)		echo
-						if curl -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
+						if $curlv -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
 							if $(opkg update | grep -q 'pdated list'); then
 								if [ "$(opkg list-upgradable)" ]; then
 									p_e_l
@@ -317,7 +318,7 @@ entware_installed(){
 							set -f
 							for i in $entServer; do
 								i1=$(echo $i | awk '{print $1}')
-								if curl -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
+								if $curlv -IsL https://$i1 | head -n 1 | grep 'OK\|Found' >/dev/null; then
 									es=$((es+1))
 									printf " ${es}. %-$(( 22 + $COR ))s%s\\n" "${GN}$i1${NC}" "- $(echo $i | awk '{print $2}' | sed 's/¦/ /g')"
 									eval entServers$es="$i1"
