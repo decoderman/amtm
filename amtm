@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=5.1.1
-release="February 02 2025"
+version=5.1.2
+release="February 03 2025"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
 wl_MD5=1cbf962ffa4593150bd1612352b1d131 # shared-amtm-whitelist
@@ -91,11 +91,11 @@ show_amtm(){
 		printf "${R_BG}%-27s%s\\n\\n" " amtm $version legacy $brTxt" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		extendno=$(nvram get extendno)
-		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-5).."
+		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-7).."
 		[ "$extendno" = 0 ] && extendno= || extendno=_$extendno
 		awmBuildno="$(nvram get buildno)"
 		[ "$(v_c $awmBuildno)" -ge "$(v_c 388)" -o "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$awmBuildno$extendno || fwVersion=$awmBuildno$extendno
-		printf " ASUS $model HW: $(uname -m) Kernel: $(uname -r | sed 's/brcmarm//g')\\n FW: $fwVersion IP address: $(nvram get lan_ipaddr)\\n"
+		printf " $model ($(uname -m)) Kernel-$(uname -r | sed 's/brcmarm//g')\\n FW-$fwVersion @ $(nvram get lan_ipaddr)\\n"
 
 		OM='Operation Mode:'
 		case "$(nvram get sw_mode)" in

@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=5.1.1
-release="February 02 2025"
+version=5.1.2
+release="February 03 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -35,7 +35,7 @@ ascii_logo(){
 about_amtm(){
 	p_e_l
 	echo " amtm, the $amtmTitle
- Version $version FW (built-in firmware version), released on $release
+ Version $version (built-in firmware version), released on $release
  amtm firmware file revision: $amtmRev
  Device operation mode NVRAM setting: sw_mode: $(nvram get sw_mode), wlc_psta: $(nvram get wlc_psta)
 
@@ -116,14 +116,14 @@ show_amtm(){
 	if [ -z "$updcheck" ]; then
 		echo
 		clear
-		printf "${R_BG}%-27s%s\\n\\n" " amtm $version FW $brTxt" "by thelonelycoder ${NC}"
+		printf "${R_BG}%-27s%s\\n\\n" " amtm $version $brTxt" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		extendno=$(nvram get extendno)
-		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-5).."
+		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-7).."
 		[ "$extendno" = 0 ] && extendno= || extendno=_$extendno
 		awmBuildno="$(nvram get buildno)"
 		[ "$(v_c $awmBuildno)" -ge "$(v_c 388)" -o "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$awmBuildno$extendno || fwVersion=$awmBuildno$extendno
-		printf " ASUS $model HW: $(uname -m) Kernel: $(uname -r | sed 's/brcmarm//g')\\n FW: $fwVersion IP address: $(nvram get lan_ipaddr)\\n"
+		printf " $model ($(uname -m)) Kernel-$(uname -r | sed 's/brcmarm//g')\\n FW-$fwVersion @ $(nvram get lan_ipaddr)\\n"
 
 		OM='Operation Mode:'
 		case "$(nvram get sw_mode)" in
