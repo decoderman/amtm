@@ -54,7 +54,6 @@ run_amtm(){
 	elif [ "$1" = updcheck ]; then
 		su=1;suUpd=0;updErr=;tpu=1;updcheck=1
 		echo "Available script updates:" >/tmp/amtm-tpu-check
-		update_firmware
 		update_amtm
 		show_amtm
 	else

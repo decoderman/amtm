@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=5.1.2
-release="February 03 2025"
+version=5.2
+release="February 09 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -12,12 +12,13 @@ EMAIL_DIR="${add}/mail"
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
 s_d_u(){ case "$amtmBranch" in LOCAL)amtmURL=http://diversion.test/amtm_fw;brTxt=$amtmBranch;;BETA)amtmURL=https://diversion.ch/amtm_fw_beta;brTxt=$amtmBranch;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;brTxt=;;esac;};s_d_u
-if [ "$amtmRev" -lt 7 ]; then
+if [ "$amtmRev" -lt 8 ]; then
 	if [ "$amtmRev" = 1 ]; then g_m amtm_rev1.mod include; elif [ "$amtmRev" -ge 2 ]; then r_m amtm_rev1.mod; fi
 	if [ "$amtmRev" -le 3 ]; then g_m amtm_rev3.mod include; elif [ "$amtmRev" -gt 3 ]; then r_m amtm_rev3.mod; fi
 	if [ "$amtmRev" = 4 ]; then	g_m amtm_rev4.mod include; elif [ "$amtmRev" -gt 4 ]; then r_m amtm_rev4.mod; fi
 	if [ "$amtmRev" = 5 ]; then	g_m amtm_rev5.mod include; elif [ "$amtmRev" -gt 5 ]; then r_m amtm_rev5.mod; fi
 	if [ "$amtmRev" = 6 ]; then g_m amtm_rev6.mod include; elif [ "$amtmRev" -gt 6 ]; then r_m amtm_rev6.mod; fi
+	if [ "$amtmRev" = 7 ]; then g_m amtm_rev7.mod include; elif [ "$amtmRev" -gt 7 ]; then r_m amtm_rev7.mod; fi
 fi
 # End updates for /usr/sbin/amtm
 
@@ -347,7 +348,7 @@ show_amtm(){
 	done
 	set +f
 
-	unset IFS swl swsize swpsize swtxt mpsw awmUpd cleanup
+	unset IFS swl swsize swpsize swtxt mpsw cleanup
 	gms(){ g_m swap.mod include;[ "$dlok" = 0 ] && show_amtm menu;}
 	[ -f /jffs/scripts/post-mount ] && swl="$(grep -E "^swapon " /jffs/scripts/post-mount | awk '{print $2}')"
 	if [ "$(wc -l < /proc/swaps)" -eq 2 ]; then
@@ -404,7 +405,6 @@ show_amtm(){
 	fi
 
 	if [ "$su" = 1 ]; then
-		update_firmware
 		update_amtm
 		unset corr1 corr2
 		if [ "$amtmUpd" = 0 ]; then
@@ -430,17 +430,12 @@ show_amtm(){
 	unset ss atii upd
 	if [ "$su" = 1 ]; then
 		su=
-		if [ "$suUpd" = 1 -o "$awmUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
+		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
 			tpText="${R}Third-party script update(s) available!${NC} Use\\n the scripts own update function to update."
-			[ "$awmUpd" = 1 ] && awmText="${R}Asuswrt-Merlin firmware update available!${NC}\\n See https://asuswrt-merlin.net/download"
 			if [ "$amtmUpd" -gt 0 ]; then
 				p_e_l
 				if [ "$suUpd" = 1 ]; then
 					printf " $tpText\\n"
-					p_e_l
-				fi
-				if [ "$awmUpd" = 1 ]; then
-					printf " $awmText\\n"
 					p_e_l
 				fi
 				amtmUpdText="updated from $version to $amtmRemotever"
@@ -470,8 +465,6 @@ show_amtm(){
 				exec "$0" " amtm $am"
 			else
 				[ "$suUpd" = 1 ] && a_m " $tpText"
-				[ "$suUpd" = 1 ] && [ "$awmUpd" = 1 ] && a_m " "
-				[ "$awmUpd" = 1 ] && a_m " $awmText"
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
@@ -527,7 +520,6 @@ show_amtm(){
 			[Rr][Tt])			case_rt;break;;
 			[Tt][Mm])			case_tm;break;;
 			[Bb][Mm])			case_bm;break;;
-			[Aa][Ww][Mm])		show_amtm " Asuswrt-Merlin link for new firmware:\\n https://asuswrt-merlin.net/download";break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
 			[Dd][Ii])			case_di;break;;
 			[Ww][Gg])			case_wg;break;;
@@ -674,9 +666,6 @@ script_check(){
 			upd="${GN_BG}$localver${NC}"
 			if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
 				upd="${E_BG}<- $remotever${NC}"
-				tpUpd="<- $remotever"
-				[ "$tpu" ] && echo "- $scriptname $localver <- $remotever <br>" >>/tmp/amtm-tpu-check
-				suUpd=1
 			elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ]; then
 				upd="${E_BG}-> $remotever${NC}"
 				tpUpd="-> $remotever"
@@ -932,40 +921,6 @@ update_amtm(){
 			tpw=
 			exec "$0" " amtm $am"
 		fi
-	fi
-}
-
-update_firmware(){
-	[ "$updcheck" ] && rm -f "${add}"/availUpd.txt
-	if [ "$(/bin/uname -o | grep -iw Merlin$)" -a "$(v_c $awmBuildno)" -ge "$(v_c 382)" -o "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
-		unset awmWSI awmInstalled availRel
-		awmWSI=$(nvram get webs_state_info)
-		awmInstalled="$awmBuildno.$(nvram get extendno)"
-		if [ "$awmWSI" ]; then
-			awmStable=$(echo $awmWSI | sed 's/3004_//;s/3006_//' | sed 's/_/./g')
-			awmBaseVer=$(echo $awmStable | cut -d'.' -f1-2)
-			if [ "$(v_c $awmBaseVer)" -gt "$(v_c $awmBuildno)" ]; then
-				availRel="release avail.";stcol=${E_BG};awmUpd=1
-			elif [ "$awmBaseVer" = "$awmBuildno" ]; then
-				if echo "$(nvram get extendno)" | grep -q 'alpha\|beta'; then
-					availRel="release avail.";stcol=${E_BG};awmUpd=1
-				elif [ "$(v_c $awmStable)" -gt "$(v_c $awmInstalled)" ]; then
-					availRel="release avail.";stcol=${E_BG};awmUpd=1
-				else
-					availRel=firmware;stcol=${GN_BG}
-				fi
-			else
-				availRel=firmware;stcol=${GN_BG}
-				[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
-				awmStable=$awmInstalled
-			fi
-			[ "$awmUpd" = 1 ] && [ "$updcheck" ] && echo "- Asuswrt-Merlin $availRel $awmStable" >>/tmp/amtm-tpu-check
-		else
-			availRel=firmware;stcol=${GN_BG}
-			[ "$(echo "$awmInstalled" | grep 'alpha\|beta')" ] && availRel="no release yet"
-			awmStable=$awmInstalled
-		fi
-		[ -z "$updcheck" ] && printf "${GN_BG}awm${NC} %-15s%-15s%${COR}s\\n\\n" "Asuswrt-Merlin" "$availRel" " ${stcol}$awmStable${NC}"
 	fi
 }
 #eof
