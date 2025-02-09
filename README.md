@@ -52,7 +52,6 @@ amtm
 | WireGuard Session Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215) |
 | Asuswrt-Merlin-AdGuardHome-Installer | SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/) |
 | VPNMON-R3 | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
-| VPNMON-R2 (Sunsetted)| Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
 | RTRMON | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/) |
 | WICENS | Maverickcdn | [Link](https://www.snbforums.com/threads/wicens-wan-ip-change-email-notification-script.69294/) |
 | KILLMON | Viktor Jaep | [Link](https://www.snbforums.com/threads/killmon-v1-05-feb-20-2023-ip4-ip6-vpn-kill-switch-monitor-configurator.81758/) |
@@ -79,7 +78,6 @@ amtm also offers an interface for managing a number of other features:
 | Router date keeper | thelonelycoder
 | amtm and third party script reset/remove options | thelonelycoder
 | Show all cron jobs | thelonelycoder
-| Firmware update notification | thelonelycoder
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
 
