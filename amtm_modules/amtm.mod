@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=5.2
-release="February 09 2025"
+version=5.2.1
+release="April 10 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -12,7 +12,7 @@ EMAIL_DIR="${add}/mail"
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
 s_d_u(){ case "$amtmBranch" in LOCAL)amtmURL=http://diversion.test/amtm_fw;brTxt=$amtmBranch;;BETA)amtmURL=https://diversion.ch/amtm_fw_beta;brTxt=$amtmBranch;;*)amtmURL=https://fwupdate.asuswrt-merlin.net/amtm_fw;brTxt=;;esac;};s_d_u
-if [ "$amtmRev" -lt 8 ]; then
+if [ "$amtmRev" -lt 9 ]; then
 	if [ "$amtmRev" = 1 ]; then g_m amtm_rev1.mod include; elif [ "$amtmRev" -ge 2 ]; then r_m amtm_rev1.mod; fi
 	if [ "$amtmRev" -le 3 ]; then g_m amtm_rev3.mod include; elif [ "$amtmRev" -gt 3 ]; then r_m amtm_rev3.mod; fi
 	if [ "$amtmRev" = 4 ]; then	g_m amtm_rev4.mod include; elif [ "$amtmRev" -gt 4 ]; then r_m amtm_rev4.mod; fi
