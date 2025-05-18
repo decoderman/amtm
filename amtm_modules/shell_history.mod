@@ -6,7 +6,7 @@ shell_history_installed(){
 		shell_history install
 	fi
 
-	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} sh${NC} %-9s%-19s\\n" "manage" "shell history"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} sh${NC} %-9s%-19s\\n" "manage" "Shell history"
 	case_sh(){
 		shell_history manage
 		show_amtm menu
@@ -20,9 +20,9 @@ install_shell_history(){
 	c_d
 	shell_history install
 	if [ -f "${add}"/.ash_history ]; then
-		show_amtm " shell history installed"
+		show_amtm " Shell history installed"
 	else
-		am=;show_amtm " shell history installation failed"
+		am=;show_amtm " Shell history installation failed"
 	fi
 }
 shell_history(){
@@ -38,7 +38,7 @@ shell_history(){
 			/bin/sh "${add}"/shell_history.mod -run >/dev/null 2>&1
 		elif [ "$1" = manage ]; then
 			p_e_l
-			printf " shell history options\\n\\n 1. Reset shell history\\n 2. View shell history content\\n 3. Remove shell history script\\n"
+			printf " Shell history options\\n\\n 1. Reset shell history\\n 2. View shell history content\\n 3. Remove shell history script\\n"
 			while true; do
 				printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
 				case "$continue" in
@@ -48,7 +48,7 @@ shell_history(){
 						c_d
 						rm -f /jffs/addons/amtm/.ash_history /home/root/.ash_history /tmp/amtm_sort_s_h
 						/bin/sh "${add}"/shell_history.mod -run >/dev/null 2>&1
-						show_amtm " shell history reset"
+						show_amtm " Shell history reset"
 						break;;
 				2)		s_l_f .ash_history;break;;
 				3)		p_e_l
@@ -58,7 +58,7 @@ shell_history(){
 						r_w_e /jffs/scripts/services-start
 						rm -f /jffs/addons/amtm/.ash_history /home/root/.ash_history /tmp/amtm_sort_s_h
 						rm -f "${add}"/shell_history.mod
-						show_amtm " shell history script removed"
+						show_amtm " Shell history script removed"
 						break;;
 				[Ee])	show_amtm menu;break;;
 				*)		printf "\\n input is not an option\\n";;

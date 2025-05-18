@@ -4,7 +4,7 @@ email_installed(){
 	[ -z "$su" ] && atii=1
 	emMan=setup
 	[ -f "${EMAIL_DIR}"/emailpw.enc ] && emMan=open
-	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} em${NC} %-9s%-19s\\n" "$emMan" "email settings"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} em${NC} %-9s%-19s\\n" "$emMan" "Email settings"
 	case_em(){
 		email_manage
 		show_amtm menu
@@ -119,6 +119,7 @@ email_manage(){
 			echo " 10. Edit SSL flag:       ${GY}Set to${NC} ${GN}--insecure${NC} ${GY}if curl problems occur${NC}"
 		fi
 		echo " 11. Send testmail to confirm settings"
+		echo " 12. Remove Email settings"
 
 		if [ -f "${EMAIL_DIR}/email.conf" ] && grep -q 'PUT YOUR PASSWORD HERE' "${EMAIL_DIR}/email.conf"; then
 			printf "\\n${R} Set your email password, it has been redacted\\n for security reasons.${NC}\\n"
@@ -127,7 +128,7 @@ email_manage(){
 		fi
 
 		while true; do
-			printf "\\n Enter your selection [1-11 e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-12 e=Exit] ";read -r continue
 			case "$continue" in
 				1)	printf "\\n${R_BG} Enter From address: ${NC} [e=Exit] ";read -r value
 					FROM_ADDRESS=$value;break;;
@@ -177,7 +178,7 @@ email_manage(){
 					echo " 1. Send testmail"
 					echo " 2. Send testmail, verbose output"
 					while true; do
-						printf "\\n Enter your selection [1-2 e=Exit] ";read -r continue
+						printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 						case "$continue" in
 							1)	send_testmail;break;;
 							2)	verbose=-v
@@ -186,6 +187,14 @@ email_manage(){
 							*)	printf "\\n input is not an option\\n";;
 						esac
 					done;break;;
+				12)	p_e_l
+					printf " This removes the Email settings script\\n"
+					printf " and all saved data from this router.\\n"
+					c_d
+					rm -r "${add}"/mail
+					rm -f "${add}"/email.mod
+					show_amtm " Email settings completely removed"
+					break;;
 			 [Ee])  show_amtm menu;break;;
 				*)	printf "\\n input is not an option\\n";;
 			esac

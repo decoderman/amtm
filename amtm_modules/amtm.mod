@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=5.2.1
-release="April 10 2025"
+version=5.2.2
+release="May 18 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -120,7 +120,7 @@ show_amtm(){
 		printf "${R_BG}%-27s%s\\n\\n" " amtm $version $brTxt" "by thelonelycoder ${NC}"
 		[ -z "$(nvram get odmpid)" ] && model="$(nvram get productid)" || model="$(nvram get odmpid)"
 		extendno=$(nvram get extendno)
-		[ "$(echo $extendno | wc -c)" -gt 4 ] && extendno="$(echo $extendno | cut -b 1-7).."
+		[ "$(echo $extendno | wc -c)" -gt 9 ] && extendno="$(echo $extendno | cut -b 1-7).."
 		[ "$extendno" = 0 ] && extendno= || extendno=_$extendno
 		awmBuildno="$(nvram get buildno)"
 		[ "$(v_c $awmBuildno)" -ge "$(v_c 388)" -o "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && fwVersion=$(nvram get firmver | sed 's/\.//g').$awmBuildno$extendno || fwVersion=$awmBuildno$extendno
@@ -229,7 +229,7 @@ show_amtm(){
 	tpucheck
 	ntps
 	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
-	/jffs/addons/amtm/mail/email.conf email em email¦settings
+	/jffs/addons/amtm/mail/email.conf email em Email¦settings
 	/jffs/addons/amtm/fw_update.mod fw_update fw Firmware¦update¦notification
 	/jffs/addons/amtm/sc_update.mod sc_update sc Scripts¦update¦notification
 	spacer
@@ -238,7 +238,7 @@ show_amtm(){
 	/jffs/addons/amtm/ledcontrol.conf led_control lc LED¦control¦-¦Scheduled¦LED¦control
 	/jffs/addons/amtm/reboot_scheduler.mod reboot_scheduler rs Reboot¦scheduler
 	spacer
-	/jffs/addons/amtm/.ash_history shell_history sh shell¦history¦-¦Keep¦history¦of¦shell¦commands
+	/jffs/addons/amtm/.ash_history shell_history sh Shell¦history¦-¦Keep¦history¦of¦shell¦commands
 	/jffs/addons/amtm/routerdate router_date rd Router¦date¦keeper¦-¦Keeps¦router¦date¦when¦rebooting'
 
 	IFS='

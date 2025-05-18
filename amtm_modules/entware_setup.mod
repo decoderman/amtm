@@ -223,7 +223,7 @@ setup_Entware(){
 		printf " 1. install 64-bit Entware (recommended)\\n"
 		printf " 2. install 32-bit Entware\\n"
 		while true; do
-			printf "\\n Enter your selection [1-2] ";read -r eversion
+			printf "\\n Enter selection [1-2] ";read -r eversion
 			case "$eversion" in
 				1)	INST_URL='aarch64-k3.10/installer/generic.sh'
 					entVer="Entware (aarch64)";break;;
@@ -316,7 +316,7 @@ setup_Entware(){
 		printf " amtm is now ready to reuse the previous\\n $entVer installation on\\n"
 		instN="Reuse previous Entware installation"
 	else
-		printf " amtm is now ready to install\\n $entVer to\\n"
+		printf " amtm is now ready to install ${GN}$entVer${NC}\\n from server ${GN}$entServer${NC} to\\n"
 		instN="Install Entware now"
 	fi
 	printf "\\n ${GN_BG} $entDev ${NC}\\n\\n"

@@ -287,7 +287,7 @@ entware_installed(){
 											p_e_l
 											echo " Do you want to update and upgrade all packages now?"
 											while true; do
-												printf "\\n Enter your selection [1=Yes 2=No] ";read -r confirm
+												printf "\\n Enter selection [1=Yes 2=No] ";read -r confirm
 												case "$confirm" in
 													1)	echo "${GY}"
 														opkg update >/dev/null
@@ -360,7 +360,7 @@ entware_installed(){
 						printf " 1. Reinstall Entware.\\n    This will make sure all necessary\\n    Entware core files are present.\\n\\n"
 						printf " 2. Reinstall all installed packages.\\n    This may help when some weird errors\\n    occur with Entware packages.\\n    Be aware that certain package config files\\n    will be overwritten by default values.\\n"
 						while true; do
-							printf "\\n Enter your selection [1-2 e=Exit] ";read -r confirm
+							printf "\\n Enter selection [1-2 e=Exit] ";read -r confirm
 							case "$confirm" in
 								1)	p_e_l
 									printf " Stopping Entware services before\\n reinstalling Entware\\n"
@@ -467,7 +467,7 @@ entware_installed(){
 										p_e_l
 										echo " Do you want to update and upgrade all packages now?"
 										while true; do
-											printf "\\n Enter your selection [1=Yes 2=No] ";read -r confirm
+											printf "\\n Enter selection [1=Yes 2=No] ";read -r confirm
 											case "$confirm" in
 												1)	echo "${GY}"
 													opkg update >/dev/null
