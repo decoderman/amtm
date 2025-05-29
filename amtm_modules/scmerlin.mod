@@ -33,9 +33,9 @@ scmerlin_installed(){
 install_scmerlin(){
 	p_e_l
 	printf " This installs scMerlin - service and script\\n control menu for Asuswrt-Merlin\\n on your router.\\n\\n"
-	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=23&starter_id=53009\\n"
-	printf " With contributions from the AMTM-OSR team.\\n\\n This script is hosted by AMTM-OSR,\\n"
-	printf " the AMTM Orphaned Script Revival repository:\\n https://github.com/AMTM-OSR/scMerlin\\n"
+	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=23&starter_id=53009\\n\\n"
+	printf " This script is now maintained by the AMTM-OSR team,\\n the AMTM Orphaned Script Revival repository.\\n"
+	printf " Visit and learn more about their mission here:\\n https://github.com/AMTM-OSR\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/AMTM-OSR/scMerlin/master/scmerlin.sh -o "/jffs/scripts/scmerlin" && chmod 0755 /jffs/scripts/scmerlin && /jffs/scripts/scmerlin install
 	sleep 2

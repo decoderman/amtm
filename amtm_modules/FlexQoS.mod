@@ -28,9 +28,9 @@ FlexQoS_installed(){
 install_FlexQoS(){
 	p_e_l
 	printf " This installs FlexQoS - Flexible QoS\\n Enhancement Script for Adaptive QoS\\n on your router.\\n\\n"
-	printf " Original Author: dave14305\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901\\n"
-	printf " With contributions from the AMTM-OSR team.\\n\\n This script is hosted by AMTM-OSR,\\n"
-	printf " the AMTM Orphaned Script Revival repository:\\n https://github.com/AMTM-OSR/FlexQoS\\n"
+	printf " Original Author: dave14305\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901\\n\\n"
+	printf " This script is now maintained by the AMTM-OSR team,\\n the AMTM Orphaned Script Revival repository.\\n"
+	printf " Visit and learn more about their mission here:\\n https://github.com/AMTM-OSR\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/AMTM-OSR/FlexQoS/master/flexqos.sh -o /jffs/addons/flexqos/flexqos.sh --create-dirs && chmod +x /jffs/addons/flexqos/flexqos.sh && sh /jffs/addons/flexqos/flexqos.sh -install
 	if [ -f /jffs/addons/flexqos/flexqos.sh ]; then

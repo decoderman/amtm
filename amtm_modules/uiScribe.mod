@@ -4,8 +4,7 @@ uiScribe_installed(){
 	scriptname=uiScribe
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
-		remoteurl=https://jackyaz.io/uiScribe/master/amtm-version/uiScribe.sh
-		remoteurlmd5=https://jackyaz.io/uiScribe/master/amtm-md5/uiScribe.sh
+		remoteurl=https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh
 		grepcheck=jackyaz
 	fi
 	script_check
@@ -31,7 +30,7 @@ install_uiScribe(){
 	printf " Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=24&starter_id=53009\\n"
 	c_d
 	if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
-		c_url https://jackyaz.io/uiScribe/master/amtm-install/uiScribe.sh -o /jffs/scripts/uiScribe && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
+		c_url https://raw.githubusercontent.com/jackyaz/uiScribe/master/uiScribe.sh -o /jffs/scripts/uiScribe && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
 		sleep 2
 		if [ -f /jffs/scripts/uiScribe ]; then
 			show_amtm " uiScribe installed"

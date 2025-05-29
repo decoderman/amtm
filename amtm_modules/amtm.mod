@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=5.2.2
-release="May 18 2025"
+version=6.0
+release="May 29 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -193,27 +193,27 @@ show_amtm(){
 
 	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
-	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement
-	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi
+	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement osr
+	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi osr
 	spacer
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
 	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
 	/jffs/scripts/MerlinAU.sh MerlinAU 8 MerlinAU¦-¦The¦Ultimate¦Firmware¦Auto-Updater
 	spacer
-	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor
+	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor osr
 	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
 	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
 	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
 	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
 	spacer
-	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon
-	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control
-	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest
+	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon osr
+	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control osr
+	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest osr
 	spacer
-	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats
+	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats osr
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
-	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments
+	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments osr
 	spacer
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
 	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
@@ -226,6 +226,7 @@ show_amtm(){
 	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor
 	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
+	osr
 	tpucheck
 	ntps
 	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
@@ -248,13 +249,7 @@ show_amtm(){
 		case "$i" in
 			spacer) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 						atii=;;
-			ntps) 		if [ "$ss" ]; then
-							[ -f /opt/bin/opkg ] && nl= || nl=\\n
-							printf "$nl${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
-						else
-							[ "$atii" ] || [ "$ss" ] && echo
-							atii=
-						fi;;
+			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo" || echo;;
 			tpucheck) 	if [ "$tpu" ]; then
 							[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
 							if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
@@ -272,6 +267,13 @@ show_amtm(){
 						fi
 						[ "$dlok" ] && tps=1 || tps=
 						[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt;;
+			ntps) 		if [ "$ss" ]; then
+							[ -f /opt/bin/opkg ] && nl= || nl=\\n
+							printf "$nl${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
+						else
+							[ "$atii" ] || [ "$ss" ] && echo
+							atii=
+						fi;;
 			fdisk) 		if [ -f "${add}"/amtm-format-disk.log ]; then
 							if [ -z "$su" -a -z "$ss" ]; then
 								atii=1
@@ -292,13 +294,14 @@ show_amtm(){
 							[ -f "${add}/${f2}.mod" ] && ${f2}_installed
 						else
 							f3="$(echo $i | awk '{print $3}')"
+							[ "$(echo $i | awk '{print $5}')" ] && f5="${GN}*${NC} " || f5=
 							bsp=' '
 							case "$(echo $f3 | wc -m)" in
 								2)	ssp=' ';;
 								3)	ssp=;;
 								4)	unset bsp ssp;;
 							esac
-							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
+							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install$f5" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
 							if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
 								sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
 								[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
@@ -675,7 +678,6 @@ script_check(){
 				if grep -q '^# amtm NoMD5check' "$scriptloc"; then
 					localver="No MD5"
 				else
-					[ "$remoteurlmd5" ] && remoteurl=$remoteurlmd5
 					remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
 					if [ "$localmd5" != "$remotemd5" ]; then
 						upd="${E_BG}-> MD5 upd${NC}"
@@ -699,7 +701,7 @@ script_check(){
 	else
 		localver=
 	fi
-	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 remoteurlmd5
+	unset tpUpd localVother remoteVother remotever localmd5 remotemd5
 }
 
 reset_amtm(){

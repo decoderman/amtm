@@ -761,13 +761,23 @@ case "${1}" in
 			fi
 			;;
 	 -on)   set_lc_def $@
-			if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
+			if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get rc_support | grep wifi7)" ]; then
+				# wifi7 routers
 				nvram set led_disable=0
 				nvram set AllLED=1
 				if [ "$auraLED" = on ]; then
 					nvram set ledg_night_mode=1
 				fi
+			elif [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
+				# wifi6 routers
+				if [ "$auraLED" = on ]; then
+					sleep 1
+					nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+					logger -s -t "$caller" "Aura LEDs set to $(nvram get ledg_scheme)"
+					service restart_ledg
+				fi
 			else
+				# other routers
 				nvram set led_disable=0
 				if [ "$auraLED" = on -a "$(nvram get ledg_scheme_old)" ]; then
 					[ "${2}" = "-p" ] && nvram commit
