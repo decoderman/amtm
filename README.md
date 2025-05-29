@@ -81,4 +81,6 @@ amtm also offers an interface for managing a number of other features:
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
 
+Visit the AMTM Orphaned Script Revival repo (AMTM-OSR): [Link](https://github.com/AMTM-OSR)
+
 [![amtm 6.0](https://cdn.imgchest.com/files/7w6c25ndqxy.png "amtm 6.0")](https://cdn.imgchest.com/files/7w6c25ndqxy.png "amtm 6.0")
