@@ -10,7 +10,7 @@ led_control_installed(){
 			lcMode=off
 			write_ledcontrol_conf
 			/bin/sh "${add}"/led_control.mod -set >/dev/null 2>&1
-			unset lcMode locMode locLat locLong locLastUpd auraLED
+			unset lcMode locMode locLat locLong locLastUpd
 			rm -f "${add}"/ledcontrol.conf
 			a_m "\\n - Dynamic LED control disabled, run setup again."
 		fi
@@ -95,10 +95,31 @@ led_control_manage(){
 		[ -z "$lcReverse" ] && lModeR=  || lModeR=' reverse'
 		printf " Your$lModeR dynamic time coordinate ($lMode) is:\\n $locLat,$locLong\\n The time zone is: $locTimezone\\n The location is: $locName.\\n\\n"
 		printf " Last update on: $locLastUpd\\n Next update on: $locNextUpdate\\n\\n"
-
 	fi
 
 	if [ "$lcMode" = on ]; then
+		if [ "$(nvram get ledg_scheme)" ]; then
+			ledg_text=" Aura RGB theme set in WebUI:"
+			case "$(nvram get ledg_scheme)" in
+				0)		echo "$ledg_text Off";;
+				1)		echo "$ledg_text Gradient";;
+				2)		echo "$ledg_text Static";;
+				3)		echo "$ledg_text Breathing";;
+				4)		echo "$ledg_text Evolution";;
+				5)		echo "$ledg_text Rainbow";;
+				6)		echo "$ledg_text Wave";;
+				7)		echo "$ledg_text Marquee";;
+				*)		echo "$ledg_text Custom";;
+			esac
+			if [ "$(nvram get ledg_night_mode)" -a "$(nvram get ledg_scheme)" != 0 ]; then
+				ledg_nm_text=" Aura Night Mode set in WebUI:"
+				case "$(nvram get ledg_night_mode)" in
+					0)		echo "$ledg_nm_text Off";;
+					1)		echo "$ledg_nm_text On";;
+				esac
+			fi
+			echo
+		fi
 		if [ -z "$lcOnh" -o -z "$lcOnm" -o -z "$lcOffh" -o -z "$lcOffm" ]; then
 			printf " Warning: ${R}One or more LED on/off times are incomplete!${NC}\\n\\n"
 		fi
@@ -114,20 +135,10 @@ led_control_manage(){
 		printf " 2. Manually ${R}Disable${NC} LEDs now (volatile)\\n"
 	fi
 	printf " 3. Remove LED control script\\n"
-	eok=3;unset noad aura
+	eok=3;unset noad
 	if [ "$lcMode" = on ]; then
 		printf " 4. ${R}Disable${NC} LED scheduler\\n"
 		eok=4;noad=4
-		if [ "$(nvram get ledg_scheme)" ]; then
-			eok=5;aura=5
-			if [ "$auraLED" = on ]; then
-				printf " 5. ${R}Disable${NC} Aura RGB coupling\\n"
-			else
-				printf " 5. ${GN}Enable${NC} Aura RGB coupling\\n"
-			fi
-		else
-			auraLED=
-		fi
 	fi
 
 	while true; do
@@ -144,17 +155,14 @@ led_control_manage(){
 							/bin/sh "${add}"/led_control.mod -set
 							. "${add}"/ledcontrol.conf
 							if [ "$lcMode" = on ]; then
-								if [ "$auraLED" = on ]; then
-									if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 0 ]; then
-										nvram set ledg_night_mode=1
-									else
-										if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
-											nvram set ledg_scheme=$(nvram get ledg_scheme_old)
-										fi
-									fi
-									nvram commit
-									service restart_leds
+								if [ "$(nvram get ledg_scheme_old)" -a "$(nvram get ledg_scheme_old)" != 0 ]; then
+									service restart_ledg
+									nvram set ledg_scheme=$(nvram get ledg_scheme_old)
 								fi
+
+								nvram commit
+								service restart_leds
+
 								checkLed=1
 								show_amtm " LED control scheduler enabled"
 							else
@@ -178,13 +186,7 @@ led_control_manage(){
 			3)		p_e_l
 					echo " This removes the scheduled LED control"
 					c_d
-					nvram set led_disable=0
-					nvram set AllLED=1
-					if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$auraLED" = on ]; then
-						nvram set ledg_night_mode=0
-					fi
-					nvram commit
-					service restart_leds
+					/bin/sh "${add}"/led_control.mod -on -p
 					if [ -f /jffs/scripts/services-start ] && grep -q "led_control.mod" /jffs/scripts/services-start; then
 						sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/services-start
 						r_w_e /jffs/scripts/services-start
@@ -198,63 +200,14 @@ led_control_manage(){
 					cru d amtm_LEDcontrol_update
 					cru d amtm_LEDcontrol_set
 					rm "${add}"/led*
-					unset lcMode locMode locLat locLong locLastUpd auraLED
-					show_amtm " LED scheduler removed"
+					unset lcMode locMode locLat locLong locLastUpd
+					show_amtm " LED scheduler removed\\n LEDs are now on"
 					break;;
 			$noad)	lcMode=off
 					write_ledcontrol_conf
 					[ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ] && a_m " LEDs are now on"
 					/bin/sh "${add}"/led_control.mod -set >/dev/null 2>&1
 					show_amtm " LED control scheduler disabled"
-					break;;
-			$aura)	p_e_l
-					if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
-						printf " Aura RGB coupling setting\\n\\n Select if Aura RGB uses Night Mode\\n when LEDs are on.\\n\\n"
-						[ "$(nvram get ledg_scheme)" != 0 ] && echo " Aura RGB is currently enabled in the WebUI." || echo " Aura RGB is currently disabled in the WebUI."
-						[ "$(nvram get ledg_night_mode)" = 1 ] && echo " Night Mode currently enabled in the WebUI." || echo " Night Mode is currently disabled in the WebUI."
-					else
-						printf " Aura RGB coupling setting\\n\\n Select if Aura RGB follows the LED scheduler\\n setting to turn Aura RGB lighting on or off.\\n\\n"
-						[ "$(nvram get ledg_scheme)" != 0 ] && echo " Aura RGB is currently enabled in the WebUI." || echo " Aura RGB is currently disabled in the WebUI."
-					fi
-					echo
-
-					if [ "$auraLED" = on ]; then
-						printf " 1. ${R}Disable${NC} Aura RGB coupling now\\n"
-					else
-						printf " 1. ${GN}Enable${NC} Aura RGB coupling now\\n"
-					fi
-					while true; do
-						printf "\\n Enter option [1-1 e=Exit] ";read -r continue
-						case "$continue" in
-							1)		break;;
-							[Ee])	show_amtm menu;break;;
-							*)		printf "\\n input is not an option\\n";;
-						esac
-					done
-					if [ -z "$auraLED" -o "$auraLED" = off ]; then
-						auraLED=on
-						write_ledcontrol_conf
-						if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 0 ]; then
-							nvram set ledg_night_mode=1
-							nvram commit
-							service restart_leds
-						fi
-						checkLed=1
-						show_amtm " Aura LED coupling enabled"
-					else
-						if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 1 ]; then
-							nvram set ledg_night_mode=0
-						else
-							if [ "$(nvram get ledg_scheme)" = 0 -a "$(nvram get ledg_scheme_old)" ]; then
-								nvram set ledg_scheme=$(nvram get ledg_scheme_old)
-							fi
-						fi
-						nvram commit
-						service restart_leds
-						auraLED=off
-						write_ledcontrol_conf
-						show_amtm " Aura LED coupling disabled"
-					fi
 					break;;
 			[Ee])	show_amtm menu;break;;
 			*)		printf "\\n input is not an option\\n";;
@@ -582,7 +535,6 @@ write_ledcontrol_conf(){
 	locTimezone="$locTimezone"
 	locLastUpd="$locLastUpd"
 	locNextUpdate="$locNextUpdate"
-	auraLED=$auraLED
 	EOF
 }
 
@@ -730,26 +682,7 @@ case "${1}" in
 				cru d amtm_LEDcontrol_on
 				cru d amtm_LEDcontrol_off
 				cru d amtm_LEDcontrol_set
-				if [ "$(nvram get led_disable)" = 1 -o "$(nvram get AllLED)" = 0 ] || [ "$auraLED" = on ]; then
-					nvram set led_disable=0
-					nvram set AllLED=1
-					if [ "$auraLED" = on ]; then
-						if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ] && [ "$(nvram get ledg_night_mode)" = 1 ]; then
-							nvram set ledg_night_mode=0
-							logger -s -t "$caller" "LED control is off, Aura Night Mode is off"
-						else
-							if [ "$(nvram get ledg_scheme_old)" ]; then
-								nvram set ledg_scheme=$(nvram get ledg_scheme_old)
-								logger -s -t "$caller" "LED control is off, Aura LEDs are now on"
-							fi
-						fi
-					fi
-					nvram commit
-					service restart_leds
-					logger -s -t "$caller" "LED control is off, LEDs are now on"
-				else
-					logger -s -t "$caller" "LED control is off, nothing to do"
-				fi
+				/bin/sh "${add}"/led_control.mod -on -p
 				if [ -f /jffs/scripts/services-start ] && grep -q "led_control.mod" /jffs/scripts/services-start; then
 					sed -i "\~${add}/led_control.mod.*~d" /jffs/scripts/services-start
 					r_w_e /jffs/scripts/services-start
@@ -765,43 +698,39 @@ case "${1}" in
 				# wifi7 routers
 				nvram set led_disable=0
 				nvram set AllLED=1
-				if [ "$auraLED" = on ]; then
-					nvram set ledg_night_mode=1
-				fi
-			elif [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
-				# wifi6 routers
-				if [ "$auraLED" = on ]; then
-					sleep 1
-					nvram set ledg_scheme=$(nvram get ledg_scheme_old)
-					logger -s -t "$caller" "Aura LEDs set to $(nvram get ledg_scheme)"
+				service restart_leds
+
+				if [ "$(nvram get ledg_scheme_old)" -a "$(nvram get ledg_scheme_old)" = 0 ]; then
 					service restart_ledg
-				fi
-			else
-				# other routers
-				nvram set led_disable=0
-				if [ "$auraLED" = on -a "$(nvram get ledg_scheme_old)" ]; then
-					[ "${2}" = "-p" ] && nvram commit
-					service restart_leds
 					nvram set ledg_scheme=$(nvram get ledg_scheme_old)
-					logger -s -t "$caller" "Aura LEDs are now on ($state)"
 				fi
+				[ "${2}" = "-p" ] && nvram commit
+			elif [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
+				#wifi6 routers
+				nvram set led_disable=0
+				nvram set AllLED=1
+				service restart_leds
+				if [ "$(nvram get ledg_scheme)" -a "$(nvram get ledg_scheme_old)" ]; then
+					service restart_ledg
+					nvram set ledg_scheme=$(nvram get ledg_scheme_old)
+				fi
+				[ "${2}" = "-p" ] && nvram commit
+			else
+				# older routers
+				nvram set led_disable=0
+				[ "${2}" = "-p" ] && nvram commit
+				service restart_leds
 			fi
-			[ "${2}" = "-p" ] && nvram commit
-			service restart_leds
 			logger -s -t "$caller" "LEDs are now on ($state)"
 			;;
 	-off)   set_lc_def $@
 			if [ "$(v_c $(nvram get firmver))" -ge "$(v_c 3.0.0.6)" ]; then
+				#wifi6 and wifi7 routers
 				nvram set led_disable=1
 				nvram set AllLED=0
+				[ "$(nvram get ledg_scheme)" ] && nvram set ledg_scheme_old=$(nvram get ledg_scheme)
 			else
-				if [ "$auraLED" = on ]; then
-					nvram set ledg_scheme=0
-					[ "${2}" = "-p" ] && nvram commit
-					service restart_leds
-					sleep 1
-					logger -s -t "$caller" "Aura LEDs are now off ($state)"
-				fi
+				# older routers
 				nvram set led_disable=1
 			fi
 			[ "${2}" = "-p" ] && nvram commit

@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.0
-release="May 29 2025"
+version=6.0.1
+release="May 31 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -249,7 +249,7 @@ show_amtm(){
 		case "$i" in
 			spacer) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 						atii=;;
-			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo" || echo;;
+			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo";;
 			tpucheck) 	if [ "$tpu" ]; then
 							[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
 							if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
