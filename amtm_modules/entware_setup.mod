@@ -129,15 +129,16 @@ setup_Entware(){
 	if [ "$useMaurer" ]; then
 		p_e_l
 		printf " The Entware repository for your router no\\n longer reiceives updates from the Entware team.\\n\\n"
-		printf " However, there's an Entware packports repository available\\n by @maurer with selected updates for some packages.\\n For more info see here:\\n"
 		case "$(uname -m)" in
-			mips)		printf " snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n";;
-			armv7l)		printf " snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n";;
+			mips)	printf " However, there's an Entware packports repository available\\n by @maurer with updates for some packages.\\n For more info see here:\\n"
+					printf " snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n";;
+			armv7l)	printf " However, there are Entware packports repositories available\\n by @maurer and @garycnew with updates for some packages.\\n For more info see here:\\n"
+					printf " snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n";;
 		esac
 		printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
 		printf " The use of the Entware packports repository can be\\n enabled at any time after installation.\\n\\n"
 		printf " 1. Use original Entware repository only.\\n"
-		printf " 2. Use Entware backports repository by @maurer in parallel.\\n"
+		printf " 2. Use Entware backports repository in parallel.\\n"
 
 		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
@@ -159,7 +160,7 @@ setup_Entware(){
 		echo " $i. ${GN}$mounted${NC}"
 		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
 			usePrevOK=1
-			if grep -q 'maurerr.github.io' "$mounted/entware/etc/opkg.conf" && [ -z "$useMaurer" ]; then
+			if grep -q 'maurerr.github.io\|garycnew.github.io' "$mounted/entware/etc/opkg.conf" && [ -z "$useMaurer" ]; then
 				usePrevOK=
 			fi
 			[ "$usePrevOK" ] && printf "    Found compatible previous Entware\\n    installation on this device.\\n"
@@ -352,15 +353,16 @@ setup_Entware(){
 	[ -z "$usePreviousEntware" ] && instP=Installing || instP=Reinstalling
 	echo
 	echo " $instP $entVer, using external script"
-	[ "$useMaurer" ] && echo " additionally using Entware backports-mirror maurerr.github.io"
+	[ "$useMaurer" ] && echo " additionally using Entware backports mirror(s)"
 	echo "${GY}"
 	case "$(uname -m)" in
 		armv7l)	if [ "$useMaurer" ]; then
 					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$entServer/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$entServer/#g' /opt/etc/opkg.conf" \
-					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
+					| sed -e "42 i sed -i '2isrc/gz entware-backports-maurerr https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" \
+					| sed -e "43 i sed -i '3isrc/gz entware-backports-garycnew https://garycnew.github.io/Entware/armv7sf-k2.6/' /opt/etc/opkg.conf" | sh
 					echo "${NC}"
 					echo " Installing required $entVer packages: wget-ssl ca-certificates"
-					echo " for use with Entware backports-mirror https://maurerr.github.io/entware-armv7-k26/"
+					echo " for use with Entware backports mirrors"
 					echo "${GY}"
 					opkg install wget-ssl ca-certificates
 					echo "${NC}"

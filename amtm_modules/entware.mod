@@ -14,6 +14,8 @@ entware_installed(){
 	get_entware_identifiers(){
 		ENTURL="$(awk 'NR == 1 {print $3}' /opt/etc/opkg.conf)"
 		ENTDOMAIN=$(echo $ENTURL | awk -F'/' '{print $1FS$2FS$3}' | sed 's%http.*://%%')
+		VERSION_ID=
+		[ -f /opt/etc/entware_release ] && VERSION_ID=", release ${GN}$(grep 'VERSION_ID' /opt/etc/entware_release | sed 's/VERSION_ID=//' | sed 's/"//g')${NC}"
 		entVersion=
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="${ENTURL##*/}"
 		entServer='bin.entware.net Primary¦server¦by¦Entware¦team¦(recommended) primary¦server¦by¦Entware¦team
@@ -21,6 +23,15 @@ entware_installed(){
 		mirrors.cernet.edu.cn/entware Multiple¦mirrors¦by¦CERNET¦(China¦Education¦and¦Research¦Network) multiple¦mirrors¦by¦CERNET'
 	}
 	get_entware_identifiers
+
+	case "$(uname -m)" in
+		armv7l)	if [ "$(v_c $(uname -r))" -lt "$(v_c 3.2)" ] && grep -q 'maurerr.github.io' /opt/etc/opkg.conf && ! grep -q 'garycnew.github.io' /opt/etc/opkg.conf; then
+					sed -i '/maurerr.github.io/d' /opt/etc/opkg.conf
+					sed -i '2i\src/gz entware-backports-maurerr https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf
+					sed -i '3i\src/gz entware-backports-garycnew https://garycnew.github.io/Entware/armv7sf-k2.6/' /opt/etc/opkg.conf
+					a_m " Entware backports repo by @garycnew added.\\n Check for Entware updates."
+				fi;
+	esac
 
 	atii=1
 	[ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl
@@ -134,13 +145,14 @@ entware_installed(){
 		unset bpe bparm pUse
 		get_entware_identifiers
 
-		printf " This router runs ${GN}Entware $entVersion${NC}\\n Server in use: ${GN}$ENTDOMAIN${NC}\\n"
+		printf " This router runs ${GN}Entware $entVersion${NC}$VERSION_ID\\n Server in use: ${GN}$ENTDOMAIN${NC}\\n"
 		printf "\\n See available packages list here:\\n $ENTURL/Packages.html\\n\\n"
 		case "$(uname -m)" in
 			armv7l)	if [ "$(v_c $(uname -r))" -lt "$(v_c 3.2)" ]; then
 						pUse=6;sel=6
-						if [ "$(grep 'maurerr.github.io' /opt/etc/opkg.conf)" ]; then
-							printf " with updates from ${GN}maurerr.github.io${NC}\\n\\n See available packages list here:\\n https://maurerr.github.io/entware-armv7-k26/\\n\\n"
+						if [ "$(grep 'maurerr.github.io\|garycnew' /opt/etc/opkg.conf)" ]; then
+							printf " with updates from ${GN}maurerr.github.io${NC}\\n and ${GN}garycnew.github.io${NC}\\n\\n See available packages list here:\\n"
+							printf " https://maurerr.github.io/entware-armv7-k26/\\n https://garycnew.github.io/Entware/armv7sf-k2.6/\\n\\n"
 							bparm="${GN}on${NC}"
 						else
 							bparm=off
@@ -167,7 +179,7 @@ entware_installed(){
 		echo " 4. Entware repair options"
 		echo " 5. Remove Entware"
 		if [ "$bparm" ]; then
-			printf " 6. Parallel use Entware-backports Repo $bparm\\n"
+			printf " 6. Parallel use Entware-backports Repos $bparm\\n"
 		fi
 
 		while true; do
@@ -374,10 +386,11 @@ entware_installed(){
 										armv7l)	if [ "$bparm" != off ]; then
 													c_url "$ENTURL/installer/generic.sh" | sed "s#URL=http://bin.entware.net/#URL=https://$ENTDOMAIN/#g" \
 													| sed -e "41 i sed -i 's#http://bin.entware.net/#https://$ENTDOMAIN/#g' /opt/etc/opkg.conf" \
-													| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" | sh
+													| sed -e "42 i sed -i '2isrc/gz entware-backports-maurerr https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" \
+													| sed -e "43 i sed -i '3isrc/gz entware-backports-garycnew https://garycnew.github.io/Entware/armv7sf-k2.6/' /opt/etc/opkg.conf" | sh
 													echo "${NC}"
 													echo " Installing required $entVersion packages: wget-ssl ca-certificates"
-													echo " for use with Entware backports-mirror https://maurerr.github.io/entware-armv7-k26/"
+													echo " for use with Entware backports mirrors"
 													echo "${GY}"
 													opkg install wget-ssl ca-certificates
 													echo "${NC}"
@@ -438,22 +451,24 @@ entware_installed(){
 						show_amtm menu;break;;
 				5)		reset_amtm;break;;
 				[$pUse])p_e_l
-						printf " Parallel use of Entware-backports Repo is $bparm\\n\\n Note if you disable this, Entware\\n repair options might no longer work.\\n"
+						printf " Parallel use of Entware-backports Repos is $bparm\\n"
 						if [ "$bparm" != off ]; then
+							printf "\\n Note if you disable this, Entware\\n repair options might no longer work.\\n"
 							while true; do
 								printf "\\n Disable it? [1=Yes e=Exit] ";read -r confirm
 								case "$confirm" in
 									1)	sed -i '/maurerr.github.io/d' /opt/etc/opkg.conf
-										show_amtm " Entware-backports Repo disabled"
+										sed -i '/garycnew.github.io/d' /opt/etc/opkg.conf
+										show_amtm " Entware-backports Repos disabled"
 										break;;
 								[Ee])	show_amtm menu;break;;
 									*)	printf "\\n input is not an option\\n";;
 								esac
 							done
 						else
-							printf "\\n This repository for armv7sf-k2.6 based routers receives\\n Entware package updates until further notice,\\n"
-							printf " while the original repo no longer does.\\n\\n This additional backports source is added:\\n - maurerr.github.io/entware-armv7-k26/\\n\\n"
-							printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n"
+							printf "\\n These repositories for armv7sf-k2.6 based routers receive\\n Entware package updates until further notice,\\n"
+							printf " while the original repo no longer does.\\n\\n These additional backports sources are added:\\n - maurerr.github.io/entware-armv7-k26/\\n - garycnew.github.io/Entware/armv7sf-k2.6/\\n\\n"
+							printf " Maintained by @maurer and @garycnew, see this thread for details:\\n snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n"
 							printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
 							while true; do
 								printf " Enable it? [1=Yes e=Exit] ";read -r confirm
@@ -463,7 +478,8 @@ entware_installed(){
 										echo "${GY}"
 										opkg install wget-ssl ca-certificates
 										echo "${NC}"
-										sed -i '2i\src/gz entware-backports-mirror https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf
+										sed -i '2i\src/gz entware-backports-maurerr https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf
+										sed -i '3i\src/gz entware-backports-garycnew https://garycnew.github.io/Entware/armv7sf-k2.6/' /opt/etc/opkg.conf
 										p_e_l
 										echo " Do you want to update and upgrade all packages now?"
 										while true; do
@@ -483,7 +499,7 @@ entware_installed(){
 												*)	printf "\\n input is not an option\\n";;
 											esac
 										done
-										show_amtm " Entware-backports Repo enabled";break;;
+										show_amtm " Entware-backports Repos enabled";break;;
 								[Ee])	show_amtm menu;break;;
 									*)	printf "\\n input is not an option\\n";;
 								esac
