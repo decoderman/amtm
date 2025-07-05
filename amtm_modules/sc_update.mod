@@ -26,17 +26,57 @@ sc_update(){
 			sed -i "\~sc_update.mod ~d" /jffs/scripts/services-start
 			echo "/bin/sh ${add}/sc_update.mod -set # Added by amtm" >> /jffs/scripts/services-start
 		fi
-		cru a amtm_ScriptsUpdateNotification "10 7 * * Sun /bin/sh ${add}/sc_update.mod -run"
-		show_amtm " Scripts update notification installed\\n or updated"
+		cru a amtm_ScriptsUpdateNotification "10 5 * * Sun /bin/sh ${add}/sc_update.mod -run"
+		show_amtm " Scripts update notification installed\\n or updated."
 	elif [ "$1" = manage ]; then
+		[ -f "${add}/sc_update.cfg" ] && . "${add}/sc_update.cfg" || scChkFreq=Sunday
 		p_e_l
-		printf " Scripts update notification options\\n\\n The update check runs every Sunday at 07:10\\n\\n"
-		printf " 1. Send a test notification email\\n 2. Remove scripts update notification script\\n"
+		printf " Scripts update notification options\\n\\n The update check runs ${GN}$scChkFreq @ 05:10${NC}\\n\\n"
+		printf " 1. Change update check frequency\\n 2. Send a test notification email\\n 3. Remove scripts update notification script\\n"
 
 		while true; do
-			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+			printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
 			case "$continue" in
 				1)		check_email_conf
+						p_e_l
+						printf " This sets the day(s) the notification checks\\n for updates.\\n Current setting: ${GN}$scChkFreq @ 05:10${NC}\\n\\n"
+						printf " Day                   Twice a week\\n"
+						printf " ------------    OR    --------------------------\\n"
+						printf " 1. Monday             91. Monday & Thursday\\n"
+						printf " 2. Tuesday            92. Tuesday & Friday\\n"
+						printf " 3. Wednesday          93. Wednesday & Saturday\\n"
+						printf " 4. Thursday           94. Thursday & Sunday\\n"
+						printf " 5. Friday             95. Friday & Monday\\n"
+						printf " 6. Saturday           96. Saturday & Tuesday\\n"
+						printf " 7. Sunday             97. Sunday & Wednesday\\n"
+						printf " 8. Check daily\\n"
+						while true; do
+							printf "\\n Select update day(s): [1-8 OR 91-97 e=Exit] ";read -r input
+							case "$input" in
+								1)		scChkFreq=Monday;scChkDOW=Mon;break;;
+								2)		scChkFreq=Tuesday;scChkDOW=Tue;break;;
+								3)		scChkFreq=Wednesday;scChkDOW=Wed;break;;
+								4)		scChkFreq=Thursday;scChkDOW=Thu;break;;
+								5)		scChkFreq=Friday;scChkDOW=Fri;break;;
+								6)		scChkFreq=Saturday;scChkDOW=Sat;break;;
+								7)		scChkFreq=Sunday;scChkDOW=Sun;break;;
+								8)		scChkFreq=Daily;scChkDOW=*;break;;
+								91)		scChkFreq="Monday & Thursday";scChkDOW="Mon,Thu";break;;
+								92)		scChkFreq="Tuesday & Friday";scChkDOW="Tue,Fri";break;;
+								93)		scChkFreq="Wednesday & Saturday";scChkDOW="Wed,Sat";break;;
+								94)		scChkFreq="Thursday & Sunday";scChkDOW="Thu,Sun";break;;
+								95)		scChkFreq="Friday & Monday";scChkDOW="Fri,Mon";break;;
+								96)		scChkFreq="Saturday & Tuesday";scChkDOW="Sat,Tue";break;;
+								97)		scChkFreq="Sunday & Wednesday";scChkDOW="Sun,Wed";break;;
+								[Ee]) 	show_amtm menu;;
+								*) 	printf "\\n input is not an option\\n";;
+							esac
+						done
+						printf "scChkFreq=\"$scChkFreq\"\\nscChkDOW=\"$scChkDOW\"" > "${add}"/sc_update.cfg
+						/bin/sh "${add}"/sc_update.mod -set
+						show_amtm " Scripts update notification frequency\\n set to $scChkFreq"
+						break;;
+				2)		check_email_conf
 						touch /tmp/amtmtest
 						/bin/sh ${add}/sc_update.mod -run
 						if [ "$?" = "0" ]; then
@@ -49,12 +89,13 @@ sc_update(){
 							show_amtm
 						fi
 						break;;
-				2)		p_e_l
+				3)		p_e_l
 						printf " This removes the scripts update notification\\n script.\\n"
 						c_d
 						cru d amtm_ScriptsUpdateNotification
 						sed -i "\~sc_update.mod ~d" /jffs/scripts/services-start
 						r_w_e /jffs/scripts/services-start
+						rm -f ${add}/sc_update.cfg
 						rm -f ${add}/sc_update.mod
 						show_amtm " Scripts update notification removed"
 						break;;
@@ -67,7 +108,8 @@ sc_update(){
 
 case "${1}" in
 	"") 	;;
-	-set) 	cru a amtm_ScriptsUpdateNotification "10 7 * * Sun /bin/sh /jffs/addons/amtm/sc_update.mod -run";;
+	-set) 	[ -f /jffs/addons/amtm/sc_update.cfg ] && . /jffs/addons/amtm/sc_update.cfg || scChkDOW=Sun
+			cru a amtm_ScriptsUpdateNotification "10 5 * * $scChkDOW /bin/sh /jffs/addons/amtm/sc_update.mod -run";;
 	-run) 	EMAIL_DIR=/jffs/addons/amtm/mail
 			if [ -f $EMAIL_DIR/email.conf ]; then
 				. $EMAIL_DIR/email.conf

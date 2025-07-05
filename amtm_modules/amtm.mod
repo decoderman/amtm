@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.0.2
-release="July 01 2025"
+version=6.1
+release="July 05 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -211,6 +211,7 @@ show_amtm(){
 	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon osr
 	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control osr
 	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest osr
+	/jffs/scripts/wxmon.sh wxmon wx WXMON¦-¦Localized¦Weather¦Monitoring
 	spacer
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats osr
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
@@ -322,6 +323,7 @@ show_amtm(){
 								[Jj]3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
 								[Ww][Ii])	case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
 								[Jj]4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
+								[Ww][Xx])	case_wx(){ c_e WXMON;g_m wxmon.mod include;[ "$dlok" = 1 ] && install_wxmon || show_amtm menu;};;
 								[Jj]5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
 								[Jj]6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 								[Jj]7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
@@ -514,6 +516,7 @@ show_amtm(){
 			[Jj]3u)				case_j3u;break;;
 			[Ww][Ii])			case_wi;break;;
 			[Jj]4)				case_j4;break;;
+			[Ww][Xx])			case_wx;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]5u)				case_j5u;break;;
 			[Jj]6)				case_j6;break;;
