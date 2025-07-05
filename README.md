@@ -60,6 +60,7 @@ amtm
 | Domain-based VPN Routing | Ranger802004 | [Link](https://www.snbforums.com/threads/domain-based-vpn-routing-script.79264/) |
 | MerlinAU Firmware Auto-Updater | ExtremeFiretop | [Link](https://www.snbforums.com/threads/introducing-merlinau-the-ultimate-firmware-auto-updater-addon.88577/) |
 | TAILMON Tailscale installer | Viktor Jaep | [Link](https://www.snbforums.com/threads/release-tailmon-v1-0-8-may-3-2024-wireguard-based-tailscale-installer-configurator-and-monitor.89860/) |
+| WXMON Localized Weather Monitoring | Viktor Jaep | [Link](https://www.snbforums.com/threads/release-wxmon-v2-1-1-jul-3-2025-localized-weather-monitoring-extended-forecasts-including-aviation-metars-and-tafs-us-global.83479/) |
 
 amtm also offers an interface for managing a number of other features:
 
@@ -81,6 +82,6 @@ amtm also offers an interface for managing a number of other features:
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
 
-Visit the AMTM Orphaned Script Revival repo (AMTM-OSR): [Link](https://github.com/AMTM-OSR)
+Feel free to visit and contribute to the AMTM Orphaned Script Revival repo (AMTM-OSR): [Link](https://github.com/AMTM-OSR)
 
 [![amtm 6.0](https://cdn.imgchest.com/files/7w6c25ndqxy.png "amtm 6.0")](https://cdn.imgchest.com/files/7w6c25ndqxy.png "amtm 6.0")
