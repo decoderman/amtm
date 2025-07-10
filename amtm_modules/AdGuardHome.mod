@@ -6,15 +6,16 @@ AdGuardHome_installed(){
 	[ -f /opt/etc/AdGuardHome/.config ] && . /opt/etc/AdGuardHome/.config
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer
+		latestverurl=https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest
 		grepcheck=SomeWhereOverTheRainBow
 		if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = release ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver=$(c_url https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest | grep "tag_name" | head -1 | cut -d \" -f 4)
+			remoteAGHver="$(c_url "${latestverurl}?per_page=3" | awk '/"tag_name":/ {t=$2} /"prerelease": false/ {gsub(/[",]/,"",t); print t; exit}')"
 			AGHext="AGH binary"
 			updAGH="${GN_BG}$localAGHver${NC}"
 		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = beta ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url https://api.github.com/repos/AdguardTeam/AdGuardHome/releases | sed -n '/"prerelease": true,/q;p' | tail -4 | grep "tag_name" | cut -d \" -f 4)"
+			remoteAGHver="$(c_url "${latestverurl}?per_page=3" | awk '/"tag_name":/ {t=$2} /"prerelease": true/ {gsub(/[",]/,"",t); print t; exit}')"
 			AGHext="AGH Beta bin"
 			updAGH="${GN_BG}$localAGHver${NC}"
 		fi
