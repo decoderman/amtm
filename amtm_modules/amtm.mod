@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.1
-release="July 05 2025"
+version=6.1.2
+release="July 12 2025"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -197,13 +197,13 @@ show_amtm(){
 	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement osr
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi osr
 	spacer
-	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate
+	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate osr
 	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
 	/jffs/scripts/MerlinAU.sh MerlinAU 8 MerlinAU¦-¦The¦Ultimate¦Firmware¦Auto-Updater
 	spacer
 	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor osr
-	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring
+	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring osr
 	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
 	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
 	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
@@ -214,7 +214,7 @@ show_amtm(){
 	/jffs/scripts/wxmon.sh wxmon wx WXMON¦-¦Localized¦Weather¦Monitoring
 	spacer
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats osr
-	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs
+	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs osr
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments osr
 	spacer
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
@@ -222,7 +222,7 @@ show_amtm(){
 	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
 	spacer
 	/jffs/scripts/vpnmon-r3.sh vpnmon vp VPNMON-R3¦-¦Monitor¦health¦of¦WAN¦DW¦VPN
-	/jffs/scripts/domain_vpn_routing.sh  vpn_routing vr Domain-based¦VPN¦Routing
+	/jffs/scripts/domain_vpn_routing.sh vpn_routing vr Domain-based¦VPN¦Routing
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor
@@ -243,7 +243,6 @@ show_amtm(){
 	spacer
 	/jffs/addons/amtm/.ash_history shell_history sh Shell¦history¦-¦Keep¦history¦of¦shell¦commands
 	/jffs/addons/amtm/routerdate router_date rd Router¦date¦keeper¦-¦Keeps¦router¦date¦when¦rebooting'
-
 	IFS='
 	'
 	set -f

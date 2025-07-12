@@ -56,13 +56,13 @@ setup_Entware(){
 		fi
 	}
 
-	useMaurer=
+	useBackport=
 	case "$(uname -m)" in
 		mips)		PART_TYPES='ext2|ext3'
 					INST_URL='https://pkg.entware.net/binaries/mipsel/installer/installer.sh'
 					entVer="Entware (mipsel)"
 					availEntVer='pkg\.entware\.net\/binaries\/mipsel\|maurerr\.github\.io'
-					useMaurer=on;;
+					useBackport=on;;
 		armv7l)		PART_TYPES='ext2|ext3|ext4'
 					if [ "$(v_c $(uname -r))" -ge "$(v_c 3.2)" ]; then
 						INST_URL='armv7sf-k3.2/installer/generic.sh'
@@ -72,7 +72,7 @@ setup_Entware(){
 						INST_URL='armv7sf-k2.6/installer/generic.sh'
 						entVer="Entware (armv7sf-k2.6)"
 						availEntVer=armv7
-						useMaurer=on
+						useBackport=on
 					fi;;
 		aarch64)	PART_TYPES='ext2|ext3|ext4'
 					INST_URL='aarch64-k3.10/installer/generic.sh'
@@ -126,13 +126,13 @@ setup_Entware(){
 
 	echo " Pre-install checks passed"
 
-	if [ "$useMaurer" ]; then
+	if [ "$useBackport" ]; then
 		p_e_l
 		printf " The Entware repository for your router no\\n longer reiceives updates from the Entware team.\\n\\n"
 		case "$(uname -m)" in
 			mips)	printf " However, there's an Entware packports repository available\\n by @maurer with updates for some packages.\\n For more info see here:\\n"
 					printf " snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n";;
-			armv7l)	printf " However, there are Entware packports repositories available\\n by @maurer and @garycnew with updates for some packages.\\n For more info see here:\\n"
+			armv7l)	printf " However, there's an Entware packports repository available\\n by @garycnew with updates for some packages.\\n For more info see here:\\n"
 					printf " snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n";;
 		esac
 		printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
@@ -143,7 +143,7 @@ setup_Entware(){
 		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
-				1)			useMaurer=;break;;
+				1)			useBackport=;break;;
 				2)			break;;
 				[Ee])		r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
 				*)			printf "\\n input is not an option\\n";;
@@ -160,7 +160,7 @@ setup_Entware(){
 		echo " $i. ${GN}$mounted${NC}"
 		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
 			usePrevOK=1
-			if grep -q 'maurerr.github.io\|garycnew.github.io' "$mounted/entware/etc/opkg.conf" && [ -z "$useMaurer" ]; then
+			if grep -q 'maurerr.github.io\|garycnew.github.io' "$mounted/entware/etc/opkg.conf" && [ -z "$useBackport" ]; then
 				usePrevOK=
 			fi
 			[ "$usePrevOK" ] && printf "    Found compatible previous Entware\\n    installation on this device.\\n"
@@ -353,16 +353,15 @@ setup_Entware(){
 	[ -z "$usePreviousEntware" ] && instP=Installing || instP=Reinstalling
 	echo
 	echo " $instP $entVer, using external script"
-	[ "$useMaurer" ] && echo " additionally using Entware backports mirror(s)"
+	[ "$useBackport" ] && echo " additionally using Entware backports repository)"
 	echo "${GY}"
 	case "$(uname -m)" in
-		armv7l)	if [ "$useMaurer" ]; then
+		armv7l)	if [ "$useBackport" ]; then
 					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$entServer/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$entServer/#g' /opt/etc/opkg.conf" \
-					| sed -e "42 i sed -i '2isrc/gz entware-backports-maurerr https://maurerr.github.io/entware-armv7-k26/' /opt/etc/opkg.conf" \
-					| sed -e "43 i sed -i '3isrc/gz entware-backports-garycnew https://garycnew.github.io/Entware/armv7sf-k2.6/' /opt/etc/opkg.conf" | sh
+					| sed -e "42 i sed -i '2isrc/gz entware-backports-garycnew https://garycnew.github.io/Entware/armv7sf-k2.6/' /opt/etc/opkg.conf" | sh
 					echo "${NC}"
 					echo " Installing required $entVer packages: wget-ssl ca-certificates"
-					echo " for use with Entware backports mirrors"
+					echo " for use with Entware backports repository"
 					echo "${GY}"
 					opkg install wget-ssl ca-certificates
 					echo "${NC}"
@@ -370,9 +369,9 @@ setup_Entware(){
 					c_url "$INST_URL" | sed "s#URL=http://bin.entware.net/#URL=https://$entServer/#g" | sed -e "41 i sed -i 's#http://bin.entware.net/#https://$entServer/#g' /opt/etc/opkg.conf" | sh
 				fi
 				;;
-		mips)	if [ "$useMaurer" ]; then
+		mips)	if [ "$useBackport" ]; then
 					c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" \
-					| sed -e "42 i sed -i '2isrc/gz entware-backports-mirror https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
+					| sed -e "42 i sed -i '2isrc/gz entware-backports-maurerr https://maurerr.github.io/packages' /opt/etc/opkg.conf" | sh
 				else
 					c_url "$INST_URL" | sed 's/http:/https:/g' | sed -e "41 i sed -i 's/http:/https:/g' /opt/etc/opkg.conf" | sh
 				fi
