@@ -282,7 +282,7 @@ entware_installed(){
 								printf "\\n This repository for MIPS based routers received\\n Entware package updates until December 2019,\\n"
 								printf " while the original repo did not.\\n\\n This additional backports source is added:\\n - maurerr.github.io/packages\\n\\n"
 								printf " Maintained by @maurer, see this thread for details:\\n snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n"
-								printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
+								printf " Be aware that some of these backported packages\\n may not be compatible or functional on your router.\\n\\n"
 								while true; do
 									printf " Enable it? [1=Yes e=Exit] ";read -r confirm
 									case "$confirm" in
@@ -456,10 +456,10 @@ entware_installed(){
 								esac
 							done
 						else
-							printf "\\n The Entware repository for your router no\\n longer reiceives updates from the Entware team.\\n\\n"
-							printf " However, there's an Entware packports repository\\n available, maintained by @garycnew:\\n garycnew.github.io/Entware/armv7sf-k2.6/\\n\\n"
+							printf "\\n The Entware repository for your router no\\n longer receives updates from the Entware team.\\n\\n"
+							printf " However, there's an Entware backports repository\\n available, maintained by @garycnew:\\n garycnew.github.io/Entware/armv7sf-k2.6/\\n\\n"
 							printf " See this thread for details:\\n snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n"
-							printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
+							printf " Be aware that some of these backported packages\\n may not be compatible or functional on your router.\\n\\n"
 							while true; do
 								printf " Enable it? [1=Yes e=Exit] ";read -r confirm
 								case "$confirm" in

@@ -128,15 +128,15 @@ setup_Entware(){
 
 	if [ "$useBackport" ]; then
 		p_e_l
-		printf " The Entware repository for your router no\\n longer reiceives updates from the Entware team.\\n\\n"
+		printf " The Entware repository for your router no\\n longer receives updates from the Entware team.\\n\\n"
 		case "$(uname -m)" in
-			mips)	printf " However, there's an Entware packports repository available\\n by @maurer with updates for some packages.\\n For more info see here:\\n"
+			mips)	printf " However, there's an Entware backports repository available\\n by @maurer with updates for some packages.\\n For more info see here:\\n"
 					printf " snbforums.com/threads/mips-entware-backports-repo-entware-ng-reloaded.49468/\\n\\n";;
-			armv7l)	printf " However, there's an Entware packports repository available\\n by @garycnew with updates for some packages.\\n For more info see here:\\n"
+			armv7l)	printf " However, there's an Entware backports repository available\\n by @garycnew with updates for some packages.\\n For more info see here:\\n"
 					printf " snbforums.com/threads/entware-armv7sf-k2-6-eos.89032/\\n\\n";;
 		esac
-		printf " Be aware that some of these packported packages\\n may not be compatible or functional on your router.\\n\\n"
-		printf " The use of the Entware packports repository can be\\n enabled at any time after installation.\\n\\n"
+		printf " Be aware that some of these backported packages\\n may not be compatible or functional on your router.\\n\\n"
+		printf " The use of the Entware backports repository can be\\n enabled at any time after installation.\\n\\n"
 		printf " 1. Use original Entware repository only.\\n"
 		printf " 2. Use Entware backports repository in parallel.\\n"
 
