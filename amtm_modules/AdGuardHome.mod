@@ -1,5 +1,8 @@
 #!/bin/sh
 #bof
+AdGuardHome_sh(){
+	if sh -c 'sh -c "$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)"'; then return 0; else return 1; fi
+}
 AdGuardHome_installed(){
 	scriptname=AdGuardHome
 	scriptgrep='^AI_VERSION'
@@ -67,7 +70,9 @@ AdGuardHome_installed(){
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ag${NC} %-9s%-21s%${COR}s\\n" "open" "AdGuardHome    $localver" " $upd"
 	[ "$su" = 1 -a -z "$updcheck" ] || [ "$AGHbinUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$AGHext $localAGHver" " $updAGH"
 	case_ag(){
-		/opt/etc/AdGuardHome/installer
+		if ! AdGuardHome_sh; then
+			/opt/etc/AdGuardHome/installer
+		fi
 		sleep 2
 		show_amtm menu
 	}
@@ -80,7 +85,7 @@ install_AdGuardHome(){
 	printf " This installs AdGuardHome - Asuswrt-Merlin-AdGuardHome-Installer\\n on your router.\\n\\n"
 	printf " Author: SomeWhereOverTheRainBow\\n snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/#post-733310\\n"
 	c_d
-	c_url -O https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer && sh installer
+	AdGuardHome_sh
 	sleep 2
 	if [ -f /opt/etc/AdGuardHome/installer ]; then
 		show_amtm " AdGuardHome installed"
