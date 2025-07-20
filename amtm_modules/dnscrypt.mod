@@ -1,7 +1,9 @@
 #!/bin/sh
 #bof
 dnscrypt_sh(){
-	if sh -c 'sh -c "$(c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer)"'; then return 0; else return 1; fi
+	local dnscrypt_script
+	dnscrypt_script="$(c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer)" || return 1
+	sh -c "$dnscrypt_script"
 }
 dnscrypt_installed(){
 	if [ "$su" = 1 ]; then
