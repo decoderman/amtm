@@ -68,6 +68,7 @@ dnscrypt_installed(){
 	case_di(){
 		p_e_l
 		if ! dnscrypt_sh && [ -s "/jffs/dnscrypt/installer" ]; then
+			if [ ! -x "/jffs/dnscrypt/installer" ]; then chmod 0755 /jffs/dnscrypt/installer; fi
 			/jffs/dnscrypt/installer
 		fi
 		sleep 5
