@@ -4,6 +4,7 @@ AdGuardHome_sh(){
 	local AGH_script
 	AGH_script="$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)" || return 1
 	printf "%s\n" "$AGH_script" | sh
+	return 0
 }
 AdGuardHome_installed(){
 	scriptname=AdGuardHome
@@ -88,16 +89,11 @@ install_AdGuardHome(){
 	printf " This installs AdGuardHome - Asuswrt-Merlin-AdGuardHome-Installer\\n on your router.\\n\\n"
 	printf " Author: SomeWhereOverTheRainBow\\n snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/#post-733310\\n"
 	c_d
-	if ! AdGuardHome_sh && [ ! -s "/opt/etc/AdGuardHome/installer" ]; then
-		mkdir -p /opt/etc/AdGuardHome /jffs/addons/AdGuardHome.d
-		c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer -o /opt/etc/AdGuardHome/installer && chmod 0755 /opt/etc/AdGuardHome/installer
-		/opt/etc/AdGuardHome/installer
-	fi
+	AdGuardHome_sh
 	sleep 2
 	if [ -f /opt/etc/AdGuardHome/installer ]; then
 		show_amtm " AdGuardHome installed"
 	else
-		{ rm -rf /opt/etc/AdGuardHome /jffs/addons/AdGuardHome.d; } 2>/dev/null
 		am=;show_amtm " AdGuardHome installation failed"
 	fi
 }
