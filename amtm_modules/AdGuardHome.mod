@@ -1,7 +1,9 @@
 #!/bin/sh
 #bof
 AdGuardHome_sh(){
-	if sh -c 'sh -c "$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)"'; then return 0; else return 1; fi
+	local AGH_script
+	AGH_script="$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)" || return 1
+	sh -c "$AGH_script"
 }
 AdGuardHome_installed(){
 	scriptname=AdGuardHome
