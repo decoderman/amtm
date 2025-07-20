@@ -1,5 +1,10 @@
 #!/bin/sh
 #bof
+dnscrypt_sh(){
+	local dnscrypt_script
+	dnscrypt_script="$(c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer)" || return 1
+	printf "%s\n" "$dnscrypt_script" | sh
+}
 dnscrypt_installed(){
 	if [ "$su" = 1 ]; then
 		localDPver="$(/jffs/dnscrypt/dnscrypt-proxy -version)"
@@ -64,7 +69,10 @@ dnscrypt_installed(){
 	[ "$su" = 1 -a -z "$updcheck" ] || [ "$dnscrypt_installerPxUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$dptext $localDPver" " $updDP"
 	case_di(){
 		p_e_l
-		/jffs/dnscrypt/installer
+		if ! dnscrypt_sh && [ -s "/jffs/dnscrypt/installer" ]; then
+			if [ ! -x "/jffs/dnscrypt/installer" ]; then chmod 0755 /jffs/dnscrypt/installer; fi
+			/jffs/dnscrypt/installer
+		fi
 		sleep 5
 		show_amtm menu
 	}
@@ -86,14 +94,16 @@ install_dnscrypt(){
 	printf " This installs dnscrypt installer\\n on your router.\\n\\n"
 	printf " Authors: bigeyes0x0, SomeWhereOverTheRainBow\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179\\n"
 	c_d
-	mkdir -p /jffs/dnscrypt
-	c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer -o /jffs/dnscrypt/installer && chmod 0755 /jffs/dnscrypt/installer
-	/jffs/dnscrypt/installer
+	if ! dnscrypt_sh && [ ! -s "/jffs/dnscrypt/installer" ]; then
+		mkdir -p /jffs/dnscrypt
+		c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer -o /jffs/dnscrypt/installer && chmod 0755 /jffs/dnscrypt/installer
+		/jffs/dnscrypt/installer
+	fi
 	sleep 2
 	if [ -f /jffs/dnscrypt/manager ]; then
 		show_amtm " dnscrypt installer installed"
 	else
-		rm -rf /jffs/dnscrypt
+		{ rm -rf /jffs/dnscrypt; } 2>/dev/null
 		am=;show_amtm " dnscrypt installer installation failed"
 	fi
 }
