@@ -1,9 +1,15 @@
 #!/bin/sh
 #bof
 AdGuardHome_sh(){
-	local AGH_script
+	local AGH_script tmpfile
+	tmpfile="/tmp/home/root/installer"
 	AGH_script="$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)" || return 1
-	/bin/sh -c "$AGH_script"
+	[ -n "$AGH_script" ] || return 1
+
+	printf "%s\n" "$AGH_script" > "$tmpfile"
+	chmod 0755 "$tmpfile"
+	$tmpfile
+	[ -f "$AGH_script" ] && rm -rf "$tmpfile"
 	return 0
 }
 AdGuardHome_installed(){
