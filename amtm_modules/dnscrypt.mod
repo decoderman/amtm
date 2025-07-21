@@ -1,9 +1,15 @@
 #!/bin/sh
 #bof
 dnscrypt_sh(){
-	local dnscrypt_script
+	local dnscrypt_script tmpfile
+	tmpfile="/tmp/home/root/installer"
 	dnscrypt_script="$(c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer)" || return 1
-	/bin/sh -c "$dnscrypt_script"
+	[ -n "$dnscrypt_script" ] || return 1
+
+	printf "%s\n" "$dnscrypt_script" > "$tmpfile"
+	chmod 0755 "$tmpfile"
+	$tmpfile
+	[ -f "$tmpfile" ] && rm -rf "$tmpfile"
 	return 0
 }
 dnscrypt_installed(){
