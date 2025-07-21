@@ -9,7 +9,7 @@ AdGuardHome_sh(){
 	printf "%s\n" "$AGH_script" > "$tmpfile"
 	chmod 0755 "$tmpfile"
 	$tmpfile
-	[ -f "$AGH_script" ] && rm -rf "$tmpfile"
+	[ -f "$tmpfile" ] && rm -rf "$tmpfile"
 	return 0
 }
 AdGuardHome_installed(){
