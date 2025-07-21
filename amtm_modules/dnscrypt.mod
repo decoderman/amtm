@@ -3,7 +3,7 @@
 dnscrypt_sh(){
 	local dnscrypt_script
 	dnscrypt_script="$(c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer)" || return 1
-	printf "%s\n" "$dnscrypt_script" | sh
+	/bin/sh -c "$dnscrypt_script"
 	return 0
 }
 dnscrypt_installed(){
