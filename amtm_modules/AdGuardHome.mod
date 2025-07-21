@@ -3,7 +3,7 @@
 AdGuardHome_sh(){
 	local AGH_script
 	AGH_script="$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)" || return 1
-	printf "%s\n" "$AGH_script" | sh
+	/bin/sh -c "$AGH_script"
 	return 0
 }
 AdGuardHome_installed(){
