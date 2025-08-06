@@ -18,7 +18,7 @@ AdGuardHome_installed(){
 	[ -f /opt/etc/AdGuardHome/.config ] && . /opt/etc/AdGuardHome/.config
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer
-		latestverurl=https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest
+		latestverurl=https://api.github.com/repos/AdguardTeam/AdGuardHome/releases
 		grepcheck=SomeWhereOverTheRainBow
 		if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = release ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
