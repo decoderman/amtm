@@ -39,7 +39,8 @@ install_uiScribe(){
 	printf " This script is now maintained by the AMTM-OSR team,\\n the AMTM Orphaned Script Revival repository.\\n"
 	printf " Visit and learn more about their mission here:\\n https://github.com/AMTM-OSR\\n"
 	c_d
-	if [ -f /jffs/scripts/scribe ] && grep -qE "^cru a logrotate .* # added by scribe" /jffs/scripts/post-mount 2> /dev/null; then
+	if [ -s /jffs/scripts/scribe ] && [ -s /jffs/addons/scribe.d/config ] && [ -x /opt/bin/scribe ]
+	then
 		c_url https://raw.githubusercontent.com/AMTM-OSR/uiScribe/master/uiScribe.sh -o /jffs/scripts/uiScribe && chmod 0755 /jffs/scripts/uiScribe && /jffs/scripts/uiScribe install
 		sleep 2
 		if [ -f /jffs/scripts/uiScribe ]; then
