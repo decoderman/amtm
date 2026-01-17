@@ -9,8 +9,8 @@
 # https://www.snbforums.com/members/thelonelycoder.25480/
 # https://diversion.ch/amtm.html
 
-version=6.1.4
-release="July 21 2025"
+version=6.2
+release="January 17 2026"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
 wl_MD5=3d41a15b6a30f225d355c587da932f82 # shared-amtm-whitelist
@@ -163,46 +163,46 @@ show_amtm(){
 	fi
 	[ "$(echo $am | grep 'update')" -o "$(echo $1 | grep 'update')" ] && cleanup=on
 
-	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker
+	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker EntReq
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
 	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement osr
-	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi osr
+	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi osr EntRec
 	spacer
-	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate osr
-	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing
-	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility
+	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate osr EntReq
+	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing EntReq
+	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility EntReq
 	/jffs/scripts/MerlinAU.sh MerlinAU 8 MerlinAU¦-¦The¦Ultimate¦Firmware¦Auto-Updater
 	spacer
-	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor osr
-	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring osr
-	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health
-	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator
+	/jffs/scripts/connmon connmon j1 connmon¦-¦Internet¦uptime¦monitor osr EntReq
+	/jffs/scripts/dn-vnstat Vnstat vn vnStat¦-¦Data¦use¦monitoring osr EntReq
+	/jffs/scripts/rtrmon.sh rtrmon rt RTRMON¦-¦Monitor¦your¦Routers¦Health EntReq
+	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator EntReq
 	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
 	spacer
-	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon osr
-	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control osr
-	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest osr
-	/jffs/scripts/wxmon.sh wxmon wx WXMON¦-¦Localized¦Weather¦Monitoring
+	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon osr EntReq
+	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control osr EntRec
+	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest osr EntReq
+	/jffs/scripts/wxmon.sh wxmon wx WXMON¦-¦Localized¦Weather¦Monitoring EntReq
 	spacer
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats osr
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs osr
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments osr
 	spacer
-	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer
+	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer EntReq
 	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
 	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
 	spacer
-	/jffs/scripts/vpnmon-r3.sh vpnmon vp VPNMON-R3¦-¦Monitor¦health¦of¦WAN¦DW¦VPN
+	/jffs/scripts/vpnmon-r3.sh vpnmon vp VPNMON-R3¦-¦Monitor¦health¦of¦WAN¦DW¦VPN EntReq
 	/jffs/scripts/domain_vpn_routing.sh vpn_routing vr Domain-based¦VPN¦Routing
-	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager
+	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager EntReq
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
-	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor
+	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor EntReq
 	spacer
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	osr
 	tpucheck
 	ntps
-	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun!
+	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun! EntReq
 	/jffs/addons/amtm/mail/email.conf email em Email¦settings
 	/jffs/addons/amtm/fw_update.mod fw_update fw Firmware¦update¦notification
 	/jffs/addons/amtm/sc_update.mod sc_update sc Scripts¦update¦notification
@@ -266,14 +266,17 @@ show_amtm(){
 							[ -f "${add}/${f2}.mod" ] && ${f2}_installed
 						else
 							f3="$(echo $i | awk '{print $3}')"
-							[ "$(echo $i | awk '{print $5}')" ] && f5="${GN}*${NC} " || f5=
+							[ "$(echo $i | grep "osr")" ] && f5="${GN}*${NC}" || f5=
+							f6=
+							[ "$(echo $i | grep "EntReq")" ] && f6=", ${R}Requires Entware installed${NC}"
+							[ "$(echo $i | grep "EntRec")" ] && f6=", ${GN}Entware installation recomended${NC}"
 							bsp=' '
 							case "$(echo $f3 | wc -m)" in
 								2)	ssp=' ';;
 								3)	ssp=;;
 								4)	unset bsp ssp;;
 							esac
-							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install$f5" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')"
+							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')$f5$f6"
 							if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
 								sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
 								[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
