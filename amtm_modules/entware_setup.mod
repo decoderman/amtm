@@ -88,24 +88,17 @@ setup_Entware(){
 		# dl master check, installs into asusware.arm folder
 		if [ "$(nvram get apps_mounted_path)" ] && [ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ]; then
 			if [ -f /opt/etc/init.d/S50downloadmaster ]; then
-				echo "${E_BG} Download Master appears to be installed ${NC}"
-				echo " $(nvram get apps_mounted_path)/$(nvram get apps_install_folder)"
-				echo " Entware and Download Master cannot be installed at the same time."
-				echo " Uninstall Download Master in 'USB Application' first."
+				printf "\\n${E_BG} Download Master appears to be installed at ${NC}\\n"
+				printf " $(nvram get apps_mounted_path)/$(nvram get apps_install_folder)\\n\\n"
+				printf " Entware and Download Master cannot be installed at the same time.\\n Uninstall Download Master in 'USB Application' first.\\n\\n"
 
-				echo
-				echo "${E_BG} Correct above error first before installing Entware ${NC}"
+				printf "${E_BG} Correct above error first before installing Entware ${NC}\\n"
 				p_e_t acknowledge
 				r_m entware_setup.mod;am=;show_amtm " Correct error first before installing Entware"
 			else
-				echo "${E_BG} Correcting invalid Download Master settings ${NC}"
-				if [ -L "/tmp/opt" ]; then
-					rm -f /tmp/opt 2> /dev/null
-					rm -f /opt 2> /dev/null
-				fi
-				if [ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ]; then
-					rm -rf "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)"
-				fi
+				printf "\\n${E_BG} Correcting invalid Download Master settings ${NC}\\n"
+				service stop_nasapps >/dev/null 2>&1
+				[ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ] &&	rm -rf "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)"
 				nvram set apps_mounted_path=
 				nvram set apps_dev=
 				nvram set apps_state_autorun=
@@ -114,6 +107,11 @@ setup_Entware(){
 				nvram set apps_state_switch=
 				nvram set apps_swap_enable=
 				nvram commit
+				if [ -L /tmp/opt ]; then
+					rm -f /tmp/opt 2> /dev/null
+					rm -f /opt 2> /dev/null
+				fi
+				service start_nasapps >/dev/null 2>&1
 			fi
 		else
 			if [ -L /tmp/opt ]; then

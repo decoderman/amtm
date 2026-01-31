@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.2
-release="January 17 2026"
+version=6.3
+release="January 31 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -77,13 +77,8 @@ g_i_m(){
 		if [ -d "$i" ]; then
 			g_i_m "$i"
 		elif [ "${i##*.}" = mod ]; then
-			case "$(basename ${i})" in
-				FreshJR_QOS.mod)	r_m "$(basename ${i})";;
-				pixelserv-tls.mod)	r_m "$(basename ${i})";;
-				nsrum.mod)			r_m "$(basename ${i})";;
-				*)					rdl=re
-									g_m "${i##*/}" new;;
-			esac
+			rdl=re
+			g_m "${i##*/}" new
 		fi
 	done
 	s_p "${add}"
@@ -103,6 +98,36 @@ check_email_conf(){
 		fi
 	fi
 }
+
+# Remove Download Master _if_ installed after Entware
+if [ -f /opt/.asusrouter ] && grep "mount-entware.mod" /jffs/scripts/post-mount >/dev/null 2>&1; then
+	opkgFile=$(/usr/bin/find /tmp/mnt/*/entware/bin/opkg 2> /dev/null)
+	if [ -f "$opkgFile" ]; then
+		opkgDevice=${opkgFile%/entware/bin/opkg}
+		printf "\\n------------------------------\\n\\n"
+		logger -s -t amtm "Found Download Master installed, while Entware is present on $opkgDevice"
+		logger -s -t amtm "Removing Download Master now as it is incompatible with Entware"
+		service stop_nasapps >/dev/null 2>&1
+		[ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ] &&	rm -rf "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)"
+		nvram set apps_mounted_path=
+		nvram set apps_dev=
+		nvram set apps_state_autorun=
+		nvram set apps_state_enable=
+		nvram set apps_state_install=
+		nvram set apps_state_switch=
+		nvram set apps_swap_enable=
+		nvram commit
+		if [ -L /tmp/opt ]; then
+			rm -f /tmp/opt 2> /dev/null
+			rm -f /opt 2> /dev/null
+		fi
+		service start_nasapps >/dev/null 2>&1
+		logger -s -t amtm "Download Master removed, starting Entware services on $opkgDevice now"
+		sh /jffs/scripts/post-mount $opkgDevice >/dev/null 2>&1
+		printf "\\n------------------------------\\n"
+		sleep 14
+	fi
+fi
 
 show_amtm(){
 	s_d_u
@@ -216,6 +241,7 @@ show_amtm(){
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats osr
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs osr
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments osr
+	/jffs/addons/modsyslogui/modsyslogui ModSyslogUI ms ModSyslogUI¦-¦System¦Log¦page¦UI¦filtering
 	spacer
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer EntReq
 	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
@@ -297,8 +323,8 @@ show_amtm(){
 							f3="$(echo $i | awk '{print $3}')"
 							[ "$(echo $i | grep "osr")" ] && f5="${GN}*${NC}" || f5=
 							f6=
-							[ "$(echo $i | grep "EntReq")" ] && f6=", ${R}Requires Entware installed${NC}"
-							[ "$(echo $i | grep "EntRec")" ] && f6=", ${GN}Entware installation recommended${NC}"
+							[ "$(echo $i | grep "EntReq")" ] && f6=", ${R}Requires Entware${NC}"
+							[ "$(echo $i | grep "EntRec")" ] && f6=", ${GN}Entware recommended${NC}"
 							bsp=' '
 							case "$(echo $f3 | wc -m)" in
 								2)	ssp=' ';;
@@ -329,6 +355,7 @@ show_amtm(){
 								[Jj]5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
 								[Jj]6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 								[Jj]7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
+								[Mm][Ss])	case_ms(){ g_m ModSyslogUI.mod include;[ "$dlok" = 1 ] && install_ModSyslogUI || show_amtm menu;};;
 								[Vv][Nn])	case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 								[Vv][Pp])	case_vp(){ c_e VPNMON-R3;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
 								[Kk][Mm])	case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
@@ -523,6 +550,7 @@ show_amtm(){
 			[Jj]5u)				case_j5u;break;;
 			[Jj]6)				case_j6;break;;
 			[Jj]7)				case_j7;break;;
+			[Mm][Ss])			case_ms;break;;
 			[Vv][Nn])			case_vn;break;;
 			[Vv][Pp])			case_vp;break;;
 			[Kk][Mm])			case_km;break;;
