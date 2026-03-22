@@ -600,7 +600,7 @@ case "${1}" in
 				done
 
 				if [ "$locMode" = on ]; then
-					cru a amtm_LEDcontrol_set "10 0 * * * /bin/sh ${add}/led_control.mod -set"
+					cru a amtm_LEDcontrol_set "08 0 * * * /bin/sh ${add}/led_control.mod -set"
 					if [ "$(nvram get ntp_ready)" = 1 ]; then
 						if [ -f "$jsonFile" ] && grep -q "$todayDate" $jsonFile; then
 							sunrise=$(jq ".results[] | select(.date == \"$todayDate\") | ".sunrise"" $jsonFile | sed 's/"//g')

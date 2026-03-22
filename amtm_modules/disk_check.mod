@@ -15,16 +15,6 @@ disk_check_installed(){
 			echo ". ${add}/disk_check.mod;run_disk_check \$@ # Added by amtm" >> /jffs/scripts/pre-mount
 		fi
 	fi
-	[ -f "${add}"/amtm-disk-check.log ] && mv "${add}"/amtm-disk-check.log "${add}"/disk_check.log
-	if [ -f "${add}"/disk-check ]; then
-		if grep -q "^blkidExclude=" "${add}"/disk-check; then
-			blkidExclude="$(grep "^blkidExclude=" "${add}"/disk-check | sed -e "s/blkidExclude=//;s/'//g")"
-			[ "$blkidExclude" = '' ] && blkidExclude=
-			[ "$blkidExclude" ] && echo "blkidExclude='$blkidExclude '" > "${add}"/disk_check.conf
-		fi
-		a_m " - Disk check script updated"
-		rm -f "${add}"/disk-check
-	fi
 	[ -f "${add}"/disk_check.log ] && dcltext="${GN_BG}dcl${NC} show log" || dcltext=
 	if [ -z "$su" -a -z "$ss" ]; then
 		printf "${GN_BG} dc${NC} %-9s%-19s%${COR}s\\n" "manage" "Disk check script" " $dcltext"
@@ -42,14 +32,11 @@ disk_check_installed(){
 
 install_disk_check(){
 	p_e_l
-	printf " This installs the disk-check script\\n on this router.\\n\\n It runs a filesystem check on compatible\\n USB storage devices before they are mounted\\n during (re)booting.\\n\\n"
+	printf " This installs the disk_check script\\n on this router.\\n\\n It runs a filesystem check on compatible\\n USB storage devices before they are mounted\\n during (re)booting.\\n\\n"
 	printf " Authors: ColinTaylor, thelonelycoder, latenitetech\\n"
 	printf " github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot-or-Hot-Plug-(improved-version)\\n github.com/RMerl/asuswrt-merlin/wiki/USB-Disk-Check-at-Boot\\n"
 	c_d disk_check.mod
 	c_j_s /jffs/scripts/pre-mount
-	if grep -q "disk-check" /jffs/scripts/pre-mount; then
-		sed -i '/disk-check/d' /jffs/scripts/pre-mount
-	fi
 	if ! grep -q "^. ${add}/disk_check.mod" /jffs/scripts/pre-mount; then
 		echo ". ${add}/disk_check.mod;run_disk_check \$@ # Added by amtm" >> /jffs/scripts/pre-mount
 	fi
@@ -91,7 +78,7 @@ disk_check_manage(){
 					i=$((i+1))
 				fi
 			done
-			[ "$did" = 1 ] && show_amtm " No devices found to exclude in disk-check"
+			[ "$did" = 1 ] && show_amtm " No devices found to exclude in disk_check"
 			while true;do
 				printf " Select device to exclude [1-$((did-1)) e=Exit] ";read -r selection
 				case "$selection" in

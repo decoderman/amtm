@@ -9,6 +9,22 @@ format_disk(){
 	printf " https://github.com/RMerl/asuswrt-merlin/wiki/Disk-formatting\\n https://www.snbforums.com/threads/ext4-disk-formatting-options-on-the-router.48302/page-2#post-455723\\n"
 	c_d format_disk.mod
 
+	if ! grep -q "^. ${add}/disk_check.mod" /jffs/scripts/pre-mount 2>/dev/null; then
+		p_e_l
+		printf " You are about to format a USB disk\\n\\n It is highly recommended to also\\n install the amtm disk_check script.\\n\\n"
+		printf " It runs a filesystem check on compatible\\n USB storage devices before they are mounted\\n during (re)booting, fixing common errors.\\n"
+		while true; do
+			printf "\\n Install the disk_check script? [1=Yes 2=No] ";read -r diskcheck
+			case "$diskcheck" in
+				1)	printf "\\n ${GN_BG} The disk_check script will be installed${NC}\\n ${GN_BG} after device formatting ${NC}\\n";break;;
+				2)	printf "\\n ${E_BG} disk_check script installation declined ${NC}\\n";break;;
+				*)			printf "\\n input is not an option\\n";;
+			esac
+		done
+	else
+		g_m disk_check.mod new
+	fi
+
 	select_device(){
 		pts=4
 		case "$(uname -m)" in
@@ -29,15 +45,12 @@ format_disk(){
 			if [ $? -eq 0 ]; then
 				if [ -z "$sdh" ]; then
 					p_e_l
-					echo " Select your device to format"
-					echo
-					echo " ${E_BG} Again, this will erase all data and ${NC}"
-					echo " ${E_BG} partitions on the selected device! ${NC}"
-					echo
+					printf " Select your device to format\\n\\n"
+					printf " ${E_BG} Again, this will erase all data and ${NC}\\n ${E_BG} partitions on the selected device! ${NC}\\n\\n"
 					sdh=1
 				fi
 				thisdevsize="$(echo $thisdevsize | awk '{ byte=$1/1000000000; printf "%.1f GB",byte }')"
-				echo " $i. ${GN_BG} $usb_dev $usb_name ($thisdevsize) ${NC}"
+				printf " $i. ${GN_BG} $usb_dev $usb_name ($thisdevsize) ${NC}\\n"
 				eval mounts$i=\"$usb_dev $usb_name '('$thisdevsize')'\"
 				noad="${noad}${i} "
 				i=$((i+1))
@@ -54,7 +67,7 @@ format_disk(){
 			printf "\\n Select device [$devNo e=Exit] ";read -r device
 			case "$device" in
 				[$noad])	break;;
-				[Ee])		am=;show_amtm " Exited Format disk function";break;;
+				[Ee])		r_m format_disk.mod;am=;show_amtm " Exited Format disk function";break;;
 				*)			printf "\\n input is not an option\\n";;
 			esac
 		done
@@ -73,20 +86,12 @@ format_disk(){
 		fi
 
 		p_e_l
-		echo " You selected the following device:"
-		echo
-		echo " ${GN_BG} $mtddev ${NC}"
+		printf " You selected the following device:\\n\\n ${GN_BG} $mtddev ${NC}\\n"
 		listptd="$(/bin/mount | grep "^$devtf" | awk -v R="${E_BG}" -v NC="${NC}" '{print " "R" "$1" "NC" mounted as "R" "$3" "NC}')"
 		if [ "$listptd" ]; then
-			echo
-			echo " This will delete ALL of the following:"
-			echo
-			echo "$listptd"
-			echo
+			printf "\\n This will delete ALL of the following:\\n\\n$listptd\\n\\n"
 		else
-			echo
-			echo " to be formatted."
-			echo
+			printf "\\n to be formatted.\\n\\n"
 		fi
 
 		printf " 1. Continue\\n 2. Return to device selection\\n"
@@ -95,7 +100,7 @@ format_disk(){
 			case "$continue" in
 				1)		break;;
 				2)		select_device;break;;
-				[Ee])	am=;show_amtm " Exited Format disk function";;
+				[Ee])	r_m format_disk.mod;am=;show_amtm " Exited Format disk function";;
 				*)		printf "\\n input is not an option\\n";;
 			esac
 		done
@@ -209,8 +214,7 @@ format_disk(){
 					printf " Label may only:\\n - contain letters, numbers - (dash) or _ (underscore)\\n - be 11 characters or shorter\\n"
 					enter_label
 					p_e_l
-					echo " You entered this label: ${GN_BG} $label ${NC}"
-					echo
+					printf " You entered this label: ${GN_BG} $label ${NC}\\n\\n"
 					printf " 1. Correct, continue\\n 2. Back to label selection\\n"
 					while true; do
 						printf "\\n Enter selection [1-2] ";read -r continue
@@ -244,7 +248,7 @@ format_disk(){
 				;;
 		esac
 
-		echo " Valid size is: 10 - $((devmbsize-deduct $part1s)) MB"
+		printf " Valid size is: 10 - $((devmbsize-deduct $part1s)) MB\\n"
 		while true; do
 			printf "\\n Enter size$pn in MB: ";read -r psize
 			case $psize in
@@ -270,14 +274,14 @@ format_disk(){
 		printf " Set size$pn on\\n\\n ${GN_BG} $mtddev (${devmbsize} MB) ${NC}\\n\\n"
 
 		case "$partitions" in
-			2)	echo " 1. Use 50% ($((devmbsize/2)) MB) of ${devmbsize} MB";;
+			2)	printf " 1. Use 50% ($((devmbsize/2)) MB) of ${devmbsize} MB\\n";;
 			3)	case "$1" in
-					1)	echo " 1. Use 33% ($((devmbsize/3)) MB) of ${devmbsize} MB";;
-					2)	echo " 1. Use 50% ($(((devmbsize-psize1)/2)) MB) of $((devmbsize-psize1)) MB";;
+					1)	printf " 1. Use 33% ($((devmbsize/3)) MB) of ${devmbsize} MB\\n";;
+					2)	printf " 1. Use 50% ($(((devmbsize-psize1)/2)) MB) of $((devmbsize-psize1)) MB\\n";;
 				esac
 				;;
 		esac
-		echo " 2. Set size manually in MB"
+		printf " 2. Set size manually in MB\\n"
 		while true; do
 			printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
 			case "$continue" in
@@ -291,7 +295,7 @@ format_disk(){
 				2)			p_e_l
 							enter_partition_size $1
 							break;;
-				[Ee])		am=;show_amtm " Exited Format disk function";;
+				[Ee])		r_m format_disk.mod;am=;show_amtm " Exited Format disk function";;
 				*)			printf "\\n input is not an option\\n";;
 			esac
 		done
@@ -299,23 +303,18 @@ format_disk(){
 
 	confirm_partition_size(){
 		p_e_l
-		echo " You entered this size: ${GN_BG} $psize MB ${NC}"
-		echo
+		printf " You entered this size: ${GN_BG} $psize MB ${NC}\\n\\n"
 		case "$partitions" in
-			2)	echo " Size of Partition ${GN_BG} 1 ${NC} will be: $psize MB"
-				echo " Size of Partition ${GN_BG} 2 ${NC} will be: $((devmbsize-psize)) MB";;
+			2)	printf " Size of Partition ${GN_BG} 1 ${NC} will be: $psize MB\\n Size of Partition ${GN_BG} 2 ${NC} will be: $((devmbsize-psize)) MB\\n";;
 			3)	case "$1" in
-					1)	echo " Size of Partition ${GN_BG} 1 ${NC} will be: $psize MB"
-						echo " Size left for Partition ${GN_BG} 2 ${NC} and ${GN_BG} 3 ${NC} will be: $((devmbsize-psize)) MB";;
-					2)	echo " Size of Partition ${GN_BG} 1 ${NC} will be: $psize1 MB"
-						echo " Size of Partition ${GN_BG} 2 ${NC} will be: $psize MB"
-						echo " Size of Partition ${GN_BG} 3 ${NC} will be: $((devmbsize-psize1-psize)) MB";;
+					1)	printf " Size of Partition ${GN_BG} 1 ${NC} will be: $psize MB\\n Size left for Partition ${GN_BG} 2 ${NC} and ${GN_BG} 3 ${NC} will be: $((devmbsize-psize)) MB\\n";;
+					2)	printf " Size of Partition ${GN_BG} 1 ${NC} will be: $psize1 MB\\n Size of Partition ${GN_BG} 2 ${NC} will be: $psize MB\\n"
+						printf " Size of Partition ${GN_BG} 3 ${NC} will be: $((devmbsize-psize1-psize)) MB";;
 				esac
 				;;
 		esac
 
-		echo
-		printf " 1. Correct, continue\\n 2. Back to size selection\\n"
+		printf "\\n 1. Correct, continue\\n 2. Back to size selection\\n"
 		while true; do
 			printf "\\n Enter selection [1-2] ";read -r continue
 			case "$continue" in
@@ -411,7 +410,7 @@ format_disk(){
 						NTFS)		select_label 3;;
 					esac
 					break;;
-			[Ee])	am=;show_amtm " Exited Format disk function";;
+			[Ee])	r_m format_disk.mod;am=;show_amtm " Exited Format disk function";;
 			*)		printf "\\n input is not an option\\n";;
 		esac
 	done
@@ -429,39 +428,35 @@ format_disk(){
 	[ "$label3" ] && l3=", label as ${GN_BG} $label3 ${NC}"
 
 	p_e_l
-	printf " Confirm formatting job for\\n\\n ${GN_BG} $mtddev ${NC}\\n"
-	echo
+	printf " Confirm formatting job for\\n\\n ${GN_BG} $mtddev ${NC}\\n\\n"
+
 	case "$partitions" in
-		1)	echo " - ${GN_BG} One ${NC} Partition, format as ${GN_BG} $nfs1 ${NC}${j1}$l1";;
-		2)	echo " - Partition ${GN_BG} 1 ${NC} $psize1 MB, format as ${GN_BG} $nfs1 ${NC}${j1}$l1"
-			echo " - Partition ${GN_BG} 2 ${NC} $((devmbsize-psize1)) MB${f2}${j2}$l2";;
-		3)	echo " - Partition ${GN_BG} 1 ${NC} $psize1 MB, format as ${GN_BG} $nfs1 ${NC}${j1}$l1"
-			echo " - Partition ${GN_BG} 2 ${NC} $psize2 MB${f2}${j2}$l2"
-			echo " - Partition ${GN_BG} 3 ${NC} $((devmbsize-psize1-psize2)) MB${f3}${NC}${j3}$l3";;
+		1)	printf " - ${GN_BG} One ${NC} Partition, format as ${GN_BG} $nfs1 ${NC}${j1}$l1\\n";;
+		2)	printf " - Partition ${GN_BG} 1 ${NC} $psize1 MB, format as ${GN_BG} $nfs1 ${NC}${j1}$l1\\n - Partition ${GN_BG} 2 ${NC} $((devmbsize-psize1)) MB${f2}${j2}$l2\\n";;
+		3)	printf " - Partition ${GN_BG} 1 ${NC} $psize1 MB, format as ${GN_BG} $nfs1 ${NC}${j1}$l1\\n - Partition ${GN_BG} 2 ${NC} $psize2 MB${f2}${j2}$l2\\n"
+			printf " - Partition ${GN_BG} 3 ${NC} $((devmbsize-psize1-psize2)) MB${f3}${NC}${j3}$l3\\n";;
 	esac
 
-	echo
-	printf " 1. Correct, format device now\\n 2. Exit format disk function\\n"
+	printf "\\n 1. Correct, format device now\\n 2. Exit format disk function\\n"
 	while true; do
 		printf "\\n Enter selection [1-2] ";read -r continue
 		case "$continue" in
 			1)		break;;
-			2|[Ee])	am=;show_amtm " Exited Format disk function";;
+			2|[Ee])	r_m format_disk.mod;am=;show_amtm " Exited Format disk function";;
 			*)		printf "\\n input is not an option\\n";;
 		esac
 	done
 
 	p_e_l
-	echo " Formatting $mtddev now!"
+	printf " Formatting $mtddev now!\\n"
 	p_e_l
 
-	echo " Stopping file serving services and swap file"
+	printf " Stopping file serving services and swap file\\n"
 	service stop_nasapps >/dev/null
 	sleep 1
 	swapoff -a
 	sleep 2
-	echo
-	echo " Unmounting device(s)"
+	printf "\\n Unmounting device(s)\\n"
 
 	rc=0
 	for mounted in $(/bin/mount | grep "^$devtf" | cut -d" " -f1); do
@@ -471,9 +466,7 @@ format_disk(){
 
 	if [ "$rc" -eq "0" ]; then
 		format_device(){
-			echo
-			echo " Zeroing disk $mtddev"
-			echo "${GY}"
+			printf "\\n Zeroing disk $mtddev${GY}\\n"
 
 			dd if=/dev/zero of=$devtf count=16065 bs=512 && sync
 
@@ -481,9 +474,7 @@ format_disk(){
 
 			rm /etc/hotplug2.rules; killall hotplug2
 
-			echo
-			echo "${NC} Creating partition(s) on $mtddev${GY}"
-			echo
+			printf "\\n${NC} Creating partition(s) on $mtddev${GY}\\n\\n"
 
 			(
 			echo o
@@ -519,34 +510,29 @@ format_disk(){
 				echo
 				case "$3" in
 					ext*)		if [ "$3" = "ext2" ]; then
-									echo "${NC} Formatting $1 as \"$3\"${GY}"
-									echo
+									printf "${NC} Formatting $1 as \"$3\"${GY}\\n\\n"
 									$mke2fsBin -t $3 ${devtf}${2}
 								elif [ "$4" = "on" ]; then
-									echo "${NC} Formatting $1 as \"$3\", enabling journalling${GY}"
-									echo
+									printf "${NC} Formatting $1 as \"$3\", enabling journalling${GY}\\n\\n"
 									$mke2fsBin -t $3 -O has_journal ${devtf}${2}
 								else
-									echo "${NC} Formatting $1 as \"$3\"${GY}"
-									echo
+									printf "${NC} Formatting $1 as \"$3\"${GY}\\n\\n"
 									$mke2fsBin -t $3 -O ^has_journal ${devtf}${2}
 								fi
 
 								if [ "$5" ]; then
-									echo "${NC} Setting $1 device label \"$5\"${GY}"
-									echo
+									printf "${NC} Setting $1 device label \"$5\"${GY}\\n\\n"
 									tune2fs -L "$5" ${devtf}${2}
 								fi
 								;;
-					FAT32)		echo "${NC} Formatting $1 as \"$3\"${GY}"
+					FAT32)		printf "${NC} Formatting $1 as \"$3\"${GY}\\n"
 								if [ "$4" ]; then
-									echo "${NC} Setting $1 device label \"$4\"${GY}"
+									printf "${NC} Setting $1 device label \"$4\"${GY}\\n"
 									mkdosfs -n "$4" ${devtf}${2}
 								else
 									mkdosfs ${devtf}${2}
 								fi
-								echo
-								echo "${NC} Setting $1 type \"$3\"${GY}"
+								printf "\\n${NC} Setting $1 type \"$3\"${GY}\\n"
 								if [ "$partitions" -gt 1 ]; then
 									echo "t
 									$2
@@ -558,9 +544,9 @@ format_disk(){
 									w" | fdisk $devtf
 								fi
 								;;
-					NTFS)		echo "${NC} Formatting $1 as \"$3\"${GY}"
+					NTFS)		printf "${NC} Formatting $1 as \"$3\"${GY}\\n"
 								if [ "$4" ]; then
-									echo "${NC} Setting $1 device label \"$4\"${GY}"
+									printf "${NC} Setting $1 device label \"$4\"${GY}\\n"
 									if /usr/sbin/mkntfs 2> /dev/null | grep -q 'v:label'; then
 										/usr/sbin/mkntfs -f -v:"$4" ${devtf}${2}
 									else
@@ -569,8 +555,7 @@ format_disk(){
 								else
 									/usr/sbin/mkntfs -f ${devtf}${2}
 								fi
-								echo
-								echo "${NC} Setting $1 type \"$3\"${GY}"
+								printf "\\n${NC} Setting $1 type \"$3\"${GY}\\n"
 								if [ "$partitions" -gt 1 ]; then
 									echo "t
 									$2
@@ -590,42 +575,51 @@ format_disk(){
 				1)		if [ "$nfs1" != none ]; then
 							formatting_dev disk 1 $nfs1 $journalling1 $label1
 						else
-							echo "${NC} Disk is set to not be formatted${GY}"
+							printf "${NC} Disk is set to not be formatted${GY}\\n"
 						fi
 						;;
 				2)		if [ "$nfs1" != none ]; then
 							formatting_dev "Partition 1" 1 $nfs1 $journalling1 $label1
 						else
-							echo "${NC} Partition 1 is set to not be formatted${GY}"
+							printf "${NC} Partition 1 is set to not be formatted${GY}\\n"
 						fi
 
 						if [ "$nfs2" != none ]; then
 							formatting_dev "Partition 2" 2 $nfs2 $journalling2 $label2
 						else
-							echo "${NC} Partition 2 is set to not be formatted${GY}"
+							printf "${NC} Partition 2 is set to not be formatted${GY}\\n"
 						fi
 						;;
 				3)		if [ "$nfs1" != none ]; then
 							formatting_dev "Partition 1" 1 $nfs1 $journalling1 $label1
 						else
-							echo "${NC} Partition 1 is set to not be formatted${GY}"
+							printf "${NC} Partition 1 is set to not be formatted${GY}\\n"
 						fi
 
 						if [ "$nfs2" != none ]; then
 							formatting_dev "Partition 2" 2 $nfs2 $journalling2 $label2
 						else
-							echo "${NC} Partition 2 is set to not be formatted${GY}"
+							printf "${NC} Partition 2 is set to not be formatted${GY}\\n"
 						fi
 
 						if [ "$nfs3" != none ]; then
 							formatting_dev "Partition 3" 3 $nfs3 $journalling3 $label3
 						else
-							echo "${NC} Partition 3 is set to not be formatted${GY}"
+							printf "${NC} Partition 3 is set to not be formatted${GY}\\n"
 						fi
 						;;
 			esac
 
 			ln -sf /rom/etc/hotplug2.rules /etc/hotplug2.rules; killall hotplug2
+
+			if [ "$diskcheck" = "1" ]; then
+				printf " Installing the disk_check script\\n"
+				g_m disk_check.mod new
+				c_j_s /jffs/scripts/pre-mount
+				if ! grep -q "^. ${add}/disk_check.mod" /jffs/scripts/pre-mount 2>/dev/null; then
+					echo ". ${add}/disk_check.mod;run_disk_check \$@ # Added by amtm" >> /jffs/scripts/pre-mount
+				fi
+			fi
 		}
 
 		echo "amtm format disk log $(date -R)" >"${add}"/amtm-format-disk.log
@@ -633,8 +627,7 @@ format_disk(){
 
 		trap '' 2
 		p_e_l
-		printf "${GN_BG} Done formatting device ${NC}\\n\\n"
-		echo " The log file can be viewed with ${GN_BG}fdl${NC}"
+		printf "${GN_BG} Done formatting device ${NC}\\n\\n The log file can be viewed with ${GN_BG}fdl${NC}\\n"
 		printf "\\n${E_BG} Your router will now reboot for the changes ${NC}\\n"
 		printf "${E_BG} to take effect. ${NC}\\n"
 		sleep 6
@@ -643,15 +636,11 @@ format_disk(){
 		exit 0
 	else
 		service start_nasapps >/dev/null
-		echo
-		echo " ${E_BG} Filesystem(s) did not unmount ${NC}"
-		echo " ${E_BG} See error above for reason ${NC}"
+		printf "\\n ${E_BG} Filesystem(s) did not unmount ${NC}\\n ${E_BG} See error above for reason ${NC}\\n"
 
 		if [ -f /opt/bin/opkg ]; then
 			open_procs(){
-				echo
-				echo " These processes or files are in use:"
-				echo
+				printf "\\n These processes or files are in use:\\n\\n"
 				for mounted in $(/bin/mount | grep "^$devtf" | cut -d" " -f3); do
 					lsof | grep $mounted | grep -v 'grep\|lsof'
 					echo

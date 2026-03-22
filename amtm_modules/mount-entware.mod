@@ -1,6 +1,5 @@
 #!/bin/sh
 #bof
-
 mount_entware(){
 	[ ! -L /tmp/opt ] && rm -rf /tmp/opt
 

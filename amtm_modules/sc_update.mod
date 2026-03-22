@@ -26,7 +26,7 @@ sc_update(){
 			sed -i "\~sc_update.mod ~d" /jffs/scripts/services-start
 			echo "/bin/sh ${add}/sc_update.mod -set # Added by amtm" >> /jffs/scripts/services-start
 		fi
-		cru a amtm_ScriptsUpdateNotification "10 5 * * Sun /bin/sh ${add}/sc_update.mod -run"
+		cru a amtm_ScriptsUpdateNotification "18 5 * * Sun /bin/sh ${add}/sc_update.mod -run"
 		show_amtm " Scripts update notification installed\\n or updated."
 	elif [ "$1" = manage ]; then
 		[ -f "${add}/sc_update.cfg" ] && . "${add}/sc_update.cfg" || scChkFreq=Sunday
@@ -109,7 +109,7 @@ sc_update(){
 case "${1}" in
 	"") 	;;
 	-set) 	[ -f /jffs/addons/amtm/sc_update.cfg ] && . /jffs/addons/amtm/sc_update.cfg || scChkDOW=Sun
-			cru a amtm_ScriptsUpdateNotification "10 5 * * $scChkDOW /bin/sh /jffs/addons/amtm/sc_update.mod -run";;
+			cru a amtm_ScriptsUpdateNotification "18 5 * * $scChkDOW /bin/sh /jffs/addons/amtm/sc_update.mod -run";;
 	-run) 	EMAIL_DIR=/jffs/addons/amtm/mail
 			if [ -f $EMAIL_DIR/email.conf ]; then
 				. $EMAIL_DIR/email.conf
