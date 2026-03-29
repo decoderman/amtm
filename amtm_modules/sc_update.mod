@@ -150,7 +150,6 @@ case "${1}" in
 				echo >>/tmp/amtm-mail-body
 				cat /tmp/amtm-tpu-check >>/tmp/amtm-mail-body
 				echo >>/tmp/amtm-mail-body
-				echo "Very truly yours," >>/tmp/amtm-mail-body
 				echo "Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/amtm-mail-body
 				echo >>/tmp/amtm-mail-body
 

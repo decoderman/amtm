@@ -349,7 +349,6 @@ run_disk_check(){
 			echo "Error for device $1:" >>/tmp/amtm-mail-body
 			echo "$(tail -n$(($(wc -l < $CHKLOG)-lcDCL)) $CHKLOG)" >>/tmp/amtm-mail-body
 			echo >>/tmp/amtm-mail-body
-			echo " Very truly yours," >>/tmp/amtm-mail-body
 			echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/amtm-mail-body
 			echo >>/tmp/amtm-mail-body
 

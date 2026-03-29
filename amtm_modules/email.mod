@@ -287,7 +287,6 @@ send_testmail(){
 	echo >>/tmp/amtm-mail-body
 	echo " This is a testmail." >>/tmp/amtm-mail-body
 	echo >>/tmp/amtm-mail-body
-	echo " Very truly yours," >>/tmp/amtm-mail-body
 	echo " Your $FRIENDLY_ROUTER_NAME router (Model type $routerModel)" >>/tmp/amtm-mail-body
 	echo >>/tmp/amtm-mail-body
 

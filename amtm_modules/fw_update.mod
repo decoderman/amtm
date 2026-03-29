@@ -163,7 +163,6 @@ write_fw_update_file(){
 	    echo >>/tmp/amtm-mail-body
 	    echo "Downloads are available at: https://asuswrt-merlin.net/download" >>/tmp/amtm-mail-body
 	    echo >>/tmp/amtm-mail-body
-	    echo "Very truly yours," >>/tmp/amtm-mail-body
 	    echo "Your \$FRIENDLY_ROUTER_NAME router (Model type \$routerModel)" >>/tmp/amtm-mail-body
 	    echo >>/tmp/amtm-mail-body
 

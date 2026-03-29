@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.4
-release="March 22 2026"
+version=6.5
+release="March 29 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -246,6 +246,7 @@ show_amtm(){
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs osr
 	/jffs/scripts/YazDHCP YazDHCP j7 YazDHCP¦-¦Expansion¦of¦DHCP¦assignments osr
 	/jffs/addons/modsyslogui/modsyslogui ModSyslogUI ms ModSyslogUI¦-¦System¦Log¦page¦UI¦filtering
+	/jffs/addons/unbound/unbound_stats.sh unbound_stats us Unbound¦Stats¦-¦Generate¦Stats¦for¦Unbound
 	spacer
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer EntReq
 	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
@@ -281,24 +282,28 @@ show_amtm(){
 			spacer) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 						atii=;;
 			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo";;
-			tpucheck) 	if [ "$tpu" ]; then
-							[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
-							if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
-								sed -i 's:<br>::g' /tmp/amtm-tpu-check
-								if [ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ]; then
-									echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
-									rm -f "${add}"/availUpd.txt
+			tpucheck) 	if [ -z "$asuc" ]; then
+							if [ "$tpu" ]; then
+								[ -f /tmp/amtm-tpu-check ] && [ ! -s /tmp/amtm-tpu-check ] && rm /tmp/amtm-tpu-check
+								if [ -f /tmp/amtm-tpu-check ] && [ "$updcheck" ]; then
+									sed -i 's:<br>::g' /tmp/amtm-tpu-check
+									if [ "$(wc -l < /tmp/amtm-tpu-check)" -eq 1 ]; then
+										echo "No script updates available at this time in amtm." >/tmp/amtm-tpu-check
+										rm -f "${add}"/availUpd.txt
+									fi
+									if [ ! -f /tmp/amtm-no-delete ]; then
+										cat /tmp/amtm-tpu-check
+										rm /tmp/amtm-tpu-check
+									fi
 								fi
-								if [ ! -f /tmp/amtm-no-delete ]; then
-									cat /tmp/amtm-tpu-check
-									rm /tmp/amtm-tpu-check
-								fi
+								exit 0
 							fi
-							exit 0
-						fi
-						[ "$dlok" ] && tps=1 || tps=
-						[ -z "$su" -a "$scriptUpd" ] && unset scriptUpd auUPD
-						[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt;;
+							[ "$dlok" ] && tps=1 || tps=
+							[ -z "$su" -a "$scriptUpd" ] && unset scriptUpd auUPD
+							[ -z "$su" -a -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
+						else
+							rm -f /tmp/amtm-tpu-check;unset asuc su suUpd updErr tpu
+						fi;;
 			ntps) 		if [ "$ss" ]; then
 							[ -f /opt/bin/opkg ] && nl= || nl=\\n
 							printf "$nl${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
@@ -361,6 +366,7 @@ show_amtm(){
 								[Jj]6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 								[Jj]7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
 								[Mm][Ss])	case_ms(){ g_m ModSyslogUI.mod include;[ "$dlok" = 1 ] && install_ModSyslogUI || show_amtm menu;};;
+								[Uu][Ss])	case_us(){ c_e 'Unbound Stats';g_m unbound_stats.mod include;[ "$dlok" = 1 ] && install_unbound_stats || show_amtm menu;};;
 								[Vv][Nn])	case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
 								[Vv][Pp])	case_vp(){ c_e VPNMON-R3;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
 								[Kk][Mm])	case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
@@ -580,6 +586,7 @@ show_amtm(){
 			[Jj]6)				case_j6;break;;
 			[Jj]7)				case_j7;break;;
 			[Mm][Ss])			case_ms;break;;
+			[Uu][Ss])			case_us;break;;
 			[Vv][Nn])			case_vn;break;;
 			[Vv][Pp])			case_vp;break;;
 			[Kk][Mm])			case_km;break;;
@@ -686,7 +693,7 @@ c_j(){
 
 MD5_info(){
 	if [ "$MD5Show" ]; then
-		printf " Info: ${E_BG} MD5 upd ${NC} = Script file hash change.\\n\\n"
+		printf " ${E_BG} MD5 upd ${NC} = Script file hash change.\\n\\n"
 		MD5Show=
 	fi
 }
@@ -722,21 +729,23 @@ s_l_f(){
 }
 
 auto_scripts_update(){
+
 	asu_loop(){
-		printf " Disable or enable script\\n\\n"
+		printf " Disable/Enable script for amtmupdate in amtm\\n\\n This sets permission if amtm is allowed to\\n directly update a script.\\n\\n"
 		i=0
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
 			i=$((i+1))
 			printf " $i: ${GN}$script${NC}\\n"
 			eval "scriptSel$i=$script"
 		done
-		[ "$(grep "^#[^##]" "${add}"/amtmUpdateScripts)" ] && printf "\\n Scripts set as disabled in amtm for amtmupdate\\n"
 		for script in $(grep "^#[^#]" "${add}"/amtmUpdateScripts); do
-			printf " - ${R}$(echo $script | sed 's/#//')${NC}\\n"
+			i=$((i+1))
+			printf " $i: ${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\\n"
+			eval "scriptSel$i=$(echo $script | sed 's/#//')"
 		done
 
 		while true; do
-			printf "\\n Enter selection [1-$i e=Exit] ";read -r script
+			printf "\\n Disable/Enable script [1-$i e=Exit] ";read -r script
 			case "$script" in
 						 [Ee]) 	show_amtm menu;;
 				  ''|*[!0-9]*) 	printf "\\n input is not a number\\n";;
@@ -746,8 +755,10 @@ auto_scripts_update(){
 									script=$(eval "echo \"\$scriptSel$script\"")
 									if grep -q "^#$script" "${add}"/amtmUpdateScripts; then
 										sed -i "/^#$script/d" "${add}"/amtmUpdateScripts
+										echo "$script" >>"${add}"/amtmUpdateScripts
 										show_amtm " $script enabled for amtmupdate"
 									else
+										sed -i "/^$script/d" "${add}"/amtmUpdateScripts
 										echo "#$script" >>"${add}"/amtmUpdateScripts
 										show_amtm " $script disabled for amtmupdate"
 									fi
@@ -759,27 +770,28 @@ auto_scripts_update(){
 	}
 
 	p_e_l
-	[ -f "${add}"/amtmUpdateScripts ] && sed -i '/^[[:space:]]*$/d' "${add}"/amtmUpdateScripts
-	printf "\\n Automatic scripts update settings\\n"
+	printf " Refreshing supported scripts list... ";asuc=1;amtm tpu;asuc=;printf "Done.\\n"
+	p_e_l
+	cat "${add}"/amtmUpdateScripts | sed '/^[[:space:]]*$/d' | sort -uo "${add}"/amtmUpdateScripts
+	printf " Automatic scripts update settings\\n\\n This list shows scripts supporting the\\n ${GN}amtmupdate${NC} command. It allows amtm to\\n"
+	printf " directly update scripts if a version change\\n is detected when running the ${GN}u${NC} update command.\\n\\n"
 	if [ -s "${add}"/amtmUpdateScripts ]; then
-		[ "$(grep "^[^#]" "${add}"/amtmUpdateScripts)" ] && printf "\\n Scripts supporting amtmupdate\\n"
+		printf " Scripts supporting amtmupdate:\\n"
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
 			printf " - ${GN}$script${NC}\\n"
 		done
-		[ "$(grep "^#[^##]" "${add}"/amtmUpdateScripts)" ] && printf "\\n Scripts set as disabled in amtm for amtmupdate\\n"
 		for script in $(grep "^#[^#]" "${add}"/amtmUpdateScripts); do
-			printf " - ${R}$(echo $script | sed 's/#//')${NC}\\n"
+			printf " - ${R}$(echo $script | sed 's/#//')${NC}, amtmupdate disabled in amtm\\n"
 		done
-		[ "$(grep "^##" "${add}"/amtmUpdateScripts)" ] && printf "\\n Scripts set as disabled in script for amtmupdate\\n"
 		for script in $(grep "^##" "${add}"/amtmUpdateScripts); do
-			printf " - ${R}$(echo $script | sed 's/##//')${NC}\\n"
+			printf " - ${R}$(echo $script | sed 's/##//')${NC}, amtmupdate disabled in $(echo $script | sed 's/##//')\\n"
 		done
 	else
 		printf "\\n No supported scripts found.\\n"
 		p_e_t "return to menu"
 	fi
 
-	printf "\\n 1. Disable or enable script for amtmupdate\\n 2. View amtmupdate log\\n\\n"
+	printf "\\n 1. Disable/Enable amtmupdate in amtm\\n 2. View amtmupdate log\\n\\n"
 	while true; do
 		printf " Enter selection [1-2 e=Exit] ";read -r continue
 		case "$continue" in
@@ -787,48 +799,53 @@ auto_scripts_update(){
 					asu_loop
 					break;;
 			2)		s_l_f amtmUpdate.log;break;;
-			[Ee])	show_amtm menu;break;;
+			[Ee])	break;;
 			*)		printf "\\n input is not an option\\n\\n";;
 		esac
 	done
 	show_amtm menu
 }
 
+asu_check(){
+	[ ! -f "${add}"/amtmUpdateScripts ] && touch "${add}"/amtmUpdateScripts
+	if grep -qm1 'amtmupdate' "$scriptloc"; then
+
+		if grep -q "^#$scriptname" "${add}"/amtmUpdateScripts; then
+			[ -z "$updcheck" ] && printf "Automatic script update disabled in amtm for $scriptname.\\n"
+			sed -i "/^##$scriptname/d;/^$scriptname/d" "${add}"/amtmUpdateScripts
+		else
+			if [ "$scriptname" = Diversion ] && ! grep -qm1 'amtmAutoUpdate' "$scriptloc"; then
+				[ -z "$updcheck" ] && printf "Please update Diversion to the latest version.\\n"
+			else
+				$scriptloc amtmupdate check >/dev/null 2>&1
+				if [ "$?" -eq 0 ]; then
+					sed -i "/^##$scriptname/d" "${add}"/amtmUpdateScripts
+					[ ! "$(grep "^$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "$scriptname" >>"${add}"/amtmUpdateScripts
+					[ -z "$asuc" ] && allowAutoUpdate=1
+				else
+					sed -i "/^$scriptname/d" "${add}"/amtmUpdateScripts
+					[ ! "$(grep "^##$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "##$scriptname" >>"${add}"/amtmUpdateScripts
+					[ -z "$updcheck" ] && printf "Automatic script update disabled in $scriptname.\\n"
+				fi
+			fi
+		fi
+	else
+		[ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
+	fi
+}
+
+
 script_check(){
 	atii=1
 	[ "$localVother" ] && localver=$localVother || localver="$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 	upd="${E_BG}${NC}$localver"
 	lvtpu=$localver
-	if [ "$su" = 1 ]; then
+	if [ "$su" = 1 -a -z "$asuc" ]; then
 		if c_url "$remoteurl" | grep -qF -m1 "$grepcheck"; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(c_url "$remoteurl" | grep -m1 "$scriptgrep" | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 			localmd5="$(md5sum "$scriptloc" | awk '{print $1}')"
 			upd="${GN_BG}$localver${NC}"
-
-
-			[ ! -f "${add}"/amtmUpdateScripts ] && touch "${add}"/amtmUpdateScripts
-			if grep -qm1 'amtmupdate' "$scriptloc"; then
-				[ ! "$(grep "^$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "$scriptname" >>"${add}"/amtmUpdateScripts
-				if grep -q "^#$scriptname" "${add}"/amtmUpdateScripts; then
-					printf "Automatic script updates disabled in amtm for $scriptname.\\n"
-				else
-					if [ "$scriptname" = Diversion ] && ! grep -qm1 'amtmAutoUpdate' "$scriptloc"; then
-						printf "Please update Diversion to the latest version.\\n"
-					else
-						$scriptloc amtmupdate check >/dev/null 2>&1
-						if [ "$?" -eq 0 ]; then
-							sed -i "/^##$scriptname/d" "${add}"/amtmUpdateScripts
-							#printf "Automatic script updates enabled for $scriptname.\\n"
-							allowAutoUpdate=1
-						else
-							[ ! "$(grep "^##$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "##$scriptname" >>"${add}"/amtmUpdateScripts
-							printf "Automatic script updates disabled in $scriptname.\\n"
-						fi
-					fi
-				fi
-			else
-				[ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
-			fi
+			asu_check
 
 			if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
 				upd="${E_BG}<- $remotever${NC}"
@@ -880,6 +897,7 @@ script_check(){
 		fi
 	else
 		localver=
+		[ "$asuc" ] && asu_check
 	fi
 	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate
 }
