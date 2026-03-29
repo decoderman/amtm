@@ -62,6 +62,7 @@ amtm
 | TAILMON Tailscale installer | Viktor Jaep | [Link](https://www.snbforums.com/threads/release-tailmon-v1-0-8-may-3-2024-wireguard-based-tailscale-installer-configurator-and-monitor.89860/) |
 | WXMON Localized Weather Monitoring | Viktor Jaep | [Link](https://www.snbforums.com/threads/release-wxmon-v2-1-1-jul-3-2025-localized-weather-monitoring-extended-forecasts-including-aviation-metars-and-tafs-us-global.83479/) |
 | ModSyslogUI System Log page UI filtering | kstamand | [Link](https://www.snbforums.com/threads/modsyslogui-v1-0-1-update-add-on-providing-system-log-page-ui-filtering-capabilities.96496/) |
+| Unbound Stats for Asuswrt-Merlin | juched78 | [Link](https://www.snbforums.com/threads/unbound-stats-for-asuswrt-merlin-v1-4-6-2026-mar-28-generate-stats-for-unbound.95533/) |
 
 amtm also offers an interface for managing a number of other features:
 
@@ -82,6 +83,7 @@ amtm also offers an interface for managing a number of other features:
 | Show all cron jobs | thelonelycoder
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
+| Automatic third-party scripts update | thelonelycoder
 
 Feel free to visit and contribute to the AMTM Orphaned Script Revival repo (AMTM-OSR): [Link](https://github.com/AMTM-OSR)
 
