@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.5
-release="March 29 2026"
+version=6.5.1
+release="March 31 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -444,7 +444,7 @@ show_amtm(){
 	atii=
 
 	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} cj${NC} %-9s%s\\n" "show" "all cron jobs"
-	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} au${NC} %-9s%s\\n" "edit" "Automatic scripts update"
+	[ -z "$su" -a -z "$ss" ] && printf "${GN_BG} au${NC} %-9s%s\\n" "edit" "Automatic script updates"
 	if [ "$ss" ]; then
 		[ "$su" ] || printf "${GN_BG} i ${NC} %-9s%s\\n" "hide" "inactive scripts"
 	else
@@ -730,8 +730,20 @@ s_l_f(){
 
 auto_scripts_update(){
 
-	asu_loop(){
-		printf " Disable/Enable script for amtmupdate in amtm\\n\\n This sets permission if amtm is allowed to\\n directly update a script.\\n\\n"
+	asu_loop()
+	{
+		printf " Disable/Enable script for ${GN}amtmupdate${NC} in amtm\n\n"
+		printf " When enabled, this setting allows amtm to
+ update scripts automatically. If you prefer
+ instead to keep the script at its current
+ version level, you may disable the setting.\n\n"
+
+		printf " Scripts that disable auto updates by amtm
+ are not shown here. For example, MerlinAU
+ disables updating its script via amtm when
+ its own built-in 'automatic script update'
+ feature is enabled.\n\n"
+
 		i=0
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
 			i=$((i+1))
@@ -745,7 +757,7 @@ auto_scripts_update(){
 		done
 
 		while true; do
-			printf "\\n Disable/Enable script [1-$i e=Exit] ";read -r script
+			printf "\\n Disable/Enable script in amtm [1-$i e=Exit] ";read -r script
 			case "$script" in
 						 [Ee]) 	show_amtm menu;;
 				  ''|*[!0-9]*) 	printf "\\n input is not a number\\n";;
@@ -773,18 +785,23 @@ auto_scripts_update(){
 	printf " Refreshing supported scripts list... ";asuc=1;amtm tpu;asuc=;printf "Done.\\n"
 	p_e_l
 	cat "${add}"/amtmUpdateScripts | sed '/^[[:space:]]*$/d' | sort -uo "${add}"/amtmUpdateScripts
-	printf " Automatic scripts update settings\\n\\n This list shows scripts supporting the\\n ${GN}amtmupdate${NC} command. It allows amtm to\\n"
-	printf " directly update scripts if a version change\\n is detected when running the ${GN}u${NC} update command.\\n\\n"
+	printf " Automatic script update settings\n\n"
+	printf " This list shows 3rd-party scripts that
+ support the ${GN}amtmupdate${NC} command parameter.
+ It allows amtm to directly update a script
+ if a version change is detected when the
+ the ${GN}u${NC} update command is executed.\n\n"
+
 	if [ -s "${add}"/amtmUpdateScripts ]; then
-		printf " Scripts supporting amtmupdate:\\n"
+		printf " Supported scripts and current status:\n"
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
-			printf " - ${GN}$script${NC}\\n"
+			printf " - ${GN}$script${NC}, enabled\n"
 		done
 		for script in $(grep "^#[^#]" "${add}"/amtmUpdateScripts); do
-			printf " - ${R}$(echo $script | sed 's/#//')${NC}, amtmupdate disabled in amtm\\n"
+			printf " - ${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\n"
 		done
 		for script in $(grep "^##" "${add}"/amtmUpdateScripts); do
-			printf " - ${R}$(echo $script | sed 's/##//')${NC}, amtmupdate disabled in $(echo $script | sed 's/##//')\\n"
+			printf " - ${R}$(echo $script | sed 's/##//')${NC}, disabled by $(echo $script | sed 's/##//')\n"
 		done
 	else
 		printf "\\n No supported scripts found.\\n"
