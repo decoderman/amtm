@@ -746,13 +746,13 @@ auto_scripts_update(){
 
 		i=0
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
-			i=$((i+1))
-			printf " $i: ${GN}$script${NC}, enabled\n"
+			i="$((i+1))"
+			printf " %2d: ${GN}$script${NC}, enabled\n" "$i"
 			eval "scriptSel$i=$script"
 		done
 		for script in $(grep "^#[^#]" "${add}"/amtmUpdateScripts); do
-			i=$((i+1))
-			printf " $i: ${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\n"
+			i="$((i+1))"
+			printf " %2d: ${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\n" "$i"
 			eval "scriptSel$i=$(echo $script | sed 's/#//')"
 		done
 
