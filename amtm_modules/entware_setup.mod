@@ -437,7 +437,7 @@ setup_Entware(){
 			echo " the previous Entware installation."
 			echo
 			echo " Note that you may have to reinstall already"
-			echo " installed third-party scripts that reside"
+			echo " installed 3rd-party scripts that reside"
 			echo " in Entware after the reboot."
 			echo " In the case of Diversion, all you need to do is open"
 			echo " Diversion in amtm so it can do a self check."

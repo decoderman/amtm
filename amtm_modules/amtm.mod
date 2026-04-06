@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.5.1
-release="March 31 2026"
+version=6.6
+release="April 06 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -175,7 +175,7 @@ show_amtm(){
 			thisDev="$(readlink /tmp/opt | sed 's#/tmp/#/#')"
 			printf "${R_BG}%-44s ${NC}\\n\\n" " $(df -kh ${thisDev%/entware} | xargs | awk '{print "'${thisDev%/entware}' "$2" "$9" "$3" "$10" ("$12")"}')"
 		fi
-		[ "$ss" ] && printf "${GN_BG}%-44s ${NC}\\n\\n" "    Third-party scripts"
+		[ "$ss" ] && printf "${GN_BG}%-44s ${NC}\\n\\n" "    3rd-party scripts"
 		shared_amtm_wl=/jffs/addons/shared-whitelists/shared-amtm-whitelist
 		if [ ! -f /jffs/addons/shared-whitelists/shared-Diversion-whitelist ]; then
 			if [ ! -f "$shared_amtm_wl" ] || [ "$wl_MD5" != "$(md5sum "$shared_amtm_wl" | awk '{print $1}')" ]; then
@@ -262,6 +262,7 @@ show_amtm(){
 	osr
 	tpucheck
 	ntps
+	/jffs/addons/amtm/personalscript.conf personal_script p Run¦your¦personal¦script¦from¦amtm
 	/jffs/addons/amtm/games/games.conf games g Router¦Games¦-¦so¦much¦fun! EntReq
 	/jffs/addons/amtm/mail/email.conf email em Email¦settings
 	/jffs/addons/amtm/fw_update.mod fw_update fw Firmware¦update¦notification
@@ -306,7 +307,7 @@ show_amtm(){
 						fi;;
 			ntps) 		if [ "$ss" ]; then
 							[ -f /opt/bin/opkg ] && nl= || nl=\\n
-							printf "$nl${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non third-party scripts)"
+							printf "$nl${GN_BG}%-44s ${NC}\\n\\n" "    amtm scripts (non 3rd-party scripts)"
 						else
 							[ "$atii" ] || [ "$ss" ] && echo
 							atii=
@@ -379,6 +380,7 @@ show_amtm(){
 								[Ww][Ff])	case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
 								[Vv][Rr])	case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
 								[Ee][Pp])	case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
+								[Pp])		case_p(){ g_m personal_script.mod include;[ "$dlok" = 1 ] && install_personal_script || show_amtm menu;};;
 								[Gg])		case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
 								[Dd][Cc])	case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
 								[Ll][Cc])	case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
@@ -478,7 +480,7 @@ show_amtm(){
 	if [ "$su" = 1 ]; then
 		su=
 		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
-			tpText="${R}Third-party script update(s) available!${NC} Use\\n the scripts own update function to update."
+			tpText="${R}3rd-party script update(s) available!${NC} Use\\n the scripts own update function to update."
 			if [ "$amtmUpd" -gt 0 ]; then
 				p_e_l
 				if [ "$suUpd" = 1 ]; then
@@ -495,7 +497,7 @@ show_amtm(){
 				MD5_info
 
 				if [ "$scriptUpd" = 1 ]; then
-					printf " 1. Update amtm and third-party scripts\\n 2. Update amtm only\\n\\n"
+					printf " 1. Update amtm and 3rd-party scripts\\n 2. Update amtm only\\n\\n"
 					isel=2
 				else
 					printf " 1. Update amtm now\\n\\n"
@@ -517,7 +519,7 @@ show_amtm(){
 					[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 					unset amtmUpate amtmMD5
 				fi
-				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
+				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
 				exec "$0" " amtm $am"
 			elif [ "$scriptUpd" = 1 ]; then
 				p_e_l
@@ -526,7 +528,7 @@ show_amtm(){
 					p_e_l
 				fi
 				while true; do
-					printf " Update third-party scripts? [1=Yes e=Exit] ";read -r continue
+					printf " Update 3rd-party scripts? [1=Yes e=Exit] ";read -r continue
 					case "$continue" in
 						1)		[ "$scriptUpd" = 1 ] && printf "scriptUpd=1\\nauUPD=1\\ntpw=1\\nsu=1\\nsuUpd=0\\nupdErr=\\n" >/tmp/amtmscriptUpd;show_amtm;break;;
 						[Ee])	show_amtm menu;break;;
@@ -610,6 +612,8 @@ show_amtm(){
 			[Ee][Mm])			case_em;break;;
 			[Ff][Ww])			case_fw;break;;
 			[Ss][Cc])			case_sc;break;;
+			[Pp])				case_p;break;;
+			[Pp][1-4]|[Pp][1-4]e)	case_pr;break;;
 			[Gg])				if [ -f "${add}"/games/games.conf ]; then [ "$more" = "more" ] && more=less || more=more;show_amtm menu; else case_g;fi;break;;
 			[Gg]r)				case_gr;break;;
 			[Gg]1|[Gg]1r)		[ "$sgs" != "hide" ] && o_g_s || case_g1;break;;
@@ -625,7 +629,7 @@ show_amtm(){
 			[Ss][Hh])			case_sh;break;;
 			[Rr][Dd])			case_rd;break;;
 			[Cc][Jj])			c_j;break;;
-			[Aa][Uu])			auto_scripts_update;break;;
+			[Aa][Uu])			auto_script_updates;break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
 			[Uu])				unset scriptUpd auUPD;c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
@@ -728,10 +732,9 @@ s_l_f(){
 	fi
 }
 
-auto_scripts_update(){
+auto_script_updates(){
 
-	asu_loop()
-	{
+	asu_loop(){
 		printf " Disable/Enable script for ${GN}amtmupdate${NC} in amtm\n\n"
 		printf " When enabled, this setting allows amtm to
  update scripts automatically. If you prefer
@@ -747,12 +750,14 @@ auto_scripts_update(){
 		i=0
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
 			i="$((i+1))"
-			printf " %2d: ${GN}$script${NC}, enabled\n" "$i"
+			[ "$(echo $i | wc -c)" -ge 3 ] && spce= || spce=" "
+			printf " $i: $spce${GN}$script${NC}, enabled\\n"
 			eval "scriptSel$i=$script"
 		done
 		for script in $(grep "^#[^#]" "${add}"/amtmUpdateScripts); do
 			i="$((i+1))"
-			printf " %2d: ${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\n" "$i"
+			[ "$(echo $i | wc -c)" -ge 3 ] && spce= || spce=" "
+			printf " $i: $spce${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\\n"
 			eval "scriptSel$i=$(echo $script | sed 's/#//')"
 		done
 
@@ -768,11 +773,11 @@ auto_scripts_update(){
 									if grep -q "^#$script" "${add}"/amtmUpdateScripts; then
 										sed -i "/^#$script/d" "${add}"/amtmUpdateScripts
 										echo "$script" >>"${add}"/amtmUpdateScripts
-										show_amtm " $script enabled for amtmupdate"
+										show_amtm " $script enabled for amtmupdate in amtm"
 									else
 										sed -i "/^$script/d" "${add}"/amtmUpdateScripts
 										echo "#$script" >>"${add}"/amtmUpdateScripts
-										show_amtm " $script disabled for amtmupdate"
+										show_amtm " $script disabled for amtmupdate in amtm"
 									fi
 								fi
 								;;
@@ -782,17 +787,17 @@ auto_scripts_update(){
 	}
 
 	p_e_l
-	printf " Refreshing supported scripts list... ";asuc=1;amtm tpu;asuc=;printf "Done.\\n"
+	printf " Refreshing supported scripts list... ";asuc=1;amtm tpu;asuc=;printf "Done.\n"
 	p_e_l
-	cat "${add}"/amtmUpdateScripts | sed '/^[[:space:]]*$/d' | sort -uo "${add}"/amtmUpdateScripts
-	printf " Automatic script update settings\n\n"
-	printf " This list shows 3rd-party scripts that
+	if [ -s "${add}"/amtmUpdateScripts ]; then
+		cat "${add}"/amtmUpdateScripts | sed '/^[[:space:]]*$/d' | sort -uo "${add}"/amtmUpdateScripts
+		printf " Automatic script update settings\n\n"
+		printf " This list shows 3rd-party scripts that
  support the ${GN}amtmupdate${NC} command parameter.
  It allows amtm to directly update a script
  if a version change is detected when the
  the ${GN}u${NC} update command is executed.\n\n"
 
-	if [ -s "${add}"/amtmUpdateScripts ]; then
 		printf " Supported scripts and current status:\n"
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
 			printf " - ${GN}$script${NC}, enabled\n"
@@ -804,8 +809,7 @@ auto_scripts_update(){
 			printf " - ${R}$(echo $script | sed 's/##//')${NC}, disabled by $(echo $script | sed 's/##//')\n"
 		done
 	else
-		printf "\\n No supported scripts found.\\n"
-		p_e_t "return to menu"
+		show_amtm " No supported scripts found."
 	fi
 
 	printf "\\n 1. Disable/Enable amtmupdate in amtm\\n 2. View amtmupdate log\\n\\n"
@@ -943,15 +947,15 @@ reset_amtm(){
 	}
 
 	p_e_l
-	printf " amtm reset options\\n\\n Enter option for more info.\\n\\n Use ${E_BG} i ${NC} to see the list of third-party\\n and amtm's own (non third-party) scripts.\\n\\n"
-	printf " 1. Reset amtm.\\n    This resets amtm and its own settings.\\n    Third-party scripts are NOT affected.\\n\\n"
-	printf " 2. Reset amtm, remove scripts and Entware.\\n    This resets amtm and its own settings\\n    and removes all third-party scripts,\\n    including Entware (if installed).\\n    Third-party scripts WILL be removed.\\n\\n"
-	printf " 3. Remove Entware.\\n    This removes the Entware repository.\\n    Third-party scripts depending on Entware\\n    may no longer work after removing.\\n"
+	printf " amtm reset options\\n\\n Enter option for more info.\\n\\n Use ${E_BG} i ${NC} to see the list of 3rd-party\\n and amtm's own (non 3rd-party) scripts.\\n\\n"
+	printf " 1. Reset amtm.\\n    This resets amtm and its own settings.\\n    3rd-party scripts are NOT affected.\\n\\n"
+	printf " 2. Reset amtm, remove scripts and Entware.\\n    This resets amtm and its own settings\\n    and removes all 3rd-party scripts,\\n    including Entware - if installed.\\n    3rd-party scripts WILL be removed.\\n\\n"
+	printf " 3. Remove Entware.\\n    This removes the Entware repository.\\n    3rd-party scripts depending on Entware\\n    may no longer work after removing.\\n"
 	while true; do
 		printf "\\n Enter selection [1-3 e=Exit] ";read -r continue
 		case "$continue" in
 			1)		p_e_l
-					printf " This resets all amtm settings.\\n\\n Note that resetting amtm will NOT remove or\\n uninstall any third-party scripts.\\n\\n"
+					printf " This resets all amtm settings.\\n\\n Note that resetting amtm will NOT remove or\\n uninstall any 3rd-party scripts.\\n\\n"
 					printf " However, when found it will remove the Disk\\n check script and log, the Format disk log,\\n the Reboot scheduler, the LED control and\\n"
 					printf " email settings you may have set.\\n"
 					c_d
@@ -1014,9 +1018,9 @@ reset_amtm(){
 					exit 0
 					break;;
 			2)		p_e_l
-					printf " This resets amtm and removes all\\n third-party scripts including Entware (if\\n installed) from this router.\\n\\n"
+					printf " This resets amtm and removes all\\n 3rd-party scripts including Entware - if\\n installed - from this router.\\n\\n"
 					printf " Note that this option will NOT restore the\\n router settings (NVRAM) to default.\\n\\n It empties these directories:\\n"
-					printf " - /jffs/addons\\n - /jffs/configs\\n - /jffs/scripts\\n\\n Additionally if found it removes:\\n"
+					printf " - /jffs/addons\\n - /jffs/configs\\n - /jffs/scripts\\n\\n Additionally, if found it removes:\\n"
 					printf " - directory /jffs/dnscrypt\\n - directory /mnt/*/skynet\\n - Entware repository\\n - the SWAP file\\n\\n The router automatically reboots after this.\\n"
 					c_d
 					rm_entware
@@ -1134,7 +1138,7 @@ update_amtm(){
 				[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
 				unset amtmUpate amtmMD5
 			fi
-			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}third-party script updates${NC}, use their\\n own update function."
+			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
 			tpw=
 			exec "$0" " amtm $am"
 		fi
