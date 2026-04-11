@@ -76,7 +76,7 @@ amtm also offers an interface for managing a number of other features:
 | Show all cron jobs | thelonelycoder
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
-| Automatic third-party scripts update | thelonelycoder
+| Automatic 3rd-party script updates | thelonelycoder
 | Add up to four of your own personal scripts to the menu | thelonelycoder
 
 Feel free to visit and contribute to the AMTM Orphaned Script Revival repo (AMTM-OSR): [Link](https://github.com/AMTM-OSR)
