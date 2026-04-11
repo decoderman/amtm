@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 FlexQoS_installed(){
-	scriptname='FlexQoS'
 	localVother="$(grep "^version=" /jffs/addons/flexqos/flexqos.sh | sed -e 's/version=//')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/FlexQoS/master/flexqos.sh
@@ -9,13 +8,13 @@ FlexQoS_installed(){
 		grepcheck=FlexQoS
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$FlexQoSUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$FlexQoSUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$FlexQoSUpate${NC}"
+		upd="${E_BG}$FlexQoSUpdate${NC}"
 		if [ "$FlexQoSMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^FlexQoS.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver FlexQoSUpate FlexQoSMD5
+			unset localver FlexQoSUpdate FlexQoSMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 3 ${NC} %-9s%-21s%${COR}s\\n" "open" "FlexQoS       $localver" " $upd"

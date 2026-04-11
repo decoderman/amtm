@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 x3mRouting_installed(){
-	scriptname='x3mRouting Selective Routing'
 	localVother="$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		newVer=https://raw.githubusercontent.com/Xentrk/x3mRouting/master/x3mRouting_Menu.sh
@@ -15,13 +14,13 @@ x3mRouting_installed(){
 		grepcheck=Xentrk
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$x3mRouting_Selective_RoutingUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$x3mRoutingUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$x3mRouting_Selective_RoutingUpate${NC}"
-		if [ "$x3mRouting_Selective_RoutingMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			[ -f "${add}"/availUpd.txt ] && sed -i '/^x3mRouting_Selective_Routing.*/d' "${add}"/availUpd.txt
+		upd="${E_BG}$x3mRoutingUpdate${NC}"
+		if [ "$x3mRoutingMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^x3mRouting.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver x3mRouting_Selective_RoutingUpate x3mRouting_Selective_RoutingMD5
+			unset localver x3mRoutingUpdate x3mRoutingMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 6 ${NC} %-9s%-21s%${COR}s\\n" "open" "x3mRouting    $localver" " $upd"

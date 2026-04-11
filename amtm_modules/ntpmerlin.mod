@@ -1,27 +1,20 @@
 #!/bin/sh
 #bof
-ntpmerlin_installed(){
-	scriptname=ntpMerlin
+ntpMerlin_installed(){
+	[ -f "${add}"/ntpmerlin.mod ] && rm -rf "${add}"/ntpmerlin.mod
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/ntpMerlin/master/ntpmerlin.sh
 		grepcheck=jackyaz
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$ntpMerlinUpate" ]; then
-			localver="$lvtpu"
-			upd="${E_BG}$ntpMerlinUpate${NC}"
-			if [ "$ntpMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				[ -f "${add}"/availUpd.txt ] && sed -i '/^ntpMerlin.*/d' "${add}"/availUpd.txt
-				upd="${E_BG}${NC}$lvtpu"
-				unset localver ntpMerlinUpate ntpMerlinMD5
-			fi
-		fi
-		if ! grep -q -m1 'AMTM-OSR' "$scriptloc"; then
-			sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="master"' "$scriptloc"
-			sed -i 's|/jackyaz/|/AMTM-OSR/|g;' "$scriptloc"
-			printf "\\n   ${R_BG} $scriptname modified to use AMTM-OSR repository ${NC}\\n    Update now using the $scriptname function.\\n"
+	if [ -z "$su" -a -z "$tpu" ] && [ "$ntpMerlinUpdate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$ntpMerlinUpdate${NC}"
+		if [ "$ntpMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^ntpMerlin.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver ntpMerlinUpdate ntpMerlinMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j2${NC} %-9s%-21s%${COR}s\\n" "open" "ntpMerlin     $localver" " $upd"
@@ -31,7 +24,7 @@ ntpmerlin_installed(){
 		show_amtm menu
 	}
 }
-install_ntpmerlin(){
+install_ntpMerlin(){
 	p_e_l
 	printf " This installs ntpMerlin - Installer for kvic\\n NTP Daemon on your router.\\n\\n"
 	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22&starter_id=53009\\n\\n"

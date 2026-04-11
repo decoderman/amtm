@@ -1,28 +1,19 @@
 #!/bin/sh
 #bof
 YazFi_installed(){
-	scriptname=YazFi
 	scriptgrep=' YAZFI_VERSION'
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/YazFi/master/YazFi.sh
 		grepcheck=jackyaz
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$YazFiUpate" ]; then
-			localver="$lvtpu"
-			upd="${E_BG}$YazFiUpate${NC}"
-			if [ "$YazFiMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				[ -f "${add}"/availUpd.txt ] && sed -i '/^YazFi.*/d' "${add}"/availUpd.txt
-				upd="${E_BG}${NC}$lvtpu"
-				unset localver YazFiUpate YazFiMD5
-			fi
-		fi
-		if ! grep -q -m1 'AMTM-OSR' "$scriptloc"; then
-			sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="master"' "$scriptloc"
-			sed -i 's|/jackyaz.io/|/raw.githubusercontent.com/AMTM-OSR/|g' "$scriptloc"
-			sed -i 's|/version/|/|g;s|/files/|/|g;s|/md5/|/|g;s|/update/|/|g;s|/install-success/|/|g;s|/md5/|/|g;s|/404/|/|g' "$scriptloc"
-			printf "\\n   ${R_BG} $scriptname modified to use AMTM-OSR repository ${NC}\\n    Update now using the $scriptname function.\\n"
+	if [ -z "$su" -a -z "$tpu" ] && [ "$YazFiUpdate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$YazFiUpdate${NC}"
+		if [ "$YazFiMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^YazFi.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver YazFiUpdate YazFiMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 4 ${NC} %-9s%-21s%${COR}s\\n" "open" "YazFi         $localver" " $upd"

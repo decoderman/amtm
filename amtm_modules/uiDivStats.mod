@@ -1,27 +1,19 @@
 #!/bin/sh
 #bof
 uiDivStats_installed(){
-	scriptname=uiDivStats
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/uiDivStats/master/uiDivStats.sh
 		grepcheck=jackyaz
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$uiDivStatsUpate" ]; then
-			localver="$lvtpu"
-			upd="${E_BG}$uiDivStatsUpate${NC}"
-			if [ "$uiDivStatsMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				sed -i '/^uiDivStats.*/d' "${add}"/availUpd.txt
-				upd="${E_BG}${NC}$lvtpu"
-				unset localver uiDivStatsUpate uiDivStatsMD5
-			fi
-		fi
-		if ! grep -q -m1 'AMTM-OSR' "$scriptloc"; then
-			sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="master"' "$scriptloc"
-			sed -i 's|/decoderman/|/AMTM-OSR/|g;' "$scriptloc"
-			printf "\\n   ${R_BG} $scriptname modified to use AMTM-OSR repository ${NC}\\n    Update now using the $scriptname function.\\n"
+	if [ -z "$su" -a -z "$tpu" ] && [ "$uiDivStatsUpdate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$uiDivStatsUpdate${NC}"
+		if [ "$uiDivStatsMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			sed -i '/^uiDivStats.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver uiDivStatsUpdate uiDivStatsMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j5${NC} %-9s%-21s%${COR}s\\n" "open" "uiDivStats    $localver" " $upd"

@@ -1,29 +1,19 @@
 #!/bin/sh
 #bof
 scribe_installed(){
-	scriptname=scribe
 	scriptgrep='^scribe_ver=\| scribe_ver='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/scribe/master/scribe.sh
 		grepcheck=cmkelley
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$scribeUpate" ]; then
-			localver="$lvtpu"
-			upd="${E_BG}$scribeUpate${NC}"
-			if [ "$scribeMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				[ -f "${add}"/availUpd.txt ] && sed -i '/^scribe.*/d' "${add}"/availUpd.txt
-				upd="${E_BG}${NC}$lvtpu"
-				unset localver scribeUpate scribeMD5
-			fi
-		fi
-		if ! grep -q -m1 'AMTM-OSR' "$scriptloc"; then
-			sed -i '/^scribe_branch/c\scribe_branch="master"' "$scriptloc"
-			sed -i '/readonly script_repo=/c\readonly script_repo="$raw_git/$script_author/$script_name/$script_branch/${script_name}.sh"' "$scriptloc"
-			sed -i 's|"cynicastic"|"AMTM-OSR"|' "$scriptloc"
-			sed -i 's|"$unzip_dir/$script_name"|"$unzip_dir/${script_name}.sh"|' "$scriptloc"
-			printf "\\n   ${R_BG} $scriptname modified to use AMTM-OSR repository ${NC}\\n    Update now using the $scriptname function.\\n"
+	if [ -z "$su" -a -z "$tpu" ] && [ "$scribeUpdate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$scribeUpdate${NC}"
+		if [ "$scribeMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^scribe.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver scribeUpdate scribeMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 5 ${NC} %-9s%-21s%${COR}s\\n" "open" "scribe        $localver" " $upd"

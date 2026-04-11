@@ -1,9 +1,8 @@
 #!/bin/sh
 #bof
 WAN_Failover_installed(){
-	scriptname='Dual WAN Failover'
 	scriptgrep='^VERSION='
-	dwftext=$scriptname
+	dwftext='Dual WAN Failover'
 
 	devmode=
 	branch=wan-failover.sh
@@ -17,15 +16,15 @@ WAN_Failover_installed(){
 		grepcheck=Ranger802004
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$Dual_WAN_FailoverUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$Dual_WAN_FailoverUpdate" ]; then
 		dwftext='WAN Failover'
 		localver="$lvtpu"
-		upd="${E_BG}$Dual_WAN_FailoverUpate${NC}"
+		upd="${E_BG}$Dual_WAN_FailoverUpdate${NC}"
 		if [ "$Dual_WAN_FailoverMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^Dual_WAN_Failover.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver Dual_WAN_FailoverUpate Dual_WAN_FailoverMD5
-			dwftext=$scriptname
+			unset localver Dual_WAN_FailoverUpdate Dual_WAN_FailoverMD5
+			dwftext='Dual WAN Failover'
 		fi
 	fi
 	[ "$suUpd" = 1 ] && dwftext='WAN Failover'

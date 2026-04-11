@@ -1,29 +1,19 @@
 #!/bin/sh
 #bof
 Vnstat_installed(){
-	scriptname=Vnstat
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/vnstat-on-merlin/main/dn-vnstat.sh
 		grepcheck=dev_null
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$VnstatUpate" ]; then
-			localver="$lvtpu"
-			upd="${E_BG}$VnstatUpate${NC}"
-			if [ "$VnstatMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				[ -f "${add}"/availUpd.txt ] && sed -i '/^Vnstat.*/d' "${add}"/availUpd.txt
-				upd="${E_BG}${NC}$lvtpu"
-				unset localver VnstatUpate VnstatMD5
-			fi
-		fi
-		if ! grep -q -m1 'AMTM-OSR' "$scriptloc"; then
-			sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="main"' "$scriptloc"
-			sed -i 's|"jackyaz-dev"|"develop"|' "$scriptloc"
-			sed -i '/SCRIPT_REPO=/c\SCRIPT_REPO="https://raw.githubusercontent.com/AMTM-OSR/vnstat-on-merlin/$SCRIPT_BRANCH"' "$scriptloc"
-			sed -i '/^readonly SHARED_REPO=/c\readonly SHARED_REPO="https://raw.githubusercontent.com/AMTM-OSR/shared-jy/master"' "$scriptloc"
-			printf "\\n   ${R_BG} $scriptname modified to use AMTM-OSR repository ${NC}\\n    Update now using the $scriptname function.\\n"
+	if [ -z "$su" -a -z "$tpu" ] && [ "$VnstatUpdate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$VnstatUpdate${NC}"
+		if [ "$VnstatMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^Vnstat.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver VnstatUpdate VnstatMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} vn${NC} %-9s%-21s%${COR}s\\n" "open" "vnStat        $localver" " $upd"

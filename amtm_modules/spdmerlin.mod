@@ -1,29 +1,20 @@
 #!/bin/sh
 #bof
-spdmerlin_installed(){
-	scriptname=spdMerlin
+spdMerlin_installed(){
+	[ -f "${add}"/spdmerlin.mod ] && rm -rf "${add}"/spdmerlin.mod
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/AMTM-OSR/spdMerlin/master/spdmerlin.sh
 		grepcheck=jackyaz
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$spdMerlinUpate" ]; then
-			localver="$lvtpu"
-			upd="${E_BG}$spdMerlinUpate${NC}"
-			if [ "$spdMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-				[ -f "${add}"/availUpd.txt ] && sed -i '/^spdMerlin.*/d' "${add}"/availUpd.txt
-				upd="${E_BG}${NC}$lvtpu"
-				unset localver spdMerlinUpate spdMerlinMD5
-			fi
-		fi
-		if ! grep -q -m1 'AMTM-OSR' "$scriptloc"; then
-			sed -i '/^SCRIPT_BRANCH=/c\SCRIPT_BRANCH="master"' "$scriptloc"
-			sed -i '/SCRIPT_REPO=/c\SCRIPT_REPO="https://raw.githubusercontent.com/AMTM-OSR/$SCRIPT_NAME/$SCRIPT_BRANCH"' "$scriptloc"
-			sed -i '/^readonly SHARED_REPO=/c\readonly SHARED_REPO="https://raw.githubusercontent.com/AMTM-OSR/shared-jy/master"' "$scriptloc"
-			sed -i 's|/version/|/|g;s|/files/|/|g;s|/md5/|/|g;s|/update/|/|g;s|/install-success/|/|g;s|/md5/|/|g;s|/404/|/|g' "$scriptloc"
-			printf "\\n   ${R_BG} $scriptname modified to use AMTM-OSR repository ${NC}\\n    Update now using the $scriptname function.\\n"
+	if [ -z "$su" -a -z "$tpu" ] && [ "$spdMerlinUpdate" ]; then
+		localver="$lvtpu"
+		upd="${E_BG}$spdMerlinUpdate${NC}"
+		if [ "$spdMerlinMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^spdMerlin.*/d' "${add}"/availUpd.txt
+			upd="${E_BG}${NC}$lvtpu"
+			unset localver spdMerlinUpdate spdMerlinMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j4${NC} %-9s%-21s%${COR}s\\n" "open" "spdMerlin     $localver" " $upd"
@@ -33,7 +24,7 @@ spdmerlin_installed(){
 		show_amtm menu
 	}
 }
-install_spdmerlin(){
+install_spdMerlin(){
 	p_e_l
 	printf " This installs spdMerlin - Automatic speedtest\\n for Asuswrt-Merlin - with graphs\\n on your router.\\n\\n"
 	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=19&starter_id=53009\\n\\n"

@@ -1,20 +1,19 @@
 #!/bin/sh
 #bof
 MerlinAU_installed(){
-	scriptname=MerlinAU
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ExtremeFiretop/MerlinAutoUpdate-Router/main/MerlinAU.sh
 		grepcheck=ExtremeFiretop
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$MerlinAUUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$MerlinAUUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$MerlinAUUpate${NC}"
+		upd="${E_BG}$MerlinAUUpdate${NC}"
 		if [ "$MerlinAUMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^MerlinAU.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver MerlinAUUpate MerlinAUMD5
+			unset localver MerlinAUUpdate MerlinAUMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 8 ${NC} %-9s%-21s%${COR}s\\n" "open" "MerlinAU      $localver" " $upd"

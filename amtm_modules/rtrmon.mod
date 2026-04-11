@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 rtrmon_installed(){
-	scriptname=rtrmon
 	localVother="$(grep ^Version "$scriptloc" | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ViktorJp/RTRMON/main/rtrmon.sh
@@ -9,13 +8,13 @@ rtrmon_installed(){
 		grepcheck=ViktorJp
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$rtrmonUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$rtrmonUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$rtrmonUpate${NC}"
+		upd="${E_BG}$rtrmonUpdate${NC}"
 		if [ "$rtrmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^rtrmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver rtrmonUpate rtrmonMD5
+			unset localver rtrmonUpdate rtrmonMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} rt${NC} %-9s%-21s%${COR}s\\n" "open" "RTRMON      $localver" " $upd"

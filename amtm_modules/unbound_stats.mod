@@ -1,20 +1,19 @@
 #!/bin/sh
 #bof
 unbound_stats_installed(){
-	scriptname='Unbound_Stats'
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/juched78/Unbound-Asuswrt-Merlin/master/unbound_stats.sh
 		grepcheck=juched
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$Unbound_StatsUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$Unbound_StatsUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$Unbound_StatsUpate${NC}"
+		upd="${E_BG}$Unbound_StatsUpdate${NC}"
 		if [ "$Unbound_StatsMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^Unbound_Stats.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver Unbound_StatsUpate Unbound_StatsMD5
+			unset localver Unbound_StatsUpdate Unbound_StatsMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} us${NC} %-9s%-21s%${COR}s\\n" "open" "Unbound Stats  $localver" " $upd"

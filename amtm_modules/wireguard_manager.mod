@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 wireguard_manager_installed(){
-	scriptname='WireGuard Session Manager'
 	localVother="$(grep '^VERSION="v' "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 	scriptgrep='^VERSION="v'
 	umtext='WireGuard Mgr'
@@ -11,13 +10,13 @@ wireguard_manager_installed(){
 		grepcheck=Martineau
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$WireGuard_Session_ManagerUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$WireGuard_Session_ManagerUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$WireGuard_Session_ManagerUpate${NC}"
+		upd="${E_BG}$WireGuard_Session_ManagerUpdate${NC}"
 		if [ "$WireGuard_Session_ManagerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^WireGuard_Session_Manager.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver WireGuard_Session_ManagerUpate WireGuard_Session_ManagerMD5
+			unset localver WireGuard_Session_ManagerUpdate WireGuard_Session_ManagerMD5
 		fi
 	fi
 	[ "$suUpd" = 1 ] && umtext='WireGuard SM'

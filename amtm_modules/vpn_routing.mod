@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 vpn_routing_installed(){
-	scriptname='VPN Routing'
 	scriptgrep='^VERSION='
 	devmode=
 	branch=domain_vpn_routing.sh
@@ -15,13 +14,13 @@ vpn_routing_installed(){
 		grepcheck=Ranger802004
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$VPN_RoutingUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$VPN_RoutingUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$VPN_RoutingUpate${NC}"
+		upd="${E_BG}$VPN_RoutingUpdate${NC}"
 		if [ "$VPN_RoutingMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^VPN_Routing.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver VPN_RoutingUpate VPN_RoutingMD5
+			unset localver VPN_RoutingUpdate VPN_RoutingMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} vr${NC} %-9s%-21s%${COR}s\\n" "open" "VPN Routing $devmode $localver" " $upd"

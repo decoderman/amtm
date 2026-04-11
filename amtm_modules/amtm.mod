@@ -1,11 +1,11 @@
 #!/bin/sh
 #bof
-version=6.6
-release="April 06 2026"
+version=6.7
+release="April 11 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
-wl_MD5=3d41a15b6a30f225d355c587da932f82 # shared-amtm-whitelist
+wl_MD5=97e81bf111660fa425c9bdbb3f431bc9 # shared-amtm-whitelist
 EMAIL_DIR="${add}/mail"
 [ -f "${add}"/amtmBranch ] && . "${add}"/amtmBranch
 
@@ -182,7 +182,6 @@ show_amtm(){
 				mkdir -p /jffs/addons/shared-whitelists
 				cat <<-EOF >"$shared_amtm_wl"
 				asuswrt-merlin.net
-				asuswrt.lostrealm.ca
 				big.oisd.nl
 				bin.entware.net
 				codeload.github.com
@@ -221,7 +220,7 @@ show_amtm(){
 	fi
 	[ "$(echo $am | grep 'update')" -o "$(echo $1 | grep 'update')" ] && cleanup=on
 
-	modules='/opt/bin/diversion diversion 1 Diversion¦-¦the¦Router¦Adblocker EntReq
+	modules='/opt/bin/diversion Diversion 1 Diversion¦-¦the¦Router¦Adblocker EntReq
 	/jffs/scripts/firewall skynet 2 Skynet¦-¦the¦Router¦Firewall
 	/jffs/addons/flexqos/flexqos.sh FlexQoS 3 FlexQoS¦-¦Flexible¦QoS¦Enhancement osr
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi osr EntRec
@@ -237,10 +236,11 @@ show_amtm(){
 	/jffs/scripts/killmon.sh killmon km KILLMON¦-¦VPN¦kill¦switch¦monitor¦&¦configurator EntReq
 	/jffs/scripts/backupmon.sh backupmon bm BACKUPMON¦-¦Backup¦and¦restore¦your¦Router
 	spacer
-	/jffs/scripts/ntpmerlin ntpmerlin j2 ntpMerlin¦-¦NTP¦Daemon osr EntReq
-	/jffs/scripts/scmerlin scmerlin j3 scMerlin¦-¦Quick¦access¦control osr EntRec
-	/jffs/scripts/spdmerlin spdmerlin j4 spdMerlin¦-¦Automatic¦speedtest osr EntReq
+	/jffs/scripts/ntpmerlin ntpMerlin j2 ntpMerlin¦-¦NTP¦Daemon osr EntReq
+	/jffs/scripts/scmerlin scMerlin j3 scMerlin¦-¦Quick¦access¦control osr EntRec
+	/jffs/scripts/spdmerlin spdMerlin j4 spdMerlin¦-¦Automatic¦speedtest osr EntReq
 	/jffs/scripts/wxmon.sh wxmon wx WXMON¦-¦Localized¦Weather¦Monitoring EntReq
+	/jffs/addons/wireless_report/wirelessreport.sh Wireless_Report wr Wireless¦Report¦-¦Wireless¦Report¦for¦AiMesh
 	spacer
 	/jffs/scripts/uiDivStats uiDivStats j5 uiDivStats¦-¦Diversion¦WebUI¦stats osr
 	/jffs/scripts/uiScribe uiScribe j6 uiScribe¦-¦WebUI¦for¦scribe¦logs osr
@@ -326,7 +326,7 @@ show_amtm(){
 							[ -f "${add}"/format_disk.mod ] && format_disk || show_amtm menu
 						};;
 			*) 			scriptloc=$(echo $i | awk '{print $1}')
-						f2=$(echo $i | awk '{print $2}')
+						f2=$(echo $i | awk '{print $2}');scriptname=$f2
 						if [ -f "$scriptloc" ]; then
 							g_m ${f2}.mod include
 							[ -f "${add}/${f2}.mod" ] && ${f2}_installed
@@ -344,12 +344,12 @@ show_amtm(){
 							esac
 							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')$f5$f6"
 							if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
-								sn=$(grep 'scriptname=' "${add}/${f2}.mod" | sed "s/.*scriptname=//;s/ /_/g;s/\//_/g;s/'//g")
-								[ "$sn" ] && sed -i "/^$sn.*/d" "${add}"/availUpd.txt
+								sed -i "/^$scriptname.*/d" "${add}"/availUpd.txt
 							fi
+							[ -s "${add}"/amtmUpdateScripts ] && [ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
 							r_m ${f2}.mod
 							case $f3 in
-								1)			case_1(){ c_e Diversion;g_m diversion.mod include;[ "$dlok" = 1 ] && install_diversion || show_amtm menu;};;
+								1)			case_1(){ c_e Diversion;g_m Diversion.mod include;[ "$dlok" = 1 ] && install_Diversion || show_amtm menu;};;
 								2)			case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
 								3)			case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
 								4)			case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
@@ -358,11 +358,12 @@ show_amtm(){
 								7)			case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
 								8)			case_8(){ g_m MerlinAU.mod include;[ "$dlok" = 1 ] && install_MerlinAU || show_amtm menu;};;
 								[Jj]1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
-								[Jj]2)		case_j2(){ c_e ntpmerlin;g_m ntpmerlin.mod include;[ "$dlok" = 1 ] && install_ntpmerlin || show_amtm menu;};;
-								[Jj]3)		case_j3(){ g_m scmerlin.mod include;[ "$dlok" = 1 ] && install_scmerlin || show_amtm menu;};;
+								[Jj]2)		case_j2(){ c_e ntpMerlin;g_m ntpMerlin.mod include;[ "$dlok" = 1 ] && install_ntpMerlin || show_amtm menu;};;
+								[Jj]3)		case_j3(){ g_m scMerlin.mod include;[ "$dlok" = 1 ] && install_scMerlin || show_amtm menu;};;
 								[Ww][Ii])	case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
-								[Jj]4)		case_j4(){ c_e spdMerlin;g_m spdmerlin.mod include;[ "$dlok" = 1 ] && install_spdmerlin || show_amtm menu;};;
+								[Jj]4)		case_j4(){ c_e spdMerlin;g_m spdMerlin.mod include;[ "$dlok" = 1 ] && install_spdMerlin || show_amtm menu;};;
 								[Ww][Xx])	case_wx(){ c_e WXMON;g_m wxmon.mod include;[ "$dlok" = 1 ] && install_wxmon || show_amtm menu;};;
+								[Ww][Rr])	case_wr(){ g_m Wireless_Report.mod include;[ "$dlok" = 1 ] && install_Wireless_Report || show_amtm menu;};;
 								[Jj]5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
 								[Jj]6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
 								[Jj]7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
@@ -466,8 +467,8 @@ show_amtm(){
 		printf "${GN_BG} m ${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "menu" "amtm  $vversion" "$thisrem"
 	else
 		echo
-		if [ "$amtmUpate" ]; then
-			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          $version" "${E_BG}$amtmUpate${NC}"
+		if [ "$amtmUpdate" ]; then
+			printf "${GN_BG} uu${NC} %-9s%-$((21$corr2))s%$((COR$corr1))s\\n" "update" "amtm          $version" "${E_BG}$amtmUpdate${NC}"
 		else
 			echo "    amtm options"
 			[ "$ss" ] || printf "${GN_BG} u ${NC} update   ${GN_BG} rr${NC} reboot\\n"
@@ -515,9 +516,9 @@ show_amtm(){
 				a_m "$amtmUpdText"
 				g_i_m "${add}"
 				[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
-				if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
+				if [ "$amtmUpdate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
 					[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
-					unset amtmUpate amtmMD5
+					unset amtmUpdate amtmMD5
 				fi
 				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
 				exec "$0" " amtm $am"
@@ -583,6 +584,7 @@ show_amtm(){
 			[Ww][Ii])			case_wi;break;;
 			[Jj]4)				case_j4;break;;
 			[Ww][Xx])			case_wx;break;;
+			[Ww][Rr])			case_wr;break;;
 			[Jj]5)				case_j5;break;;
 			[Jj]5u)				case_j5u;break;;
 			[Jj]6)				case_j6;break;;
@@ -812,14 +814,20 @@ auto_script_updates(){
 		show_amtm " No supported scripts found."
 	fi
 
-	printf "\\n 1. Disable/Enable amtmupdate in amtm\\n 2. View amtmupdate log\\n\\n"
+	printf "\\n 1. Disable/Enable amtmupdate in amtm\\n 2. View amtmupdate log\\n 3. Reset supported scripts list\\n\\n"
 	while true; do
-		printf " Enter selection [1-2 e=Exit] ";read -r continue
+		printf " Enter selection [1-3 e=Exit] ";read -r continue
 		case "$continue" in
 			1)		p_e_l
 					asu_loop
 					break;;
 			2)		s_l_f amtmUpdate.log;break;;
+			3)		p_e_l
+					printf " This resets the supported scripts list and\\n its settings in amtm.\\n"
+					c_d
+					rm -rf "${add}"/amtmUpdateScripts
+					auto_script_updates
+					break;;
 			[Ee])	break;;
 			*)		printf "\\n input is not an option\\n\\n";;
 		esac
@@ -830,28 +838,21 @@ auto_script_updates(){
 asu_check(){
 	[ ! -f "${add}"/amtmUpdateScripts ] && touch "${add}"/amtmUpdateScripts
 	if grep -qm1 'amtmupdate' "$scriptloc"; then
-
 		if grep -q "^#$scriptname" "${add}"/amtmUpdateScripts; then
 			[ -z "$updcheck" ] && printf "Automatic script update disabled in amtm for $scriptname.\\n"
 			sed -i "/^##$scriptname/d;/^$scriptname/d" "${add}"/amtmUpdateScripts
 		else
-			if [ "$scriptname" = Diversion ] && ! grep -qm1 'amtmAutoUpdate' "$scriptloc"; then
-				[ -z "$updcheck" ] && printf "Please update Diversion to the latest version.\\n"
+			$scriptloc amtmupdate check >/dev/null 2>&1
+			if [ "$?" -eq 0 ]; then
+				sed -i "/^##$scriptname/d" "${add}"/amtmUpdateScripts
+				[ ! "$(grep "^$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "$scriptname" >>"${add}"/amtmUpdateScripts
+				[ -z "$asuc" ] && allowAutoUpdate=1
 			else
-				$scriptloc amtmupdate check >/dev/null 2>&1
-				if [ "$?" -eq 0 ]; then
-					sed -i "/^##$scriptname/d" "${add}"/amtmUpdateScripts
-					[ ! "$(grep "^$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "$scriptname" >>"${add}"/amtmUpdateScripts
-					[ -z "$asuc" ] && allowAutoUpdate=1
-				else
-					sed -i "/^$scriptname/d" "${add}"/amtmUpdateScripts
-					[ ! "$(grep "^##$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "##$scriptname" >>"${add}"/amtmUpdateScripts
-					[ -z "$updcheck" ] && printf "Automatic script update disabled in $scriptname.\\n"
-				fi
+				sed -i "/^$scriptname/d" "${add}"/amtmUpdateScripts
+				[ ! "$(grep "^##$scriptname" "${add}"/amtmUpdateScripts)" ] && echo "##$scriptname" >>"${add}"/amtmUpdateScripts
+				[ -z "$updcheck" ] && printf "Automatic script update disabled in $scriptname.\\n"
 			fi
 		fi
-	else
-		[ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
 	fi
 }
 
@@ -872,7 +873,7 @@ script_check(){
 				upd="${E_BG}<- $remotever${NC}"
 			elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ]; then
 				if [ "$allowAutoUpdate" -a "$auUPD" ]; then
-					printf "\\n$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
+					printf "$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
 					"$scriptloc" amtmupdate
 					if [ "$?" -eq 0 ]; then
 						printf "$scriptname sucessfully updated\\n\\n" >>"${add}"/amtmUpdate.log
@@ -908,13 +909,13 @@ script_check(){
 				fi
 			fi
 			if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ]; then
-				echo "$(echo $scriptname | sed -e 's/ /_/g;s/\//_/g')Upate=\"$tpUpd\"">>"${add}"/availUpd.txt
-				echo "$(echo $scriptname | sed -e 's/ /_/g;s/\//_/g')MD5=\"$localmd5\"">>"${add}"/availUpd.txt
+				echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
+				echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"
 			updErr=1
-			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC} unreachable"
+			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC}\\n unreachable or file check failed."
 		fi
 	else
 		localver=
@@ -1121,7 +1122,7 @@ update_amtm(){
 				amtmUpd=0
 			fi
 			if [ "$amtmUpd" -gt 0 ]; then
-				echo "amtmUpate=\"$thisUpd\"">>"${add}"/availUpd.txt
+				echo "amtmUpdate=\"$thisUpd\"">>"${add}"/availUpd.txt
 				echo "amtmMD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
 		else
@@ -1134,9 +1135,9 @@ update_amtm(){
 			fi
 			g_i_m "${add}"
 			[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
-			if [ "$amtmUpate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
+			if [ "$amtmUpdate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
 				[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
-				unset amtmUpate amtmMD5
+				unset amtmUpdate amtmMD5
 			fi
 			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
 			tpw=

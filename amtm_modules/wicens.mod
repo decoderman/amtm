@@ -1,24 +1,23 @@
 #!/bin/sh
 #bof
 wicens_installed(){
-	scriptname='WAN IP Notification'
 	localVother="$(grep "^script_version=" "$scriptloc" | sed -e "s/script_version=//;s/'//g")"
-	witext=$scriptname
+	witext='WAN IP Notification'
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/maverickcdn/wicens/master/wicens.sh
 		remoteVother="$(c_url "$remoteurl" | grep "^script_version=" | sed -e "s/script_version=//;s/'//g")"
 		grepcheck=maverickcdn
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$wicensUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$wicensUpdate" ]; then
 		witext='WICENS'
 		localver="$lvtpu"
-		upd="${E_BG}$wicensUpate${NC}"
+		upd="${E_BG}$wicensUpdate${NC}"
 		if [ "$wicensMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^wicens.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver wicensUpate wicensMD5
-			witext=$scriptname
+			unset localver wicensUpdate wicensMD5
+			witext='WAN IP Notification'
 		fi
 	fi
 	[ "$suUpd" = 1 ] && witext='WICENS'

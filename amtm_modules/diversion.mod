@@ -1,9 +1,8 @@
 #!/bin/sh
 #bof
-diversion_installed(){
-	scriptname=Diversion
+Diversion_installed(){
+	[ -f "${add}"/diversion.mod ] && rm -rf "${add}"/diversion.mod
 	localVother="$(grep ^VERSION "$scriptloc" | sed -e 's/VERSION=//')"
-
 	if [ "$su" = 1 ]; then
 		case "$amtmBranch" in
 			LOCAL) 	remoteurl="http://diversion.test/diversion_adblocking/diversion";;
@@ -13,13 +12,13 @@ diversion_installed(){
 		grepcheck=thelonelycoder
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$DiversionUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$DiversionUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$DiversionUpate${NC}"
+		upd="${E_BG}$DiversionUpdate${NC}"
 		if [ "$DiversionMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^Diversion.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver DiversionUpate DiversionMD5
+			unset localver DiversionUpdate DiversionMD5
 		fi
 	fi
 
@@ -36,7 +35,7 @@ diversion_installed(){
 		show_amtm menu
 	}
 }
-install_diversion(){
+install_Diversion(){
 	p_e_l
 	printf " This installs Diversion - the Router Adblocker\\n on your router.\\n\\n"
 	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480\\n"

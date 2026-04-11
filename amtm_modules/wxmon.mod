@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 wxmon_installed(){
-	scriptname=wxmon
 	localVother="$(grep ^version "$scriptloc" | sed -e 's/version=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ViktorJp/WXMON/master/wxmon.sh
@@ -9,13 +8,13 @@ wxmon_installed(){
 		grepcheck=ViktorJp
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$wxmonUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$wxmonUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$wxmonUpate${NC}"
+		upd="${E_BG}$wxmonUpdate${NC}"
 		if [ "$wxmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^wxmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver wxmonUpate wxmonMD5
+			unset localver wxmonUpdate wxmonMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} wx${NC} %-9s%-21s%${COR}s\\n" "open" "WXMON     $localver" " $upd"

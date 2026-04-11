@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 ModSyslogUI_installed(){
-	scriptname=ModSyslogUI
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/kstamand/modsyslogui/master/modsyslogui
@@ -9,13 +8,13 @@ ModSyslogUI_installed(){
 	fi
 	script_check
 	if [ -z "$su" -a -z "$tpu" ]; then
-		if [ "$ModSyslogUIUpate" ]; then
+		if [ "$ModSyslogUIUpdate" ]; then
 			localver="$lvtpu"
-			upd="${E_BG}$ModSyslogUIUpate${NC}"
+			upd="${E_BG}$ModSyslogUIUpdate${NC}"
 			if [ "$ModSyslogUIMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 				[ -f "${add}"/availUpd.txt ] && sed -i '/^ModSyslogUI.*/d' "${add}"/availUpd.txt
 				upd="${E_BG}${NC}$lvtpu"
-				unset localver ModSyslogUIUpate ModSyslogUIMD5
+				unset localver ModSyslogUIUpdate ModSyslogUIMD5
 			fi
 		fi
 	fi

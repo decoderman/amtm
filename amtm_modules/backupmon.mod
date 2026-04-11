@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 backupmon_installed(){
-	scriptname=backupmon
 	localVother="$(grep ^Version "$scriptloc" | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ViktorJp/BACKUPMON/main/backupmon.sh
@@ -9,13 +8,13 @@ backupmon_installed(){
 		grepcheck=ViktorJp
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$backupmonUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$backupmonUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$backupmonUpate${NC}"
+		upd="${E_BG}$backupmonUpdate${NC}"
 		if [ "$backupmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^backupmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver backupmonUpate backupmonMD5
+			unset localver backupmonUpdate backupmonMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} bm${NC} %-9s%-21s%${COR}s\\n" "open" "BACKUPMON      $localver" " $upd"

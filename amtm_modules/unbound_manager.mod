@@ -1,25 +1,24 @@
 #!/bin/sh
 #bof
 unbound_manager_installed(){
-	scriptname='unbound Manager'
 	localVother="$(grep "^VERSION=" "$scriptloc" | sed -e 's/VERSION=//;s/"//g')"
 	scriptgrep='^VERSION='
-	umtext=$scriptname
+	umtext='unbound Manager'
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/MartineauUK/Unbound-Asuswrt-Merlin/master/unbound_manager.sh
 		remoteVother="$(c_url "$remoteurl" | grep "^VERSION=" | sed -e 's/VERSION=//;s/"//g')"
 		grepcheck=Martineau
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$unbound_ManagerUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$unbound_ManagerUpdate" ]; then
 		umtext='unbound Mgr'
 		localver="$lvtpu"
-		upd="${E_BG}$unbound_ManagerUpate${NC}"
+		upd="${E_BG}$unbound_ManagerUpdate${NC}"
 		if [ "$unbound_ManagerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^unbound_Manager.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver unbound_ManagerUpate unbound_ManagerMD5
-			umtext=$scriptname
+			unset localver unbound_ManagerUpdate unbound_ManagerMD5
+			umtext='unbound Manager'
 		fi
 	fi
 	[ "$suUpd" = 1 ] && umtext='unbound Mgr'

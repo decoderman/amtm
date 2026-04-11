@@ -101,7 +101,7 @@ entware_installed(){
 							[ "$tpu" ] && echo "&nbsp;- $(echo $line | awk '{print $1}') $(echo $line | awk '{print $3}') -> $(echo $line | awk '{print $5}')<br>" >>/tmp/amtm-tpu-check
 						done </tmp/amtm-entware-check
 						echo
-						echo "EntwareUpate=\"$i\"">>"${add}"/availUpd.txt
+						echo "EntwareUpdate=\"$i\"">>"${add}"/availUpd.txt
 						echo "EntwareMD5=\"$(md5sum /opt/lib/opkg/status | awk '{print $1}')\"">>"${add}"/availUpd.txt
 					fi
 				else
@@ -116,15 +116,15 @@ entware_installed(){
 		rm -f /tmp/amtm-entware-check
 	else
 		entUpd=
-		if [ "$EntwareUpate" ]; then
+		if [ "$EntwareUpdate" ]; then
 			entUpd=1
-			[ "$EntwareUpate" -lt 10 ] && EntwareUpate="$EntwareUpate p" || EntwareUpate="${EntwareUpate}p"
+			[ "$EntwareUpdate" -lt 10 ] && EntwareUpdate="$EntwareUpdate p" || EntwareUpdate="${EntwareUpdate}p"
 			if [ "$EntwareMD5" != "$(md5sum /opt/lib/opkg/status | awk '{print $1}')" ]; then
 				[ -f "${add}"/availUpd.txt ] && sed -i '/^Entware.*/d' "${add}"/availUpd.txt
-				unset EntwareUpate EntwareMD5 entUpd
+				unset EntwareUpdate EntwareMD5 entUpd
 			fi
 		fi
-		[ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpate avail${NC}"
+		[ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpdate avail${NC}"
 		[ -z "$entUpd" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi
 

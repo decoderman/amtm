@@ -27,7 +27,7 @@ dnscrypt_installed(){
 				[ "$tpu" ] && echo "- dnscrypt installer, dnscrypt-proxy $localDPver -> $remoteDPver <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
 				localDPver=$localDPver
-				echo "dnscrypt_installerPxUpate=\"$updtpuDP\"">>"${add}"/availUpd.txt
+				echo "dnscrypt_installerPxUpdate=\"$updtpuDP\"">>"${add}"/availUpd.txt
 				echo "dnscrypt_installerPxVer=\"$localDPver\"">>"${add}"/availUpd.txt
 			else
 				localDPver=
@@ -39,7 +39,6 @@ dnscrypt_installed(){
 		ditext="dnscrypt installer"
 	fi
 
-	scriptname='dnscrypt installer'
 	scriptgrep='^DI_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl="https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer"
@@ -47,33 +46,33 @@ dnscrypt_installed(){
 	fi
 	script_check
 	[ "$su" = 1 ] && [ -z "$localver" ] && ditext="dnscrypt installer"
-	if [ -z "$su" -a -z "$tpu" ] && [ "$dnscrypt_installerUpate" -o "$dnscrypt_installerPxUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$dnscrypt_installerUpdate" -o "$dnscrypt_installerPxUpdate" ]; then
 		dptext="dnscrypt-prox"
-		if [ "$dnscrypt_installerUpate" ]; then
+		if [ "$dnscrypt_installerUpdate" ]; then
 			ditext="dnscrypt inst"
 			localver="$lvtpu"
-			upd="${E_BG}$dnscrypt_installerUpate${NC}"
+			upd="${E_BG}$dnscrypt_installerUpdate${NC}"
 			if [ "$dnscrypt_installerMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 				if [ -f "${add}"/availUpd.txt ]; then
 					sed -i '/^dnscrypt_installerU.*/d' "${add}"/availUpd.txt
 					sed -i '/^dnscrypt_installerM.*/d' "${add}"/availUpd.txt
 				fi
-				unset localver dnscrypt_installerUpate dnscrypt_installerMD5
+				unset localver dnscrypt_installerUpdate dnscrypt_installerMD5
 				upd="${E_BG}${NC}$lvtpu"
 				ditext="dnscrypt installer"
 			fi
 		fi
-		if [ "$dnscrypt_installerPxUpate" ]; then
+		if [ "$dnscrypt_installerPxUpdate" ]; then
 			localDPver="$(/jffs/dnscrypt/dnscrypt-proxy -version)"
-			updDP="${E_BG}$dnscrypt_installerPxUpate${NC}"
+			updDP="${E_BG}$dnscrypt_installerPxUpdate${NC}"
 			if [ "$dnscrypt_installerPxVer" != "$localDPver" ]; then
 				[ -f "${add}"/availUpd.txt ] && sed -i '/^dnscrypt_installerP.*/d' "${add}"/availUpd.txt
-				unset dnscrypt_installerPxUpate dnscrypt_installerPxVer
+				unset dnscrypt_installerPxUpdate dnscrypt_installerPxVer
 			fi
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} di${NC} %-9s%-21s%${COR}s\\n" "open" "$ditext $localver" " $upd"
-	[ "$su" = 1 -a -z "$updcheck" ] || [ "$dnscrypt_installerPxUpate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$dptext $localDPver" " $updDP"
+	[ "$su" = 1 -a -z "$updcheck" ] || [ "$dnscrypt_installerPxUpdate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$dptext $localDPver" " $updDP"
 	case_di(){
 		p_e_l
 		if ! dnscrypt_sh && [ -s "/jffs/dnscrypt/installer" ]; then

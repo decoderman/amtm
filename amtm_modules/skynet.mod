@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 skynet_installed(){
-	scriptname=Skynet
 	localVother=$(grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' "$scriptloc")
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/Adamm00/IPSet_ASUS/master/firewall.sh
@@ -9,13 +8,13 @@ skynet_installed(){
 		grepcheck=Adamm
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$SkynetUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$skynetUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$SkynetUpate${NC}"
-		if [ "$SkynetMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
-			[ -f "${add}"/availUpd.txt ] && sed -i '/^Skynet.*/d' "${add}"/availUpd.txt
+		upd="${E_BG}$skynetUpdate${NC}"
+		if [ "$skynetMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
+			[ -f "${add}"/availUpd.txt ] && sed -i '/^skynet.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver SkynetUpate SkynetMD5
+			unset localver skynetUpdate skynetMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} 2 ${NC} %-9s%-21s%${COR}s\\n" "open" "Skynet        $localver" " $upd"

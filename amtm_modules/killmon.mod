@@ -1,7 +1,6 @@
 #!/bin/sh
 #bof
 killmon_installed(){
-	scriptname=killmon
 	localVother="$(grep ^Version "$scriptloc" | awk '{print $1}' | sed -e 's/Version=//;s/"//g')"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ViktorJp/KILLMON/main/killmon.sh
@@ -9,13 +8,13 @@ killmon_installed(){
 		grepcheck=ViktorJp
 	fi
 	script_check
-	if [ -z "$su" -a -z "$tpu" ] && [ "$killmonUpate" ]; then
+	if [ -z "$su" -a -z "$tpu" ] && [ "$killmonUpdate" ]; then
 		localver="$lvtpu"
-		upd="${E_BG}$killmonUpate${NC}"
+		upd="${E_BG}$killmonUpdate${NC}"
 		if [ "$killmonMD5" != "$(md5sum "$scriptloc" | awk '{print $1}')" ]; then
 			[ -f "${add}"/availUpd.txt ] && sed -i '/^killmon.*/d' "${add}"/availUpd.txt
 			upd="${E_BG}${NC}$lvtpu"
-			unset localver killmonUpate killmonMD5
+			unset localver killmonUpdate killmonMD5
 		fi
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} km${NC} %-9s%-21s%${COR}s\\n" "open" "KILLMON     $localver" " $upd"
