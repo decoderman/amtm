@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.7
-release="April 11 2026"
+version=6.7.1
+release="April 18 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -142,7 +142,7 @@ show_amtm(){
 	else
 		[ -z "$updcheck" -a -z "$tpu" ] && rm -f "${add}"/availUpd.txt
 	fi
-	unset dlok dfc
+	unset dlok dfc end3rdps
 	if [ -z "$updcheck" ]; then
 		echo
 		clear
@@ -257,7 +257,7 @@ show_amtm(){
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager EntReq
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor EntReq
-	spacer
+	end3rdps
 	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
 	osr
 	tpucheck
@@ -282,6 +282,8 @@ show_amtm(){
 		case "$i" in
 			spacer) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 						atii=;;
+			end3rdps) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
+						atii=;end3rdps=1;;
 			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo";;
 			tpucheck) 	if [ -z "$asuc" ]; then
 							if [ "$tpu" ]; then
@@ -343,10 +345,8 @@ show_amtm(){
 								4)	unset bsp ssp;;
 							esac
 							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')$f5$f6"
-							if [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ]; then
-								sed -i "/^$scriptname.*/d" "${add}"/availUpd.txt
-							fi
-							[ -s "${add}"/amtmUpdateScripts ] && [ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
+							[ -z "$end3rdps" ] && [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ] && sed -i "/^$scriptname.*/d" "${add}"/availUpd.txt
+							[ -z "$end3rdps" ] && [ -s "${add}"/amtmUpdateScripts ] && [ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
 							r_m ${f2}.mod
 							case $f3 in
 								1)			case_1(){ c_e Diversion;g_m Diversion.mod include;[ "$dlok" = 1 ] && install_Diversion || show_amtm menu;};;
@@ -477,6 +477,10 @@ show_amtm(){
 	fi
 
 	[ "$ss" ] && ssi=1 || ssi=
+	if [ "$auUPD" ]; then
+		unset scriptUpd auUPD su suUpd am tpText tpw
+		a_m " 3rd-party script(s) have been automatically\\n updated by amtm.\\n"
+	fi
 	unset ss atii upd
 	if [ "$su" = 1 ]; then
 		su=
@@ -876,9 +880,9 @@ script_check(){
 					printf "$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
 					"$scriptloc" amtmupdate
 					if [ "$?" -eq 0 ]; then
-						printf "$scriptname sucessfully updated\\n\\n" >>"${add}"/amtmUpdate.log
+						printf "$scriptname sucessfully updated from v$localver to v$remotever\\n\\n" >>"${add}"/amtmUpdate.log
 					else
-						printf "$scriptname update failed\\n\\n" | tee -a "${add}"/amtmUpdate.log
+						printf "$scriptname update v$localver to v$remotever failed\\n\\n" | tee -a "${add}"/amtmUpdate.log
 					fi
 					upd="${GN_BG}$remotever${NC}"
 				else
