@@ -2,6 +2,7 @@
 #bof
 Wireless_Report_installed(){
 	scriptgrep='^SCRIPT_VERSION='
+	wrtext="Wireless Report"
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/JB1366/Wireless_Report/main/wirelessreport.sh
 		grepcheck=JB_1366
@@ -16,7 +17,8 @@ Wireless_Report_installed(){
 			unset localver Wireless_ReportUpdate Wireless_ReportMD5
 		fi
 	fi
-	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} wr${NC} %-9s%-21s%${COR}s\\n" "open" "Wireless Report $localver" " $upd"
+	[ "$localver" = "No MD5" ] && wrtext="Wireless Rpt."
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} wr${NC} %-9s%-21s%${COR}s\\n" "open" "$wrtext $localver" " $upd"
 	case_wr(){
 		/jffs/addons/wireless_report/wirelessreport.sh install
 		sleep 2

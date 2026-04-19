@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.7.1
-release="April 18 2026"
+version=6.7.2
+release="April 19 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -493,7 +493,7 @@ show_amtm(){
 					p_e_l
 				fi
 				amtmUpdText="updated from $version to $amtmRemotever"
-				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n\\n See SNB Forum post and/or\\n https://diversion.ch for what's new.\\n"
+				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n\\n See SNB Forum post and / or\\n https://diversion.ch for what's new.\\n"
 				if [ "$amtmUpd" = 2 ]; then
 					printf " ${R}amtm MD5 hash change detected${NC}\\n"
 					amtmUpdText="MD5 update applied."
@@ -555,7 +555,7 @@ show_amtm(){
 	unset sfp dfc
 	rm -f /tmp/amtm-dl
 
-	if [ "$1" = menu ] && [ -z "$am" ] && [ -z "$MD5Show" ]; then
+	if [ "$1" = menu -a -z "$am" ] && [ -z "$MD5Show" -a -z "$NoMD5" ]; then
 		p_e_l
 	else
 		p_e_l
@@ -702,10 +702,8 @@ c_j(){
 }
 
 MD5_info(){
-	if [ "$MD5Show" ]; then
-		printf " ${E_BG} MD5 upd ${NC} = Script file hash change.\\n\\n"
-		MD5Show=
-	fi
+	[ "$MD5Show" ] && printf " ${E_BG} MD5 upd ${NC} = Script file hash change.\\n\\n";MD5Show=
+	[ "$NoMD5" ] && printf " No MD5 = Script suppresses MD5 hash check.\\n\\n";NoMD5=
 }
 
 s_l_f(){
@@ -898,8 +896,8 @@ script_check(){
 					suUpd=1
 				fi
 			else
-				if grep -q '^# amtm NoMD5check' "$scriptloc"; then
-					localver="No MD5"
+				if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
+					localver="No MD5";NoMD5=1
 				else
 					remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
 					if [ "$localmd5" != "$remotemd5" ]; then
