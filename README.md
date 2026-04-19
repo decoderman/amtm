@@ -11,8 +11,7 @@ See the Asuswrt-Merlin wiki for the [usage of this firmware version](https://git
 News and more about amtm at [Diversion - the Router Adblocker](https://diversion.ch).
 Discussion about [amtm - the Asuswrt-Merlin Terminal Menu](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=16).
 
-**Note that starting with version 2.7, amtm is hosted on the Diversion Server**.
-The transition for the built in amtm updater is seamless, no user action is required to use the new Server.
+**Note that amtm is hosted on the Diversion Server**.
 
 ### How to start amtm in Asuswrt-Merlin firmware 384.15 and newer
 Enter this into your favorite SSH terminal:
@@ -21,15 +20,17 @@ Enter this into your favorite SSH terminal:
 amtm
 ```
 
-### Supported scripts
+**Note that the standalone amtm legacy version for Asuswrt-Merlin firmware older than 384.15 is discontinued and no longer maintained. It remains at version 6.3, released on January 31 2026**
 
-| Script | Maintainer | Infos |
+### Supported scripts in amtm
+
+| Script name | Maintainer(s) | Infos |
 |--------|------------|------|
 | Diversion | thelonelycoder | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480) |
 | Skynet | Adamm | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=14) |
 | FlexQoS | dave14305, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901) |
 | YazFi | Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009) |
-| scribe | cmkelley | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7) |
+| scribe | cmkelley, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=7) |
 | x3mRouting | Xentrk | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=9) |
 | unbound Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=5) |
 | connmon |Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009) |
@@ -37,10 +38,10 @@ amtm
 | scMerlin | Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=23&starter_id=53009) |
 | spdMerlin | Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=19&starter_id=53009) |
 | uiDivStats | Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=15&starter_id=53009) |
-| uiScribe | Jack Yaz | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=24&starter_id=53009) |
+| uiScribe | Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=24&starter_id=53009) |
 | DNSCrypt | bigeyes0x0, SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179) |
 | YazDHCP | Jack Yaz, AMTM-OSR team | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=31&starter_id=53009) |
-| Vnstat | dev_null | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
+| Vnstat | dev_null, AMTM-OSR team | [Link](https://www.snbforums.com/threads/beta-2-vnstat-on-merlin-ui-cli-and-email-data-use-monitoring-with-full-install-and-menu.70727/) |
 | WireGuard Session Manager | Martineau | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215) |
 | Asuswrt-Merlin-AdGuardHome-Installer | SomeWhereOverTheRainBow | [Link](https://www.snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/) |
 | VPNMON-R3 | Viktor Jaep | [Link](https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=36) |
@@ -59,7 +60,7 @@ amtm
 
 amtm also offers an interface for managing a number of other features:
 
-| Other features | Maintainer |
+| Other amtm features | Maintainer(s) |
 |----------------|-----------|
 | Entware | zyxmon, ryzhovau, themiron |
 | USB disk check at boot | ColinTaylor, latenitetech, thelonelycoder |
@@ -79,6 +80,6 @@ amtm also offers an interface for managing a number of other features:
 | Automatic 3rd-party script updates | thelonelycoder
 | Add up to four of your own personal scripts to the menu | thelonelycoder
 
-Feel free to visit and contribute to the AMTM Orphaned Script Revival repo (AMTM-OSR): [Link](https://github.com/AMTM-OSR)
+Feel free to visit and contribute to the AMTM Orphaned Script Revival repo [AMTM-OSR](https://github.com/AMTM-OSR).
 
-[![amtm 6.0](https://cdn.imgchest.com/files/7w6c25ndqxy.png "amtm 6.0")](https://cdn.imgchest.com/files/7w6c25ndqxy.png "amtm 6.0")
+[![amtm 6.7.2](https://cdn.imgchest.com/files/33d1eea4ed17.png "amtm 6.7.2")](https://cdn.imgchest.com/files/33d1eea4ed17.png "amtm 6.7.2")
