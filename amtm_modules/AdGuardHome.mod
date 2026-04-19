@@ -21,12 +21,12 @@ AdGuardHome_installed(){
 		grepcheck=SomeWhereOverTheRainBow
 		if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = release ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url "${latestverurl}?per_page=3" | awk '/"tag_name":/ {t=$2} /"prerelease": false/ {gsub(/[",]/,"",t); print t; exit}')"
+			remoteAGHver="$(c_url "${latestverurl}?per_page=5" | awk '/"tag_name":/ {t=$2} /"prerelease": false/ {gsub(/[",]/,"",t); print t; exit}')"
 			AGHext="AGH binary"
 			updAGH="${GN_BG}$localAGHver${NC}"
 		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = beta ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url "${latestverurl}?per_page=3" | awk '/"tag_name":/ {t=$2} /"prerelease": true/ {gsub(/[",]/,"",t); print t; exit}')"
+			remoteAGHver="$(c_url "${latestverurl}?per_page=5" | awk '/"tag_name":/ {t=$2} /"prerelease": true/ {gsub(/[",]/,"",t); print t; exit}')"
 			AGHext="AGH Beta bin"
 			updAGH="${GN_BG}$localAGHver${NC}"
 		fi
