@@ -1,13 +1,15 @@
 #!/bin/sh
 #bof
-version=6.7.2
-release="April 19 2026"
+version=6.7.3
+release="April 25 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
 wl_MD5=97e81bf111660fa425c9bdbb3f431bc9 # shared-amtm-whitelist
 EMAIL_DIR="${add}/mail"
 [ -f "${add}"/amtmBranch ] && . "${add}"/amtmBranch
+# Workaround for Entware ELF binaries compiled with RUNPATH, thanks @Martinski #
+unset LD_LIBRARY_PATH
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
@@ -930,6 +932,7 @@ reset_amtm(){
 	rm_entware() {
 		if [ -f "/jffs/scripts/services-stop" ]; then
 			[ -f /opt/etc/init.d/rc.unslung ] && /opt/etc/init.d/rc.unslung stop
+			sleep 2
 			sed -i '/rc.unslung stop/d' /jffs/scripts/services-stop
 			r_w_e /jffs/scripts/services-stop
 		fi
