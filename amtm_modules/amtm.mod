@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.7.3
-release="April 25 2026"
+version=6.8
+release="May 02 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -253,6 +253,7 @@ show_amtm(){
 	/opt/etc/AdGuardHome/installer AdGuardHome ag Asuswrt-Merlin-AdGuardHome-Installer EntReq
 	/jffs/scripts/wicens.sh wicens wi WICENS¦-¦WAN¦IP¦Change¦Email¦Notification¦Script
 	/jffs/scripts/wan-failover.sh WAN_Failover wf Dual¦WAN¦Failover¦-¦replaces¦ASUS¦WAN¦Failover
+	/jffs/scripts/knock.sh Knock kn Knock¦-¦Router¦Commands¦for¦non-admin¦users
 	spacer
 	/jffs/scripts/vpnmon-r3.sh vpnmon vp VPNMON-R3¦-¦Monitor¦health¦of¦WAN¦DW¦VPN EntReq
 	/jffs/scripts/domain_vpn_routing.sh vpn_routing vr Domain-based¦VPN¦Routing
@@ -336,19 +337,23 @@ show_amtm(){
 							[ -f "${add}/${f2}.mod" ] && ${f2}_installed
 						else
 							f3="$(echo $i | awk '{print $3}')"
-							[ "$(echo $i | grep "osr")" ] && f5="${GN}*${NC}" || f5=
-							f6=
-							[ "$(echo $i | grep "EntReq")" ] && f6=", ${R}Requires Entware${NC}"
-							[ "$(echo $i | grep "EntRec")" ] && f6=", ${GN}Entware recommended${NC}"
-							bsp=' '
-							case "$(echo $f3 | wc -m)" in
-								2)	ssp=' ';;
-								3)	ssp=;;
-								4)	unset bsp ssp;;
-							esac
-							[ "$ss" ] && printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')$f5$f6"
-							[ -z "$end3rdps" ] && [ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ] && sed -i "/^$scriptname.*/d" "${add}"/availUpd.txt
-							[ -z "$end3rdps" ] && [ -s "${add}"/amtmUpdateScripts ] && [ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
+							if [ "$ss" ]; then
+								[ "$(echo $i | grep "osr")" ] && f5="${GN}*${NC}" || f5=
+								f6=
+								[ "$(echo $i | grep "EntReq")" ] && f6=", ${R}Requires Entware${NC}"
+								[ "$(echo $i | grep "EntRec")" ] && f6=", ${GN}Entware recommended${NC}"
+								bsp=' '
+								case "$(echo $f3 | wc -m)" in
+									2)	ssp=' ';;
+									3)	ssp=;;
+									4)	unset bsp ssp;;
+								esac
+								printf "${E_BG}$bsp${f3}$ssp${NC} %-9s%s\\n" "install" "$(echo $i | awk '{print $4}' | sed 's/¦/ /g')$f5$f6"
+							fi
+							if [ -z "$end3rdps" ]; then
+								[ -s "${add}"/availUpd.txt -a -f "${add}/${f2}.mod" ] && sed -i "/^$scriptname.*/d" "${add}"/availUpd.txt
+								[ -s "${add}"/amtmUpdateScripts ] && [ "$(grep "$scriptname" "${add}"/amtmUpdateScripts)" ] && sed -i "/$scriptname/d" "${add}"/amtmUpdateScripts
+							fi
 							r_m ${f2}.mod
 							case $f3 in
 								1)			case_1(){ c_e Diversion;g_m Diversion.mod include;[ "$dlok" = 1 ] && install_Diversion || show_amtm menu;};;
@@ -381,6 +386,7 @@ show_amtm(){
 								[Ww][Gg])	case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 								[Aa][Gg])	case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
 								[Ww][Ff])	case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
+								[Kk][Nn])	case_kn(){ c_e Knock;g_m Knock.mod include;[ "$dlok" = 1 ] && install_Knock || show_amtm menu;};;
 								[Vv][Rr])	case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
 								[Ee][Pp])	case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
 								[Pp])		case_p(){ g_m personal_script.mod include;[ "$dlok" = 1 ] && install_personal_script || show_amtm menu;};;
@@ -607,6 +613,7 @@ show_amtm(){
 			[Ww][Gg])			case_wg;break;;
 			[Aa][Gg])			case_ag;break;;
 			[Ww][Ff])			case_wf;break;;
+			[Kk][Nn])			case_kn;break;;
 			[Vv][Rr])			case_vr;break;;
 			[Ee][Pp])			case_ep;break;;
 			[Dd][Cc])			case_dc;break;;
@@ -757,13 +764,13 @@ auto_script_updates(){
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
 			i="$((i+1))"
 			[ "$(echo $i | wc -c)" -ge 3 ] && spce= || spce=" "
-			printf " $i: $spce${GN}$script${NC}, enabled\\n"
+			printf " $spce$i: ${GN}$script${NC}, enabled\\n"
 			eval "scriptSel$i=$script"
 		done
 		for script in $(grep "^#[^#]" "${add}"/amtmUpdateScripts); do
 			i="$((i+1))"
 			[ "$(echo $i | wc -c)" -ge 3 ] && spce= || spce=" "
-			printf " $i: $spce${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\\n"
+			printf " $spce$i: $spce${R}$(echo $script | sed 's/#//')${NC}, disabled in amtm\\n"
 			eval "scriptSel$i=$(echo $script | sed 's/#//')"
 		done
 
@@ -857,9 +864,10 @@ asu_check(){
 				[ -z "$updcheck" ] && printf "Automatic script update disabled in $scriptname.\\n"
 			fi
 		fi
+	elif grep -q "$scriptname" "${add}"/amtmUpdateScripts; then
+		sed -i "/^$scriptname/d" "${add}"/amtmUpdateScripts
 	fi
 }
-
 
 script_check(){
 	atii=1
