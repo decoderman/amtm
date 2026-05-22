@@ -1,17 +1,19 @@
 #!/bin/sh
 #bof
 AdGuardHome_sh(){
-	local AGH_script tmpfile
+	local AGH_script tmpfile ret
 	tmpfile="/tmp/home/root/installer"
 	AGH_script="$(c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer)" || return 1
 	[ -n "$AGH_script" ] || return 1
 
-	printf "%s\n" "$AGH_script" > "$tmpfile"
-	chmod 0755 "$tmpfile"
-	$tmpfile
-	[ -f "$tmpfile" ] && rm -rf "$tmpfile"
-	return 0
+	printf "%s\n" "$AGH_script" > "$tmpfile" || return 1
+	chmod 0755 "$tmpfile" || return 1
+	"$tmpfile" "$@"
+	ret="$?"
+	[ -f "$tmpfile" ] && rm -f "$tmpfile"
+	return "$ret"
 }
+
 AdGuardHome_installed(){
 	scriptgrep='^AI_VERSION'
 	[ -f /opt/etc/AdGuardHome/.config ] && . /opt/etc/AdGuardHome/.config
@@ -77,15 +79,45 @@ AdGuardHome_installed(){
 	fi
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ag${NC} %-9s%-21s%${COR}s\\n" "open" "AdGuardHome    $localver" " $upd"
 	[ "$su" = 1 -a -z "$updcheck" ] || [ "$AGHbinUpdate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$AGHext $localAGHver" " $updAGH"
+
 	case_ag(){
-		if ! AdGuardHome_sh && [ -s "/opt/etc/AdGuardHome/installer" ]; then
-			if [ ! -x "/opt/etc/AdGuardHome/installer" ]; then chmod 0755 /opt/etc/AdGuardHome/installer; fi
-			/opt/etc/AdGuardHome/installer
+		local action ret
+		#
+		# If AMTM detected either an installer update or an AGH binary update,
+		# always run the installer through its AMTM update path.
+		#
+		# This lets one update pass handle:
+		#   1. installer update
+		#   2. AGH binary update
+		#   3. support files update
+		#
+		if [ "$AdGuardHomeUpdate" ] || [ "$AGHbinUpdate" ]; then
+			action="amtmupdate"
+		else
+			action=""
+		fi
+		if [ "$action" ]; then
+			AdGuardHome_sh "$action"
+			ret="$?"
+		else
+			AdGuardHome_sh
+			ret="$?"
+		fi
+		if [ "$ret" -ne 0 ] && [ -s "/opt/etc/AdGuardHome/installer" ]; then
+			if [ ! -x "/opt/etc/AdGuardHome/installer" ]; then
+				chmod 0755 /opt/etc/AdGuardHome/installer
+			fi
+			if [ "$action" ]; then
+				/opt/etc/AdGuardHome/installer "$action"
+			else
+				/opt/etc/AdGuardHome/installer
+			fi
 		fi
 		sleep 2
 		show_amtm menu
 	}
 }
+
 install_AdGuardHome(){
 	if [ -f /jffs/dnscrypt/manager ]; then
 		am=;show_amtm " ! AdGuardHome is not available to install.\\n dnscrypt installer is installed which is incompatible\\n with AdGuardHome."
