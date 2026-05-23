@@ -883,7 +883,7 @@ script_check(){
 
 			if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
 				upd="${E_BG}<- $remotever${NC}"
-			elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ]; then
+			elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
 				if [ "$allowAutoUpdate" -a "$auUPD" ]; then
 					printf "$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
 					"$scriptloc" amtmupdate
@@ -900,8 +900,14 @@ script_check(){
 					else
 						upd="${E_BG}-> $remotever${NC}"
 					fi
-					tpUpd="-> $remotever"
-					[ "$tpu" ] && echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
+						if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
+							forceOnlyUpdate=1
+						else
+							[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
+						fi
+					if [ "$tpu" ]; then
+						[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
+					fi
 
 					suUpd=1
 				fi
@@ -920,7 +926,7 @@ script_check(){
 					fi
 				fi
 			fi
-			if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ]; then
+			if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ] && [ -z "$forceOnlyUpdate" ]; then
 				echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
 				echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 			fi
@@ -933,7 +939,7 @@ script_check(){
 		localver=
 		[ "$asuc" ] && asu_check
 	fi
-	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate
+	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate forceScriptUpdate forceOnlyUpdate
 }
 
 reset_amtm(){

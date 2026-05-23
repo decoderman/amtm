@@ -22,6 +22,7 @@ dnscrypt_installed(){
 		updDP="${GN_BG}$localDPver${NC}"
 		if [ "$localDPver" ] && [ "$remoteDPver" ]; then
 			if [ "$localDPver" != "$remoteDPver" ]; then
+				forceScriptUpdate="binary $localDPver -> $remoteDPver"
 				updDP="${E_BG}-> $remoteDPver${NC}"
 				updtpuDP="-> $remoteDPver"
 				[ "$tpu" ] && echo "- dnscrypt installer, dnscrypt-proxy $localDPver -> $remoteDPver <br>" >>/tmp/amtm-tpu-check
