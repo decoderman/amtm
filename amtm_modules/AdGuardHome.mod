@@ -32,6 +32,7 @@ AdGuardHome_installed(){
 		fi
 		if [ "$localAGHver" ] && [ "$remoteAGHver" ]; then
 			if [ "$localAGHver" != "$remoteAGHver" ]; then
+				forceScriptUpdate="binary $localAGHver -> $remoteAGHver"
 				updAGH="${E_BG}-> $remoteAGHver${NC}"
 				[ "$tpu" ] && echo "- $scriptname binary $localAGHver -> $remoteAGHver <br>" >>/tmp/amtm-tpu-check
 				suUpd=1
