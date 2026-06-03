@@ -20,24 +20,25 @@ AdGuardHome_installed(){
 		# Change from using github api to using AdGuard Metadata directly.
 		latestverurl=https://static.adguard.com/adguardhome
 		grepcheck=SomeWhereOverTheRainBow
-		if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = release ]; then
+		case "${ADGUARD_BRANCH}" in
+			release)
+				_AGHchannel=stable
+				AGHext="AGH Stable bin"
+				;;
+			beta)
+				_AGHchannel=beta
+				AGHext="AGH Beta bin"
+				;;
+			edge)
+				_AGHchannel=edge
+				AGHext="AGH Edge bin"
+				;;
+		esac
+		if [ "${_AGHchannel}" ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url "${latestverurl}/stable/version.txt" | awk 'NF {VERSION = $1; sub(/^version=/, "", VERSION); print VERSION; exit}')"
+			remoteAGHver="$(c_url "${latestverurl}/${_AGHchannel}/version.txt" | awk 'NF {VERSION = $1; sub(/^version=/, "", VERSION); print VERSION; exit}')"
 			# Add fallback to local metadata cache for version checks
-			[ -z "${remoteAGHver}" ] && remoteAGHver="$(c_url "https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/refs/heads/master/armv8/checksum.txt" | awk '$1 !~ /^#/ && $2 == "stable" {VERSION = $3; sub(/^version=/, "", VERSION); print VERSION; exit}')"
-			AGHext="AGH Stable bin"
-			updAGH="${GN_BG}$localAGHver${NC}"
-		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = beta ]; then
-			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url "${latestverurl}/beta/version.txt" | awk 'NF {VERSION = $1; sub(/^version=/, "", VERSION); print VERSION; exit}')"
-			[ -z "${remoteAGHver}" ] && remoteAGHver="$(c_url "https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/refs/heads/master/armv8/checksum.txt" | awk '$1 !~ /^#/ && $2 == "beta" {VERSION = $3; sub(/^version=/, "", VERSION); print VERSION; exit}')"
-			AGHext="AGH Beta bin"
-			updAGH="${GN_BG}$localAGHver${NC}"
-		elif [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = edge ]; then
-			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url "${latestverurl}/edge/version.txt" | awk 'NF {VERSION = $1; sub(/^version=/, "", VERSION); print VERSION; exit}')"
-			[ -z "${remoteAGHver}" ] && remoteAGHver="$(c_url "https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/refs/heads/master/armv8/checksum.txt" | awk '$1 !~ /^#/ && $2 == "edge" {VERSION = $3; sub(/^version=/, "", VERSION); print VERSION; exit}')"
-			AGHext="AGH Edge bin"
+			[ -z "${remoteAGHver}" ] && remoteAGHver="$(c_url "https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/refs/heads/master/armv8/checksum.txt" | awk -v VAR="${_AGHchannel}" '$1 !~ /^#/ && $2 == VAR {VERSION = $3; sub(/^version=/, "", VERSION); print VERSION; exit}')"
 			updAGH="${GN_BG}$localAGHver${NC}"
 		fi
 		if [ "$localAGHver" ] && [ "$remoteAGHver" ]; then
@@ -57,12 +58,6 @@ AdGuardHome_installed(){
 		fi
 	fi
 	script_check
-	if [ "$ADGUARD_BRANCH" -a "$ADGUARD_BRANCH" = edge ]; then
-		[ -f "${add}/availUpd.txt" ] && sed -i '/^AGHbin.*/d' "${add}"/availUpd.txt
-		unset AGHbinUpdate AGHbinVer updAGH
-		localAGHver=Edge
-		AGHext="AGH binary branch:"
-	fi
 	if [ -z "$su" -a -z "$tpu" ] && [ "$AdGuardHomeUpdate" -o "$AGHbinUpdate" ]; then
 		localver="$lvtpu"
 		upd="${E_BG}$AdGuardHomeUpdate${NC}"
