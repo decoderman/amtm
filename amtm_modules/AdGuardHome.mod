@@ -40,6 +40,7 @@ AdGuardHome_installed(){
 			# Add fallback to local metadata cache for version checks
 			[ -z "${remoteAGHver}" ] && remoteAGHver="$(c_url "https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/refs/heads/master/armv8/checksum.txt" | awk -v VAR="${_AGHchannel}" '$1 !~ /^#/ && $2 == VAR {VERSION = $3; sub(/^version=/, "", VERSION); print VERSION; exit}')"
 			updAGH="${GN_BG}$localAGHver${NC}"
+			unset _AGHchannel
 		fi
 		if [ "$localAGHver" ] && [ "$remoteAGHver" ]; then
 			if [ "$localAGHver" != "$remoteAGHver" ]; then
