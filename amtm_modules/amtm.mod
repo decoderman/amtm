@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.8.2
-release="June 07 2026"
+version=6.8.3
+release="June 14 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -889,6 +889,7 @@ script_check(){
 					"$scriptloc" amtmupdate
 					if [ "$?" -eq 0 ]; then
 						printf "$scriptname sucessfully updated from v$localver to v$remotever\\n\\n" >>"${add}"/amtmUpdate.log
+						[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
 					else
 						printf "$scriptname update v$localver to v$remotever failed\\n\\n" | tee -a "${add}"/amtmUpdate.log
 					fi
@@ -900,15 +901,14 @@ script_check(){
 					else
 						upd="${E_BG}-> $remotever${NC}"
 					fi
-						if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
-							forceOnlyUpdate=1
-						else
-							[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
-						fi
+					if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
+						forceOnlyUpdate=1
+					else
+						[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
+					fi
 					if [ "$tpu" ]; then
 						[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
 					fi
-
 					suUpd=1
 				fi
 			else

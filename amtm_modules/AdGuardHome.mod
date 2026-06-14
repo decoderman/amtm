@@ -59,6 +59,7 @@ AdGuardHome_installed(){
 		fi
 	fi
 	script_check
+	[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
 	if [ -z "$su" -a -z "$tpu" ] && [ "$AdGuardHomeUpdate" -o "$AGHbinUpdate" ]; then
 		localver="$lvtpu"
 		upd="${E_BG}$AdGuardHomeUpdate${NC}"
@@ -78,8 +79,21 @@ AdGuardHome_installed(){
 			fi
 		fi
 	fi
+	if [ "$auUPD" -a "$AGHbinUpdate" ]; then
+		if [ "$auUPDAGHbinUpdate" ]; then
+			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
+			if [ "$AGHbinVer" != "$localAGHver" ]; then
+				[ -f "${add}"/availUpd.txt ] && sed -i '/^AGHbin.*/d' "${add}"/availUpd.txt
+				printf "AdGuardHome binary sucessfully updated from $AGHbinVer to $localAGHver\\n\\n" >>"${add}"/amtmUpdate.log
+				unset AGHbinUpdate AGHbinVer auUPDAGHbinUpdate
+			fi
+		else
+			printf "AdGuardHome binary update failed\\n\\n" >>"${add}"/amtmUpdate.log
+		fi
+	fi
+
 	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ag${NC} %-9s%-21s%${COR}s\\n" "open" "AdGuardHome    $localver" " $upd"
-	[ "$su" = 1 -a -z "$updcheck" ] || [ "$AGHbinUpdate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$AGHext $localAGHver" " $updAGH"
+	[ "$su" = 1 -a -z "$updcheck" ] && [ -z "$auUPD" ] || [ "$AGHbinUpdate" ] && printf "${GN_BG}   ${NC} %-9s%-21s%${COR}s\\n" "" "$AGHext $localAGHver" " $updAGH"
 	case_ag(){
 		if ! AdGuardHome_sh && [ -s "/opt/etc/AdGuardHome/installer" ]; then
 			if [ ! -x "/opt/etc/AdGuardHome/installer" ]; then chmod 0755 /opt/etc/AdGuardHome/installer; fi
