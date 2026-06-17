@@ -23,7 +23,7 @@ Knock_installed(){
 			unset localver KnockUpdate KnockMD5
 		fi
 	fi
-	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} kn${NC} %-9s%-21s%${COR}s\\n" "open" "Knock      $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} kn${NC} %-9s%-21s%${COR}s\\n" "open" "Knock         $localver" " $upd"
 	case_kn(){
 		trap trap_ctrl 2
 		trap_ctrl(){
