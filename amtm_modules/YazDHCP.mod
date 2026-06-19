@@ -16,7 +16,7 @@ YazDHCP_installed(){
 			unset localver YazDHCPUpdate YazDHCPMD5
 		fi
 	fi
-	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j7${NC} %-9s%-21s%${COR}s\\n" "open" "YazDHCP     $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} j7${NC} %-9s%-21s%${COR}s\\n" "open" "YazDHCP       $localver" " $upd"
 	case_j7(){
 		/jffs/scripts/YazDHCP
 		sleep 2

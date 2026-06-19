@@ -1,16 +1,17 @@
 #!/bin/sh
 #bof
 Knock_installed(){
-	localVother="$(grep ^version= "$scriptloc" | sed -e 's/version=//')"
+	scriptgrep='^version=| version='
+	localVother="$(grep -E -m1 "$scriptgrep" "$scriptloc" | sed -e 's/.*version=//;s/ .*$//')"
 	nonamtm=
 	if [ -z "$localVother" ]; then
-		localVother="$(grep ^REV= "$scriptloc" | sed -e 's/REV=//;s/"//g')"
+		localVother="$(grep '^REV=' "$scriptloc" | sed -e 's/REV=//;s/"//g')"
 		nonamtm=1
 	fi
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/Rung-Asus/Knock/main/knock.sh
-		remoteVother="$(c_url "$remoteurl" | grep ^version= | sed -e 's/version=//')"
-		[ -z "$remoteVother" ] && remoteVother="$(c_url "$remoteurl" | grep ^REV= | sed -e 's/REV=//;s/"//g')"
+		remoteVother="$(c_url "$remoteurl" | grep -E -m1 "$scriptgrep" | sed -e 's/.*version=//;s/ .*$//')"
+		[ -z "$remoteVother" ] && remoteVother="$(c_url "$remoteurl" | grep '^REV=' | sed -e 's/REV=//;s/"//g')"
 		grepcheck=Rung
 	fi
 	script_check
@@ -23,7 +24,7 @@ Knock_installed(){
 			unset localver KnockUpdate KnockMD5
 		fi
 	fi
-	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} kn${NC} %-9s%-21s%${COR}s\\n" "open" "Knock      $localver" " $upd"
+	[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} kn${NC} %-9s%-21s%${COR}s\\n" "open" "Knock         $localver" " $upd"
 	case_kn(){
 		trap trap_ctrl 2
 		trap_ctrl(){
