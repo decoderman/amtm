@@ -17,8 +17,9 @@ AdGuardHome_sh(){
 
 	chmod 0755 "$tmpfile"
 	$tmpfile
+    local rc=$?
 	[ -f "$tmpfile" ] && rm -rf "$tmpfile"
-	return 0
+	return "$rc"
 }
 AdGuardHome_installed(){
 	scriptgrep='^AI_VERSION'
