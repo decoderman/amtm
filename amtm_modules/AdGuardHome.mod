@@ -6,7 +6,7 @@ AdGuardHome_sh(){
 	{ 	
 		:
 		c_url https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/master/installer 
-	} >>"${tmpfile}" || {
+	} >"${tmpfile}" || {
     	rm -f "$tmpfile"
     	return 1
 	}
