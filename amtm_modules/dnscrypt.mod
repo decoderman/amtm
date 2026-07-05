@@ -7,7 +7,7 @@ dnscrypt_sh(){
 		:
 		c_url https://raw.githubusercontent.com/thuantran/dnscrypt-asuswrt-installer/master/installer 
 	} >"${tmpfile}" || {
-    	rm -f "$tmpfile"
+    	rm -f "${tmpfile}"
     	return 1
 	}
 	[ -s "${tmpfile}" ] || {
@@ -15,11 +15,14 @@ dnscrypt_sh(){
     	return 1
 	}
 
-	chmod 0755 "$tmpfile"
-	$tmpfile
-    local rc=$?
-	[ -f "$tmpfile" ] && rm -rf "$tmpfile"
-	return "$rc"
+	chmod 0755 "${tmpfile}"
+	${tmpfile}
+    local rc
+	rc="$?"
+	[ ! -f "${tmpfile}" ] || { 
+		rm -f "${tmpfile}"
+	}
+	return "${rc}"
 }
 dnscrypt_installed(){
 	if [ "$su" = 1 ]; then
