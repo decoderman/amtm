@@ -17,7 +17,8 @@ AdGuardHome_sh(){
 
 	chmod 0755 "${tmpfile}"
 	${tmpfile}
-    local rc="$?"
+    local rc
+	rc="$?"
 	[ ! -f "${tmpfile}" ] || { 
 		rm -f "${tmpfile}"
 	}
