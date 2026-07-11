@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.8.3
-release="June 14 2026"
+version=6.8.5
+release="July 11 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -848,7 +848,9 @@ auto_script_updates(){
 
 asu_check(){
 	[ ! -f "${add}"/amtmUpdateScripts ] && touch "${add}"/amtmUpdateScripts
+	engaebigesiech=naei # Default for asu
 	if grep -qm1 'amtmupdate' "$scriptloc"; then
+		engaebigesiech=yo
 		if grep -q "^#$scriptname" "${add}"/amtmUpdateScripts; then
 			[ -z "$updcheck" ] && printf "Automatic script update disabled in amtm for $scriptname.\\n"
 			sed -i "/^##$scriptname/d;/^$scriptname/d" "${add}"/amtmUpdateScripts
@@ -881,54 +883,58 @@ script_check(){
 			upd="${GN_BG}$localver${NC}"
 			asu_check
 
-			if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
-				upd="${E_BG}<- $remotever${NC}"
-			elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
-				if [ "$allowAutoUpdate" -a "$auUPD" ]; then
-					printf "$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
-					"$scriptloc" amtmupdate
-					if [ "$?" -eq 0 ]; then
-						printf "$scriptname sucessfully updated from v$localver to v$remotever\\n\\n" >>"${add}"/amtmUpdate.log
-						[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
+			if [ "$engaebigesiech" = "yo" ]; then
+				if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
+					upd="${E_BG}<- $remotever${NC}"
+				elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
+					if [ "$allowAutoUpdate" -a "$auUPD" ]; then
+						printf "$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
+						"$scriptloc" amtmupdate
+						if [ "$?" -eq 0 ]; then
+							printf "$scriptname sucessfully updated from v$localver to v$remotever\\n\\n" >>"${add}"/amtmUpdate.log
+							[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
+						else
+							printf "$scriptname update v$localver to v$remotever failed\\n\\n" | tee -a "${add}"/amtmUpdate.log
+						fi
+						upd="${GN_BG}$remotever${NC}"
 					else
-						printf "$scriptname update v$localver to v$remotever failed\\n\\n" | tee -a "${add}"/amtmUpdate.log
+						if [ "$allowAutoUpdate" ]; then
+							scriptUpd=1
+							upd="*${E_BG}-> $remotever${NC}"
+						else
+							upd="${E_BG}-> $remotever${NC}"
+						fi
+						if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
+							forceOnlyUpdate=1
+						else
+							[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
+						fi
+						if [ "$tpu" ]; then
+							[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
+						fi
+						suUpd=1
 					fi
-					upd="${GN_BG}$remotever${NC}"
 				else
-					if [ "$allowAutoUpdate" ]; then
-						scriptUpd=1
-						upd="*${E_BG}-> $remotever${NC}"
+					if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
+						localver="No MD5";NoMD5=1
 					else
-						upd="${E_BG}-> $remotever${NC}"
+						remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
+						if [ "$localmd5" != "$remotemd5" ]; then
+							upd="${E_BG}-> MD5 upd${NC}"
+							tpUpd="-> MD5 upd"
+							[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
+							suUpd=1;MD5Show=1
+						else
+							localver=
+						fi
 					fi
-					if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
-						forceOnlyUpdate=1
-					else
-						[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
-					fi
-					if [ "$tpu" ]; then
-						[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
-					fi
-					suUpd=1
+				fi
+				if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ] && [ -z "$forceOnlyUpdate" ]; then
+					echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
+					echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 				fi
 			else
-				if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
-					localver="No MD5";NoMD5=1
-				else
-					remotemd5="$(c_url "$remoteurl" | md5sum | awk '{print $1}')"
-					if [ "$localmd5" != "$remotemd5" ]; then
-						upd="${E_BG}-> MD5 upd${NC}"
-						tpUpd="-> MD5 upd"
-						[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
-						suUpd=1;MD5Show=1
-					else
-						localver=
-					fi
-				fi
-			fi
-			if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ] && [ -z "$forceOnlyUpdate" ]; then
-				echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
-				echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
+				localver="${E_BG}  unable to check ${NC}"; upd=
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"
