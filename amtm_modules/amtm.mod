@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.8.5
-release="July 11 2026"
+version=6.8.7
+release="July 18 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -576,6 +576,11 @@ show_amtm(){
 		fi
 		p_e_l
 	fi
+	if [ "$nedengaebigesiech" = yo ]; then
+		printf " ${E_BG}*incompatible${NC} = Script is not amtmupdate\\n compatible. Contact the developer.\\n"
+		nedengaebigesiech=
+		p_e_l
+	fi
 
 	while true; do
 		printf "${R_BG} Enter amtm option ${NC} ";read -r selection
@@ -934,7 +939,8 @@ script_check(){
 					echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 				fi
 			else
-				localver="${E_BG}  unable to check ${NC}"; upd=
+				localver="${E_BG}*incompatible${NC}"; upd=
+				nedengaebigesiech=yo
 			fi
 		else
 			upd=" ${E_BG}upd err${NC}"
