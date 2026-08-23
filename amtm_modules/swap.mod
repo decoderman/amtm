@@ -7,7 +7,8 @@ check_swap(){
 			c_j_s /jffs/scripts/post-mount
 			sed -i "1a swapon $swl # Added by amtm" /jffs/scripts/post-mount
 			swapon "$swl" 2> /dev/null
-			swsize=$(du -h "$swl" | awk '{print $1}')
+			swsize="$(du -h "$swl" 2>/dev/null)"
+			[ "$(/bin/uname -o | grep -iw Merlin-LTS)" ] && swsize="${swsize%%/*}" || swsize="${swsize%%[[:space:]]*}"
 		fi
 	}
 
@@ -27,7 +28,8 @@ check_swap(){
 			swapon "$swl" 2> /dev/null
 			swtxt=" Swap file re-enabled"
 		fi
-		swsize=$(du -h "$swl" | awk '{print $1}')
+		swsize="$(du -h "$swl" 2>/dev/null)"
+		[ "$(/bin/uname -o | grep -iw Merlin-LTS)" ] && swsize="${swsize%%/*}" || swsize="${swsize%%[[:space:]]*}"
 	elif [ "$swl" ] && [ "$swl" = "$(sed -n '2p' /proc/swaps | awk '{print $1}')" ]; then
 		swpsize="$((($(sed -n '2p' /proc/swaps | awk '{print $3}') + (1024 + 1)) / 1024))"
 	elif [ -f /jffs/configs/fstab ] && grep -qF "swap" /jffs/configs/fstab && [ "$(wc -l < /proc/swaps)" -eq 2 ]; then

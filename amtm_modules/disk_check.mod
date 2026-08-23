@@ -270,10 +270,10 @@ run_disk_check(){
 		printf "\\n" >> $CHKLOG
 	fi
 
-	if [ -f "$CHKLOG" ] && [ "$(wc -c < $CHKLOG)" -gt "300000" ]; then
-		sed -i '1,300d' "$CHKLOG"
-		sed -i "1s/^/Truncated log file, size over 300KB, on $(date)\n\n/" "$CHKLOG"
-		logger -t "$TAG" "Truncated $CHKLOG, size over 300KB"
+	if [ -f "$CHKLOG" ] && [ "$(wc -c < $CHKLOG)" -gt "100000" ]; then
+		sed -i '1,100d' "$CHKLOG"
+		sed -i "1s/^/Truncated log file, size over 100KB, on $(date)\n\n/" "$CHKLOG"
+		logger -t "$TAG" "Truncated $CHKLOG, size over 100KB"
 	fi
 
 	if [ "$#" -lt 2 ]; then

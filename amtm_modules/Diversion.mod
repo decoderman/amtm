@@ -2,6 +2,7 @@
 #bof
 Diversion_installed(){
 	[ -f "${add}"/diversion.mod ] && rm -rf "${add}"/diversion.mod
+	[ "$(grep -m1 'action_handoff_consumed=yes' "$scriptloc")" ] && sed -i 's/action_handoff_consumed=yes/action_handoff_consumed=no/' "$scriptloc"
 	localVother="$(grep ^VERSION "$scriptloc" | sed -e 's/VERSION=//')"
 	if [ "$su" = 1 ]; then
 		case "$amtmBranch" in
@@ -12,6 +13,7 @@ Diversion_installed(){
 		grepcheck=thelonelycoder
 	fi
 	script_check
+
 	if [ -z "$su" -a -z "$tpu" ] && [ "$DiversionUpdate" ]; then
 		localver="$lvtpu"
 		upd="${E_BG}$DiversionUpdate${NC}"

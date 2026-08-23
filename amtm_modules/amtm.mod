@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=6.9.1
-release="August 01 2026"
+version=7.0
+release="August 23 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -22,6 +22,7 @@ if [ "$amtmRev" -lt 9 ]; then
 	if [ "$amtmRev" = 5 ]; then	g_m amtm_rev5.mod include; elif [ "$amtmRev" -gt 5 ]; then r_m amtm_rev5.mod; fi
 	if [ "$amtmRev" = 6 ]; then g_m amtm_rev6.mod include; elif [ "$amtmRev" -gt 6 ]; then r_m amtm_rev6.mod; fi
 	if [ "$amtmRev" = 7 ]; then g_m amtm_rev7.mod include; elif [ "$amtmRev" -gt 7 ]; then r_m amtm_rev7.mod; fi
+	if [ "$amtmRev" = 8 ]; then g_m amtm_rev8.mod include; elif [ "$amtmRev" -gt 8 ]; then r_m amtm_rev8.mod; fi
 fi
 # End updates for /usr/sbin/amtm
 
@@ -73,6 +74,11 @@ c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;
 o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to play a game${NC}";}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
 s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
+set_vars(){ updErr=;c_ntp;tpw=1;su=1;suUpd=0;}
+tpu_check(){ su=1;suUpd=0;updErr=;tpu=1;> /tmp/amtm-tpu-check;show_amtm >/dev/null 2>&1;}
+upd_check(){ su=1;suUpd=0;updErr=;tpu=1;updcheck=1;echo "Available script updates:" >/tmp/amtm-tpu-check;update_amtm;show_amtm;}
+auto_script_update(){ trim_file "${add}"/amtmUpdate.log;set_vars;unset scriptUpd auUPD;rm -f "${add}"/availUpd.txt;autoupdate=1;show_amtm menu >/dev/null 2>&1;}
+trim_file(){ if [ -f "$1" ] && [ "$(wc -c < $1)" -gt "100000" ]; then sed -i '1,100d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";sed -i "1s/^/Truncated log file, size over 100KB, on $(date)\n\n/" "$1";fi;}
 v_c(){
 	local v1 v2 v3 v4
 	OIFS="$IFS"; IFS="."
@@ -313,7 +319,13 @@ EOF
 			spacer) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 						atii=;;
 			end3rdps) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
-						atii=;end3rdps=1;;
+						atii=;end3rdps=1
+						if [ -f /tmp/amtm-autoupdate ]; then
+							rm -f /tmp/amtm-autoupdate
+							autoupdate=;exit 0
+						fi
+						[ "$autoupdate" ] && touch /tmp/amtm-autoupdate
+						;;
 			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo";;
 			tpucheck) 	if [ -z "$asuc" ]; then
 							if [ "$tpu" ]; then
@@ -468,7 +480,7 @@ EOF
 		{ read -r _; read -r swap_file _; } < /proc/swaps
 		if [ -f "$swl" ] && [ "$swl" = "$swap_file" ]; then
 			swsize="$(du -h "$swl" 2>/dev/null)"
-			swsize="${swsize%%/*}"
+			[ "$(/bin/uname -o | grep -iw Merlin-LTS)" ] && swsize="${swsize%%/*}" || swsize="${swsize%%[[:space:]]*}"
 		else
 			gms;check_swap
 		fi
@@ -542,8 +554,8 @@ EOF
 
 	[ "$ss" ] && ssi=1 || ssi=
 	if [ "$auUPD" ]; then
-		unset scriptUpd auUPD su suUpd am tpText tpw
-		a_m " 3rd-party script(s) have been automatically\\n updated by amtm.\\n"
+		unset scriptUpd auUPD su suUpd am tpText tpw autoupdate
+		a_m " 3rd-party script(s) have been automatically\\n updated by amtm."
 	fi
 	unset ss atii upd
 	if [ "$su" = 1 ]; then
@@ -551,67 +563,97 @@ EOF
 		if [ "$suUpd" = 1 ] || [ "$amtmUpd" -gt 0 ]; then
 			tpText="${R}3rd-party script update(s) available!${NC} Use\\n the scripts own update function to update."
 			if [ "$amtmUpd" -gt 0 ]; then
-				p_e_l
-				if [ "$suUpd" = 1 ]; then
-					[ "$scriptUpd" = 1 ] && printf " $tpText\\n\\n Scripts with update versions marked\\n with * can be updated directly with amtm.\\n" || printf " $tpText\\n"
+				if [ -z "$autoupdate" ]; then
 					p_e_l
-				fi
-				amtmUpdText="updated from $version to $amtmRemotever"
-				[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n\\n See SNB Forum post and / or\\n https://diversion.ch for what's new.\\n"
-				if [ "$amtmUpd" = 2 ]; then
-					printf " ${R}amtm MD5 hash change detected${NC}\\n"
-					amtmUpdText="MD5 update applied."
-				fi
-				echo
-				MD5_info
+					if [ "$suUpd" = 1 ]; then
+						[ "$scriptUpd" = 1 ] && printf " $tpText\\n\\n Scripts with update versions marked\\n with * can be updated directly with amtm.\\n" || printf " $tpText\\n"
+						p_e_l
+					fi
+					amtmUpdText="updated from $version to $amtmRemotever"
+					[ "$amtmUpd" = 1 ] && printf " ${R}amtm $amtmRemotever is now available!${NC}\\n\\n See SNB Forum post and / or\\n https://diversion.ch for what's new.\\n"
+					if [ "$amtmUpd" = 2 ]; then
+						printf " ${R}amtm MD5 hash change detected${NC}\\n"
+						amtmUpdText="MD5 update applied."
+					fi
+					echo
+					MD5_info
 
-				if [ "$scriptUpd" = 1 ]; then
-					printf " 1. Update amtm and 3rd-party scripts\\n 2. Update amtm only\\n\\n"
-					isel=2
+					if [ "$scriptUpd" = 1 ]; then
+						printf " 1. Update amtm and 3rd-party scripts\\n 2. Update amtm only\\n\\n"
+						isel=2
+					else
+						printf " 1. Update amtm now\\n\\n"
+						isel=1
+					fi
+					while true; do
+						printf " Enter selection [1-$isel e=Exit] ";read -r continue
+						case "$continue" in
+							1)		[ "$scriptUpd" = 1 ] && echo "set_vars;scriptUpd=1;auUPD=1" >/tmp/amtmscriptUpd;break;;
+							2)		break;;
+							[Ee])	show_amtm menu;break;;
+							*)		printf "\\n input is not an option\\n\\n";;
+						esac
+					done
+					a_m "$amtmUpdText"
+					g_i_m "${add}"
+					[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
+					if [ "$amtmUpdate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
+						[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+						unset amtmUpdate amtmMD5
+					fi
+					[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
+					exec "$0" " amtm $am"
+				elif [ "$autoupdate" -a "$amtmUpd" = 1 ]; then
+					updcheck=1
+					printf "$(date +"%b %d %Y %R") Automatic update of amtm\\n" | tee -a "${add}"/amtmUpdate.log
+					[ "$scriptUpd" = 1 ] && echo "set_vars;scriptUpd=1;auUPD=1;autoupdate=1" >/tmp/amtmscriptUpd
+					g_i_m "${add}"
+					if [ "$updErr" = 1 ]; then
+						printf "amtm Automatic update aborted, could not retrieve version\\n\\n" >>"${add}"/amtmUpdate.log
+					else
+						printf "amtm sucessfully updated from v$version to v$amtmRemotever\\n\\n" >>"${add}"/amtmUpdate.log
+					fi
+					exec "$0" " amtm $am"
 				else
-					printf " 1. Update amtm now\\n\\n"
-					isel=1
+					exit 0
 				fi
-				while true; do
-					printf " Enter selection [1-$isel e=Exit] ";read -r continue
-					case "$continue" in
-						1)		[ "$scriptUpd" = 1 ] && printf "scriptUpd=1\\nauUPD=1\\ntpw=1\\nsu=1\\nsuUpd=0\\nupdErr=\\n" >/tmp/amtmscriptUpd;break;;
-						2)		break;;
-						[Ee])	show_amtm menu;break;;
-						*)		printf "\\n input is not an option\\n\\n";;
-					esac
-				done
-				a_m "$amtmUpdText"
-				g_i_m "${add}"
-				[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
-				if [ "$amtmUpdate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
-					[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
-					unset amtmUpdate amtmMD5
-				fi
-				[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
-				exec "$0" " amtm $am"
 			elif [ "$scriptUpd" = 1 ]; then
-				p_e_l
-				if [ "$suUpd" = 1 ]; then
-					printf " $tpText\\n\\n Scripts with update versions marked\\n with * can be updated directly with amtm.\\n"
+				if [ -z "$autoupdate" ]; then
 					p_e_l
+					if [ "$suUpd" = 1 ]; then
+						printf " $tpText\\n\\n Scripts with update versions marked\\n with * can be updated directly with amtm.\\n"
+						p_e_l
+					fi
+					while true; do
+						printf " Update 3rd-party scripts? [1=Yes e=Exit] ";read -r continue
+						case "$continue" in
+							1)		[ "$scriptUpd" = 1 ] && echo "set_vars;scriptUpd=1;auUPD=1" >/tmp/amtmscriptUpd;show_amtm;break;;
+							[Ee])	show_amtm menu;break;;
+							*)		printf "\\n input is not an option\\n\\n";;
+						esac
+					done
+				elif [ "$autoupdate" ]; then
+					updcheck=1
+					echo "set_vars;scriptUpd=1;auUPD=1;autoupdate=1" >/tmp/amtmscriptUpd;show_amtm
 				fi
-				while true; do
-					printf " Update 3rd-party scripts? [1=Yes e=Exit] ";read -r continue
-					case "$continue" in
-						1)		[ "$scriptUpd" = 1 ] && printf "scriptUpd=1\\nauUPD=1\\ntpw=1\\nsu=1\\nsuUpd=0\\nupdErr=\\n" >/tmp/amtmscriptUpd;show_amtm;break;;
-						[Ee])	show_amtm menu;break;;
-						*)		printf "\\n input is not an option\\n\\n";;
-					esac
-				done
 			else
 				[ "$suUpd" = 1 ] && a_m " $tpText"
 			fi
 		else
 			if [ "$updErr" = 1 ]; then
-				a_m "\\n Update(s) aborted, could not retrieve version"
+				if [ "$autoupdate" ]; then
+					printf "$(date +"%b %d %Y %R") Automatic update(s) aborted, could not retrieve version\\n" | tee -a "${add}"/amtmUpdate.log
+					rm -f /tmp/amtm-autoupdate;autoupdate=;exit 0
+				else
+					a_m "\\n Update(s) aborted, could not retrieve version"
+				fi
 			else
-				a_m " Everything's up to date ($(date +"%b %d %Y %R"))"
+				if [ "$autoupdate" ]; then
+					printf "$(date +"%b %d %Y %R") Automatic update check: Everything's up to date\\n" | tee -a "${add}"/amtmUpdate.log
+					rm -f /tmp/amtm-autoupdate;autoupdate=;exit 0
+				else
+					a_m " Everything's up to date ($(date +"%b %d %Y %R"))"
+				fi
 			fi
 		fi
 	fi
@@ -711,10 +753,10 @@ EOF
 			[Cc][Jj])			c_j;break;;
 			[Aa][Uu])			auto_script_updates;break;;
 			[Ii])				c_ntp;if [ "$ssi" ]; then ss=;more=less;else ss=1;more=more;fi;show_amtm menu;break;;
-			[Uu])				unset scriptUpd auUPD;c_ntp;[ -f "${add}"/availUpd.txt ] && rm "${add}"/availUpd.txt;tpw=1;su=1;suUpd=0;updErr=;show_amtm menu;break;;
+			[Uu])				trim_file "${add}"/amtmUpdate.log;set_vars;unset scriptUpd auUPD autoupdate;rm -f "${add}"/availUpd.txt;show_amtm menu;break;;
 			[Tt]|[Cc][Tt])		theme_amtm;break;;
 			[Mm])				show_amtm menu;break;;
-			[Uu][Uu])			c_ntp;tpw=1;update_amtm;break;;
+			[Uu][Uu])			c_ntp;tpw=1;autoupdate=;update_amtm;break;;
 			[Rr])				reset_amtm;break;;
 			[Aa])				about_amtm;break;;
 			[Ee])				clear
@@ -872,9 +914,11 @@ auto_script_updates(){
 		printf " Automatic script update settings\n\n"
 		printf " This list shows 3rd-party scripts that
  support the ${GN}amtmupdate${NC} command parameter.
+
  It allows amtm to directly update a script
  if a version change is detected when the
- the ${GN}u${NC} update command is executed.\n\n"
+ the ${GN}u${NC} update command is executed or
+ Automatic script updates are scheduled.\n\n"
 
 		printf " Supported scripts and current status:\n"
 		for script in $(grep "^[^#]" "${add}"/amtmUpdateScripts); do
@@ -888,18 +932,91 @@ auto_script_updates(){
 			printf " - ${R}${s_clean}${NC}, disabled by ${s_clean}\n"
 		done
 	else
-		show_amtm " No supported scripts found."
+		printf  " No supported 3rd-party scripts found.\n\n"
+	fi
+	printf " - ${GN}amtm${NC}, enabled for Automatic script update\n"
+
+	if [ -f "${add}/amtmUpdate.conf" ]; then
+		. "${add}/amtmUpdate.conf"
+		printf "\\n 1. Edit Automatic script update schedule ${GN}$asuUpdDay @ 23:45${NC}\\n"
+		asuChkTxt=" The update check runs ${GN}$asuUpdDay @ 23:45${NC}\\n\\n"
+	else
+		asuUpdDay=Sunday
+		asuChkTxt=
+		printf "\\n 1. Set Automatic script update schedule\\n"
 	fi
 
-	printf "\\n 1. Disable/Enable amtmupdate in amtm\\n 2. View amtmupdate log\\n 3. Reset supported scripts list\\n\\n"
+	printf " 2. Disable/Enable amtmupdate for scripts in amtm\\n 3. View amtmupdate log\\n 4. Reset supported scripts list\\n\\n"
 	while true; do
-		printf " Enter selection [1-3 e=Exit] ";read -r continue
+		printf " Enter selection [1-4 e=Exit] ";read -r continue
 		case "$continue" in
 			1)		p_e_l
+					printf " Automatic script update schedule options\\n\\n$asuChkTxt"
+					printf " 1. Set update check frequency\\n 2. Remove Automatic script update schedule\\n"
+
+					while true; do
+						printf "\\n Enter selection [1-2 e=Exit] ";read -r continue
+						case "$continue" in
+							1)		p_e_l
+									printf " This sets the day(s) the\\n Automatic script update runs.\\n\\n"
+									printf " Day                   Twice a week\\n"
+									printf " ------------    OR    --------------------------\\n"
+									printf " 1. Monday             91. Monday & Thursday\\n"
+									printf " 2. Tuesday            92. Tuesday & Friday\\n"
+									printf " 3. Wednesday          93. Wednesday & Saturday\\n"
+									printf " 4. Thursday           94. Thursday & Sunday\\n"
+									printf " 5. Friday             95. Friday & Monday\\n"
+									printf " 6. Saturday           96. Saturday & Tuesday\\n"
+									printf " 7. Sunday             97. Sunday & Wednesday\\n"
+									printf " 8. Check daily\\n"
+									while true; do
+										printf "\\n Select update day(s): [1-8 OR 91-97 e=Exit] ";read -r input
+										case "$input" in
+											1)		asuUpdDay=Monday;asuUpdDOW=Mon;break;;
+											2)		asuUpdDay=Tuesday;asuUpdDOW=Tue;break;;
+											3)		asuUpdDay=Wednesday;asuUpdDOW=Wed;break;;
+											4)		asuUpdDay=Thursday;asuUpdDOW=Thu;break;;
+											5)		asuUpdDay=Friday;asuUpdDOW=Fri;break;;
+											6)		asuUpdDay=Saturday;asuUpdDOW=Sat;break;;
+											7)		asuUpdDay=Sunday;asuUpdDOW=Sun;break;;
+											8)		asuUpdDay=Daily;asuUpdDOW=*;break;;
+											91)		asuUpdDay="Monday & Thursday";asuUpdDOW="Mon,Thu";break;;
+											92)		asuUpdDay="Tuesday & Friday";asuUpdDOW="Tue,Fri";break;;
+											93)		asuUpdDay="Wednesday & Saturday";asuUpdDOW="Wed,Sat";break;;
+											94)		asuUpdDay="Thursday & Sunday";asuUpdDOW="Thu,Sun";break;;
+											95)		asuUpdDay="Friday & Monday";asuUpdDOW="Fri,Mon";break;;
+											96)		asuUpdDay="Saturday & Tuesday";asuUpdDOW="Sat,Tue";break;;
+											97)		asuUpdDay="Sunday & Wednesday";asuUpdDOW="Sun,Wed";break;;
+											[Ee]) 	show_amtm menu;;
+											*) 	printf "\\n input is not an option\\n";;
+										esac
+									done
+									printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"" > "${add}"/amtmUpdate.conf
+									cru a amtm_Automatic_script_update "45 23 * * $asuUpdDOW amtm autoupdate"
+									c_j_s /jffs/scripts/services-start
+									sed -i '/amtm_Automatic_script_update/d' /jffs/scripts/services-start
+									echo "cru a amtm_Automatic_script_update \"45 23 * * $asuUpdDOW amtm autoupdate\" # Added by amtm" >> /jffs/scripts/services-start
+									show_amtm " Automatic script update schedule\\n set to $asuUpdDay @ 23:45"
+									break;;
+							2)		p_e_l
+									printf " Remove Automatic script update schedule.\\n"
+									c_d
+									cru d amtm_Automatic_script_update
+									sed -i '/amtm_Automatic_script_update/d' /jffs/scripts/services-start
+									r_w_e /jffs/scripts/services-start
+									rm -f "${add}"/amtmUpdate.conf
+									show_amtm " Automatic script update schedule removed"
+									break;;
+							[Ee])	show_amtm menu;;
+							*)		printf "\\n input is not an option\\n";;
+						esac
+					done
+					break;;
+			2)		p_e_l
 					asu_loop
 					break;;
-			2)		s_l_f amtmUpdate.log;break;;
-			3)		p_e_l
+			3)		s_l_f amtmUpdate.log;break;;
+			4)		p_e_l
 					printf " This resets the supported scripts list and\\n its settings in amtm.\\n"
 					c_d
 					rm -rf "${add}"/amtmUpdateScripts
@@ -956,7 +1073,8 @@ script_check(){
 					upd="${E_BG}<- $remotever${NC}"
 				elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
 					if [ "$allowAutoUpdate" -a "$auUPD" ]; then
-						printf "$(date +"%b %d %Y %R") Updating $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
+						[ "$autoupdate" ] && auUPDTxt='Automatic update of' || auUPDTxt=Updating
+						printf "$(date +"%b %d %Y %R") $auUPDTxt $scriptname\\n" | tee -a "${add}"/amtmUpdate.log
 						"$scriptloc" amtmupdate
 						if [ "$?" -eq 0 ]; then
 							printf "$scriptname sucessfully updated from v$localver to v$remotever\\n\\n" >>"${add}"/amtmUpdate.log
@@ -964,6 +1082,7 @@ script_check(){
 						else
 							printf "$scriptname update v$localver to v$remotever failed\\n\\n" | tee -a "${add}"/amtmUpdate.log
 						fi
+						localver=
 						upd="${GN_BG}$remotever${NC}"
 					else
 						if [ "$allowAutoUpdate" ]; then
@@ -998,7 +1117,7 @@ script_check(){
 						fi
 					fi
 				fi
-				if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" ] && [ -z "$forceOnlyUpdate" ]; then
+				if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" -a -z "$autoupdate" ] && [ -z "$forceOnlyUpdate" ]; then
 					echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
 					echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 				fi
@@ -1016,6 +1135,79 @@ script_check(){
 		[ "$asuc" ] && asu_check
 	fi
 	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate forceScriptUpdate forceOnlyUpdate
+	rm -f /tmp/amtm_script_check
+}
+
+update_amtm(){
+	urlNOK=
+	c_url "$amtmURL/amtm.mod" -o /tmp/amtm_check.mod
+	if ! grep -q "^version=" /tmp/amtm_check.mod 2>/dev/null; then
+		urlNOK=1
+		f_b_url
+		c_url "$amtmURL/amtm.mod" -o /tmp/amtm_check.mod
+	fi
+	if [ "$urlNOK" ] && ! grep -q "^version=" /tmp/amtm_check.mod 2>/dev/null; then
+		if [ "$su" = 1 ]; then
+			updErr=1
+			thisrem=" ${E_BG}upd err${NC}"
+			amtmUpd=0
+			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
+			a_m " ! amtm: ${R}${d_name}${NC} unreachable"
+		else
+			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
+			show_amtm " ! amtm: ${R}${d_name}${NC} unreachable"
+		fi
+	else
+		urlNOK=
+	fi
+	dfc=
+	if [ -z "$urlNOK" ]; then
+		amtmRemotever="$(grep -m1 "^version=" /tmp/amtm_check.mod 2>/dev/null)"
+		amtmRemotever="${amtmRemotever#version=}"
+		localmd5="$(md5sum "${add}"/a_fw/amtm.mod 2>/dev/null)"
+		localmd5="${localmd5%% *}"
+		remotemd5="$(md5sum /tmp/amtm_check.mod 2>/dev/null)"
+		remotemd5="${remotemd5%% *}"
+		rm -f /tmp/amtm_check.mod
+
+		if [ "$su" = 1 ]; then
+			if [ "$(v_c $version)" -lt "$(v_c $amtmRemotever)" ]; then
+				thisrem="${E_BG}-> $amtmRemotever${NC}"
+				thisUpd="-> $amtmRemotever"
+				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
+				amtmUpd=1
+			elif [ "$localmd5" != "$remotemd5" -a -z "$autoupdate" ]; then
+				thisrem="${E_BG}-> MD5 upd${NC}"
+				thisUpd="-> MD5 upd"
+				[ "$updcheck" ] && echo "- amtm $version, MD5 hash change detected" >>/tmp/amtm-tpu-check
+				amtmUpd=2;MD5Show=1
+			else
+				thisrem="${GN_BG}$version${NC}"
+				amtmUpd=0
+			fi
+			if [ "$amtmUpd" -gt 0 -a -z "$autoupdate" ]; then
+				echo "amtmUpdate=\"$thisUpd\"">>"${add}"/availUpd.txt
+				echo "amtmMD5=\"$localmd5\"">>"${add}"/availUpd.txt
+			fi
+		else
+			if [ "$version" != "$amtmRemotever" ]; then
+				a_m "updated from $version to $amtmRemotever"
+			elif [ "$localmd5" != "$remotemd5" ]; then
+				a_m "MD5 update applied"
+			else
+				a_m "force updated to $amtmRemotever"
+			fi
+			g_i_m "${add}"
+			[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
+			if [ "$amtmUpdate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
+				[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
+				unset amtmUpdate amtmMD5
+			fi
+			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
+			tpw=
+			exec "$0" " amtm $am"
+		fi
+	fi
 }
 
 reset_amtm(){
@@ -1100,6 +1292,11 @@ reset_amtm(){
 						r_w_e /jffs/scripts/services-start
 						rm -f /home/root/.ash_history /tmp/amtm_sort_s_h
 					fi
+					if [ -f /jffs/scripts/services-start ] && grep -q "amtm_Automatic_script_update" /jffs/scripts/services-start; then
+						cru d amtm_Automatic_script_update
+						sed -i '/amtm_Automatic_script_update/d' /jffs/scripts/services-start
+						r_w_e /jffs/scripts/services-start
+					fi
 					if [ -f /jffs/scripts/update-notification ] && grep -q "created by amtm" /jffs/scripts/update-notification; then
 						rm -f /jffs/scripts/update-notification
 					fi
@@ -1175,76 +1372,5 @@ reset_amtm(){
 			*)		printf "\\n input is not an option\\n";;
 		esac
 	done
-}
-
-update_amtm(){
-	urlNOK=
-	c_url "$amtmURL/amtm.mod" -o /tmp/amtm_check.mod
-	if ! grep -q "^version=" /tmp/amtm_check.mod 2>/dev/null; then
-		urlNOK=1
-		f_b_url
-		c_url "$amtmURL/amtm.mod" -o /tmp/amtm_check.mod
-	fi
-	if [ "$urlNOK" ] && ! grep -q "^version=" /tmp/amtm_check.mod 2>/dev/null; then
-		if [ "$su" = 1 ]; then
-			updErr=1
-			thisrem=" ${E_BG}upd err${NC}"
-			amtmUpd=0
-			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
-			a_m " ! amtm: ${R}${d_name}${NC} unreachable"
-		else
-			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
-			show_amtm " ! amtm: ${R}${d_name}${NC} unreachable"
-		fi
-	else
-		urlNOK=
-	fi
-	dfc=
-	if [ -z "$urlNOK" ]; then
-		amtmRemotever="$(grep -m1 "^version=" /tmp/amtm_check.mod 2>/dev/null)"
-		amtmRemotever="${amtmRemotever#version=}"
-		localmd5="$(md5sum "${add}"/a_fw/amtm.mod 2>/dev/null)"
-		localmd5="${localmd5%% *}"
-		remotemd5="$(md5sum /tmp/amtm_check.mod 2>/dev/null)"
-		remotemd5="${remotemd5%% *}"
-
-		if [ "$su" = 1 ]; then
-			if [ "$version" != "$amtmRemotever" ]; then
-				thisrem="${E_BG}-> $amtmRemotever${NC}"
-				thisUpd="-> $amtmRemotever"
-				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
-				amtmUpd=1
-			elif [ "$localmd5" != "$remotemd5" ]; then
-				thisrem="${E_BG}-> MD5 upd${NC}"
-				thisUpd="-> MD5 upd"
-				[ "$updcheck" ] && echo "- amtm $version, MD5 hash change detected" >>/tmp/amtm-tpu-check
-				amtmUpd=2;MD5Show=1
-			else
-				thisrem="${GN_BG}$version${NC}"
-				amtmUpd=0
-			fi
-			if [ "$amtmUpd" -gt 0 ]; then
-				echo "amtmUpdate=\"$thisUpd\"">>"${add}"/availUpd.txt
-				echo "amtmMD5=\"$localmd5\"">>"${add}"/availUpd.txt
-			fi
-		else
-			if [ "$version" != "$amtmRemotever" ]; then
-				a_m "updated from $version to $amtmRemotever"
-			elif [ "$localmd5" != "$remotemd5" ]; then
-				a_m "MD5 update applied"
-			else
-				a_m "force updated to $amtmRemotever"
-			fi
-			g_i_m "${add}"
-			[ -s "${add}"/availUpd.txt ] && . "${add}"/availUpd.txt
-			if [ "$amtmUpdate" ] && [ "$amtmMD5" != "$(md5sum "${add}"/a_fw/amtm.mod | awk '{print $1}')" ]; then
-				[ -s "${add}"/availUpd.txt ] && sed -i '/^amtm.*/d' "${add}"/availUpd.txt
-				unset amtmUpdate amtmMD5
-			fi
-			[ "$tpw" = 1 ] && [ "$tps" = 1 ] && a_m "\\n For ${R}3rd-party script updates${NC}, use their\\n own update function."
-			tpw=
-			exec "$0" " amtm $am"
-		fi
-	fi
 }
 #eof

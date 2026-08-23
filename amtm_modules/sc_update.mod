@@ -31,7 +31,7 @@ sc_update(){
 	elif [ "$1" = manage ]; then
 		[ -f "${add}/sc_update.cfg" ] && . "${add}/sc_update.cfg" || scChkFreq=Sunday
 		p_e_l
-		printf " Scripts update notification options\\n\\n The update check runs ${GN}$scChkFreq @ 05:10${NC}\\n\\n"
+		printf " Scripts update notification options\\n\\n The update check runs ${GN}$scChkFreq @ 05:18${NC}\\n\\n"
 		printf " 1. Change update check frequency\\n 2. Send a test notification email\\n 3. Remove scripts update notification script\\n"
 
 		while true; do
@@ -39,7 +39,7 @@ sc_update(){
 			case "$continue" in
 				1)		check_email_conf
 						p_e_l
-						printf " This sets the day(s) the notification checks\\n for updates.\\n Current setting: ${GN}$scChkFreq @ 05:10${NC}\\n\\n"
+						printf " This sets the day(s) the notification checks\\n for updates.\\n Current setting: ${GN}$scChkFreq @ 05:18${NC}\\n\\n"
 						printf " Day                   Twice a week\\n"
 						printf " ------------    OR    --------------------------\\n"
 						printf " 1. Monday             91. Monday & Thursday\\n"
