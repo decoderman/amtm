@@ -36,7 +36,7 @@ install_MerlinAU(){
 	printf " Major contributor: Martinski\\n"
 	c_d
 	clear
-	c_url https://raw.githubusercontent.com/ExtremeFiretop/MerlinAutoUpdate-Router/main/MerlinAU.sh -o /jffs/scripts/MerlinAU.sh && chmod 0755 /jffs/scripts/MerlinAU.sh && /jffs/scripts/MerlinAU.sh install
+	c_url https://github.com/ExtremeFiretop/MerlinAutoUpdate-Router/releases/latest/download/MerlinAU-install.sh -o /jffs/scripts/MerlinAU.sh && chmod 0755 /jffs/scripts/MerlinAU.sh && /jffs/scripts/MerlinAU.sh install
 	sleep 2
 	if [ -f /jffs/scripts/MerlinAU.sh ]; then
 		show_amtm " MerlinAU installed"
