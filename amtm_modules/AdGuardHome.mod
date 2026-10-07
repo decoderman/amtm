@@ -48,7 +48,7 @@ AdGuardHome_installed(){
 		esac
 		if [ "${_AGHchannel}" ]; then
 			localAGHver="$(/opt/etc/AdGuardHome/AdGuardHome --version | cut -d" "  -f4-)"
-			remoteAGHver="$(c_url "${latestverurl}/${_AGHchannel}/version.txt" | awk 'NF {VERSION = $1; sub(/^version=/, "", VERSION); print VERSION; exit}')"
+			remoteAGHver="$(c_url "${latestverurl}/${_AGHchannel}/version.json" | awk -F'"' '/^[[:space:]]*"version"[[:space:]]*:/ { print $4; exit }')"
 			# Add fallback to local metadata cache for version checks
 			[ -z "${remoteAGHver}" ] && remoteAGHver="$(c_url "https://raw.githubusercontent.com/jumpsmm7/Asuswrt-Merlin-AdGuardHome-Installer/refs/heads/master/armv8/checksum.txt" | awk -v VAR="${_AGHchannel}" '$1 !~ /^#/ && $2 == VAR {VERSION = $3; sub(/^version=/, "", VERSION); print VERSION; exit}')"
 			updAGH="${GN_BG}$localAGHver${NC}"
