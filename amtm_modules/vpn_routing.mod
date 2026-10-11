@@ -39,7 +39,7 @@ vpn_routing_installed(){
 install_vpn_routing(){
 	p_e_l
 	printf " This installs Domain-based VPN Routing - route\\n specific website domains to specific VPN\\n tunnels on your router.\\n\\n"
-	printf " Author: Ranger802004\\n snbforums.com/threads/domain-based-vpn-routing-script.79264/\\n"
+	printf " Author: Ranger802004\\n snbforums.com/threads/92029/\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/Ranger802004/asusmerlin/main/domain_vpn_routing/domain_vpn_routing.sh -o /jffs/scripts/domain_vpn_routing.sh && chmod 755 /jffs/scripts/domain_vpn_routing.sh && sh /jffs/scripts/domain_vpn_routing.sh install
 	sleep 2

@@ -111,7 +111,7 @@ install_dnscrypt(){
 	fi
 	p_e_l
 	printf " This installs dnscrypt installer\\n on your router.\\n\\n"
-	printf " Authors: bigeyes0x0, SomeWhereOverTheRainBow\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29&starter_id=64179\\n"
+	printf " Authors: bigeyes0x0, SomeWhereOverTheRainBow\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=29\\n"
 	c_d
 	mkdir -p /jffs/dnscrypt
 	dnscrypt_sh

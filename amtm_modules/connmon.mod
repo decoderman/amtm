@@ -26,7 +26,7 @@ connmon_installed(){
 install_connmon(){
 	p_e_l
 	printf " This installs connmon - Internet connection\\n monitoring on your router.\\n\\n"
-	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18&starter_id=53009\\n\\n"
+	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=18\\n\\n"
 	printf " This script is now maintained by the AMTM-OSR team,\\n the AMTM Orphaned Script Revival repository.\\n"
 	printf " Visit and learn more about their mission here:\\n https://github.com/AMTM-OSR\\n"
 	c_d

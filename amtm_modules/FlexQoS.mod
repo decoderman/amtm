@@ -27,7 +27,7 @@ FlexQoS_installed(){
 install_FlexQoS(){
 	p_e_l
 	printf " This installs FlexQoS - Flexible QoS\\n Enhancement Script for Adaptive QoS\\n on your router.\\n\\n"
-	printf " Original Author: dave14305\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8&starter_id=58901\\n\\n"
+	printf " Original Author: dave14305\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=8\\n\\n"
 	printf " This script is now maintained by the AMTM-OSR team,\\n the AMTM Orphaned Script Revival repository.\\n"
 	printf " Visit and learn more about their mission here:\\n https://github.com/AMTM-OSR\\n"
 	c_d

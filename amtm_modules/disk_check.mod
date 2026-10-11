@@ -248,14 +248,11 @@ run_disk_check(){
 	fi
 
 	while [ "$(nvram get ntp_ready)" = 0 ] && [ "$ntptimer" -lt "$ntptimeout" ]; do
-		ntptimer=$((ntptimer+1))
-		sleep 1
-		if [ "$ntptsync" -lt "$ntptimeout" ]; then
-			logger -t "$TAG" "trying force-sync of NTP, restarting service, sync counter at $ntptsync"
-			service restart_ntpc
-			ntptsync=$((ntptsync+1))
-			sleep 5
-		fi
+		ntptsync=$((ntptsync+1))
+		logger -t "$TAG" "trying force-sync of NTP, restarting service, sync counter at $ntptsync"
+		service restart_ntpc
+		sleep 5
+		ntptimer=$((ntptimer+5))
 	done
 
 	if [ "$ntptimer" -ge "$ntptimeout" ]; then

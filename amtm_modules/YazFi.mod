@@ -26,7 +26,7 @@ YazFi_installed(){
 install_YazFi(){
 	p_e_l
 	printf " This installs YazFi - enhanced Asuswrt-Merlin\\n Guest WiFi Networks on your router.\\n\\n"
-	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13&starter_id=53009\\n\\n"
+	printf " Original Author: Jack Yaz\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=13\\n\\n"
 	printf " This script is now maintained by the AMTM-OSR team,\\n the AMTM Orphaned Script Revival repository.\\n"
 	printf " Visit and learn more about their mission here:\\n https://github.com/AMTM-OSR\\n"
 	c_d

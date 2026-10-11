@@ -121,7 +121,7 @@ install_AdGuardHome(){
 	fi
 	p_e_l
 	printf " This installs AdGuardHome - Asuswrt-Merlin-AdGuardHome-Installer\\n on your router.\\n\\n"
-	printf " Author: SomeWhereOverTheRainBow\\n snbforums.com/threads/new-release-asuswrt-merlin-adguardhome-installer.76506/#post-733310\\n"
+	printf " Author: SomeWhereOverTheRainBow\\n snbforums.com/threads/97476/\\n"
 	c_d
 	AdGuardHome_sh
 	sleep 2

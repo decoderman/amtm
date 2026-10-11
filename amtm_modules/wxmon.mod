@@ -34,7 +34,7 @@ wxmon_installed(){
 install_wxmon(){
 	p_e_l
 	printf " This installs WXMON - Localized Weather Monitoring, extended forecasts, including aviation METARs and TAFs! (US/Global!)\\n on your router.\\n\\n"
-	printf " Author: Viktor Jaep\\n snbforums.com/threads/release-wxmon-v2-1-1-jul-3-2025-localized-weather-monitoring-extended-forecasts-including-aviation-metars-and-tafs-us-global.83479/\\n"
+	printf " Author: Viktor Jaep\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=47\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/ViktorJp/WXMON/master/wxmon.sh -o /jffs/scripts/wxmon.sh && chmod a+rx /jffs/scripts/wxmon.sh && /jffs/scripts/wxmon.sh -setup
 

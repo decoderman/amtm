@@ -2,14 +2,13 @@
 #bof
 Diversion_installed(){
 	[ -f "${add}"/diversion.mod ] && rm -rf "${add}"/diversion.mod
-	[ "$(grep -m1 'action_handoff_consumed=yes' "$scriptloc")" ] && sed -i 's/action_handoff_consumed=yes/action_handoff_consumed=no/' "$scriptloc"
-	localVother="$(grep ^VERSION "$scriptloc" | sed -e 's/VERSION=//')"
+	localVother="$(grep ^VERSION "$scriptloc" | cut -d'=' -f2)"
 	if [ "$su" = 1 ]; then
 		case "$amtmBranch" in
 			LOCAL) 	remoteurl="http://diversion.test/diversion_adblocking/diversion";;
 			*) 		remoteurl="https://diversion.ch/diversion_adblocking/diversion";;
 		esac
-		remoteVother="$(c_url "$remoteurl" | grep ^VERSION | sed -e 's/VERSION=//')"
+		remoteVother="$(c_url "$remoteurl" | grep ^VERSION | cut -d'=' -f2)"
 		grepcheck=thelonelycoder
 	fi
 	script_check
@@ -40,7 +39,7 @@ Diversion_installed(){
 install_Diversion(){
 	p_e_l
 	printf " This installs Diversion - the Router Adblocker\\n on your router.\\n\\n"
-	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10&starter_id=25480\\n"
+	printf " Author: thelonelycoder\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=10\\n"
 	c_d
 	case "$amtmBranch" in
 		LOCAL) 	remoteurl="http://diversion.test/install";;

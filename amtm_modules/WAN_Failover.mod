@@ -44,7 +44,7 @@ WAN_Failover_installed(){
 install_WAN_Failover(){
 	p_e_l
 	printf " This installs Dual WAN Failover - replace the\\n factory ASUS WAN Failover functionality\\n on your router.\\n\\n"
-	printf " Author: Ranger802004\\n snbforums.com/threads/dual-wan-failover-v2-0-1-release.83674/\\n"
+	printf " Author: Ranger802004\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=43\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/Ranger802004/asusmerlin/main/wan-failover.sh -o "/jffs/scripts/wan-failover.sh" && chmod 755 /jffs/scripts/wan-failover.sh && sh /jffs/scripts/wan-failover.sh install
 	sleep 2

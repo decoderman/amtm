@@ -49,7 +49,7 @@ Knock_installed(){
 install_Knock(){
 	p_e_l
 	printf " This installs Knock - Router Commands for non-admin users\\n on your router.\\n\\n"
-	printf " Author: rung\\n snbforums.com/threads/knock-v1-4-updated-23apr2026-router-commands-for-non-admin-users.96390/\\n"
+	printf " Author: rung\\n snbforums.com/threads/96390/\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/Rung-Asus/Knock/main/knock.sh -o /jffs/scripts/knock.sh && chmod 755 /jffs/scripts/knock.sh && sh /jffs/scripts/knock.sh -install
 	sleep 2

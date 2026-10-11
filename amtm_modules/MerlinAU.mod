@@ -4,6 +4,8 @@ MerlinAU_installed(){
 	scriptgrep=' SCRIPT_VERSION='
 	if [ "$su" = 1 ]; then
 		remoteurl=https://raw.githubusercontent.com/ExtremeFiretop/MerlinAutoUpdate-Router/main/MerlinAU.sh
+		localmd5Other=$(grep -v '^readonly RELEASE_ASSET_KIND=' "$scriptloc" | md5sum 2>/dev/null)
+		remotemd5Other=1
 		grepcheck=ExtremeFiretop
 	fi
 	script_check
@@ -32,11 +34,12 @@ MerlinAU_installed(){
 install_MerlinAU(){
 	p_e_l
 	printf " This installs MerlinAU - The Ultimate\\n Firmware Auto-Updater on your router.\\n\\n"
-	printf " Author: ExtremeFiretop\\n snbforums.com/threads/introducing-merlinau-the-ultimate-firmware-auto-updater-addon.88577/\\n"
+	printf " Author: ExtremeFiretop\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=41\\n"
 	printf " Major contributor: Martinski\\n"
 	c_d
 	clear
-	c_url https://github.com/ExtremeFiretop/MerlinAutoUpdate-Router/releases/latest/download/MerlinAU-install.sh -o /jffs/scripts/MerlinAU.sh && chmod 0755 /jffs/scripts/MerlinAU.sh && /jffs/scripts/MerlinAU.sh install
+	c_url https://github.com/ExtremeFiretop/MerlinAutoUpdate-Router/releases/latest/download/MerlinAU-install.sh -o \
+		/jffs/scripts/MerlinAU.sh && chmod 0755 /jffs/scripts/MerlinAU.sh && /jffs/scripts/MerlinAU.sh install
 	sleep 2
 	if [ -f /jffs/scripts/MerlinAU.sh ]; then
 		show_amtm " MerlinAU installed"

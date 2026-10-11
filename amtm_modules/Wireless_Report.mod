@@ -28,7 +28,7 @@ Wireless_Report_installed(){
 install_Wireless_Report(){
 	p_e_l
 	printf " This installs Wireless Report - Wireless Report for AiMesh\\n on your router.\\n\\n"
-	printf " Author: JB_1366\\n snbforums.com/threads/wireless-report-for-aimesh-v1-3-5-apr-9-2026.96861\\n"
+	printf " Author: JB_1366\\n snbforums.com/threads/96861/\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/JB1366/Wireless_Report/main/wirelessreport.sh -o /tmp/wirelessreport.sh && sh /tmp/wirelessreport.sh install
 	sleep 2

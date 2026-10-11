@@ -37,7 +37,7 @@ wicens_installed(){
 install_wicens(){
 	p_e_l
 	printf " This installs WICENS - WAN IP Change Email\\n Notification Script on your router.\\n\\n"
-	printf " Author: Maverickcdn\\n snbforums.com/threads/wicens-wan-ip-change-email-notification-script.69294/\\n"
+	printf " Author: Maverickcdn\\n snbforums.com/threads/69294/\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/maverickcdn/wicens/master/wicens.sh -o /jffs/scripts/wicens.sh && chmod 755 /jffs/scripts/wicens.sh && /jffs/scripts/wicens.sh
 	sleep 2

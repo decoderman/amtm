@@ -33,8 +33,8 @@ tailmon_installed(){
 }
 install_tailmon(){
 	p_e_l
-	printf " This installs TAILMON - WireGuard-based Tailscale\\n installer, configurator and monitor\\n\\n"
-	printf " Author: Viktor Jaep\\n snbforums.com/threads/release-tailmon-v1-0-8-may-3-2024-wireguard-based-tailscale-installer-configurator-and-monitor.89860/\\n"
+	printf " This installs TAILMON - WireGuard-based Tailscale\\n installer, configurator and monitor on your router.\\n\\n"
+	printf " Author: Viktor Jaep\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=45\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/ViktorJp/TAILMON/master/tailmon.sh -o /jffs/scripts/tailmon.sh && chmod a+rx /jffs/scripts/tailmon.sh && /jffs/scripts/tailmon.sh -setup
 

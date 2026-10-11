@@ -30,7 +30,7 @@ wireguard_manager_installed(){
 install_wireguard_manager(){
 	p_e_l
 	printf " This installs WireGuard Session Manager\\n on your router.\\n\\n"
-	printf " Author: Martineau\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32&starter_id=13215\\n\\n"
+	printf " Author: Martineau\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=32\\n\\n"
 	printf " Contributors: odkrys, Torson, ZebMcKayhan, jobhax,\\n elorimer, Sh0cker54, here1310, defung, The Chief\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/MartineauUK/wireguard/main/wg_manager.sh --create-dirs -o /jffs/addons/wireguard/wg_manager.sh && chmod 755 /jffs/addons/wireguard/wg_manager.sh && /jffs/addons/wireguard/wg_manager.sh install

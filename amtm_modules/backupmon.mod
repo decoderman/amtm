@@ -34,7 +34,7 @@ backupmon_installed(){
 install_backupmon(){
 	p_e_l
 	printf " This installs BACKUPMON - Backup/Restore\\n JFFS, NVRAM and External USB Drive\\n on your router.\\n\\n"
-	printf " Author: Viktor Jaep\\n snbforums.com/threads/release-backupmon-v1-18-sep-20-2023-backup-restore-your-router-jffs-nvram-external-usb-drive.86645/\\n"
+	printf " Author: Viktor Jaep\\n snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=38\\n"
 	c_d
 	c_url https://raw.githubusercontent.com/ViktorJp/BACKUPMON/main/backupmon.sh -o /jffs/scripts/backupmon.sh && chmod 755 /jffs/scripts/backupmon.sh && /jffs/scripts/backupmon.sh -setup
 	sleep 2

@@ -60,6 +60,10 @@ amtm
 | Wireless Report for AiMesh | JB_1366 | [Link](https://www.snbforums.com/threads/wireless-report-for-aimesh-v1-3-6-apr-11-2026.96861/) |
 | Knock - Router Commands for non-admin users | rung | [Link](https://www.snbforums.com/threads/knock-v2-0-updated-1may2026-router-commands-for-non-admin-users.96390/) |
 
+| Auto SSH-Key - SSH Keygen for AiMesh devices | JB_1366 | [Link](https://www.snbforums.com/threads/97834/) |
+| IOCMON - Asuswrt-Merlin Security Intelligence Monitor | Viktor Jaep | [Link](https://www.snbforums.com/threads/97925/) |
+| SendEmail - Script Tool to Send Email Notifications | Martinski | [Link](https://www.snbforums.com/threads/97946/) |
+
 amtm also offers an interface for managing a number of other features:
 
 | Other amtm features | Maintainer(s) |
@@ -80,7 +84,8 @@ amtm also offers an interface for managing a number of other features:
 | Reboot router command | thelonelycoder
 | Scripts update notification | thelonelycoder
 | Automatic 3rd-party script updates | thelonelycoder
-| Add up to four of your own personal scripts to the menu | thelonelycoder
+| Add up to eight of your own personal scripts to the amtm menu | thelonelycoder
+| Automatic AiMesh Node (script) updates | thelonelycoder 
 
 Feel free to visit and contribute to the AMTM Orphaned Script Revival repo [AMTM-OSR](https://github.com/AMTM-OSR).
 
