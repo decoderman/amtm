@@ -59,7 +59,6 @@ amtm
 | Unbound Stats for Asuswrt-Merlin | juched78, Martinski | [Link](https://www.snbforums.com/threads/unbound-stats-for-asuswrt-merlin-v1-4-6-2026-mar-28-generate-stats-for-unbound.95533/) |
 | Wireless Report for AiMesh | JB_1366 | [Link](https://www.snbforums.com/threads/wireless-report-for-aimesh-v1-3-6-apr-11-2026.96861/) |
 | Knock - Router Commands for non-admin users | rung | [Link](https://www.snbforums.com/threads/knock-v2-0-updated-1may2026-router-commands-for-non-admin-users.96390/) |
-
 | Auto SSH-Key - SSH Keygen for AiMesh devices | JB_1366 | [Link](https://www.snbforums.com/threads/97834/) |
 | IOCMON - Asuswrt-Merlin Security Intelligence Monitor | Viktor Jaep | [Link](https://www.snbforums.com/threads/97925/) |
 | SendEmail - Script Tool to Send Email Notifications | Martinski | [Link](https://www.snbforums.com/threads/97946/) |
