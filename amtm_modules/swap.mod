@@ -191,7 +191,6 @@ manage_swap(){
 									fi
 									mkswap "$swapDevice/myswap.swp"
 									swapon "$swapDevice/myswap.swp"
-									nvram set usb_idle_timeout=0
 									nvram commit
 
 									c_j_s /jffs/scripts/post-mount

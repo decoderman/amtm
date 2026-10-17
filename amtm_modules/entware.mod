@@ -26,12 +26,12 @@ entware_installed(){
 
 	atii=1
 	[ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl
-	if [ "$su" = 1 ]; then
+	if [ "$su" = 1 ] && [ -z "$autoupdate" ]; then
 		opkg_update(){
 			opkg update >/tmp/amtm-entware-check 2>&1
 		}
 		use_alternate_server(){
-			printf "- Entware server ${R}$ENTDOMAIN${NC} unreachable\\n"
+			printf "- Entware server ${R}$ENTDOMAIN${NC} is unreachable\\n"
 			change_opkg_server(){
 				sed -i "1s#.*#src\/gz entware https://$1/$entVersion#" /opt/etc/opkg.conf
 			}
@@ -51,7 +51,7 @@ entware_installed(){
 								opkg_update
 								[ -s /tmp/amtm-entware-check ] && grep -q 'pdated list' /tmp/amtm-entware-check && serverOK=1
 							else
-								printf "- Entware server ${R}$i1${NC} unreachable\\n"
+								printf "- Entware server ${R}$i1${NC} is unreachable\\n"
 								echo 'ailed to' >/tmp/amtm-entware-check
 							fi
 						fi
@@ -66,7 +66,7 @@ entware_installed(){
 						printf "- Using Entware server ${GN}$entServer${NC},\\n  entware-backports-mirror\\n"
 						opkg update >/tmp/amtm-entware-check 2>&1
 					else
-						printf "- Entware server ${R}$entServer${NC} unreachable\\n"
+						printf "- Entware server ${R}$entServer${NC} is unreachable\\n"
 						echo 'ailed to' >/tmp/amtm-entware-check
 					fi
 				else
@@ -110,7 +110,7 @@ entware_installed(){
 			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
 				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
 				a_m " Entware: ${R}All servers failed to respond${NC}"
-				[ "$updcheck" ] && echo "- Entware server unreachable." >>/tmp/amtm-tpu-check
+				[ "$updcheck" ] && echo "- Entware server is unreachable." >>/tmp/amtm-tpu-check
 			fi
 		fi
 		rm -f /tmp/amtm-entware-check
@@ -124,8 +124,8 @@ entware_installed(){
 				unset EntwareUpdate EntwareMD5 entUpd
 			fi
 		fi
-		[ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpdate avail${NC}"
-		[ -z "$entUpd" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
+		[ -z "$autoupdate" ] && [ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpdate avail${NC}"
+		[ -z "$autoupdate" ] && [ -z "$entUpd" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
 	fi
 
 	case_ep(){
@@ -208,9 +208,9 @@ entware_installed(){
 							else
 								a_m " Entware update check failed:"
 								if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
-									a_m " ${R}$ENTDOMAIN${NC} and\\n ${R}maurerr.github.io${NC} unreachable"
+									a_m " ${R}$ENTDOMAIN${NC} and\\n ${R}maurerr.github.io${NC} is unreachable"
 								else
-									a_m " ${R}$ENTDOMAIN${NC} unreachable"
+									a_m " ${R}$ENTDOMAIN${NC} is unreachable"
 								fi
 							fi
 						else
