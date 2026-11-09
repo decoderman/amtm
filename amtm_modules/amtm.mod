@@ -1139,7 +1139,7 @@ script_check(){
 		c_url "$remoteurl" -o /tmp/amtm_script_check
 		if grep -qF -m1 "$grepcheck" /tmp/amtm_script_check 2>/dev/null; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(grep -m1 "$scriptgrep" /tmp/amtm_script_check 2>/dev/null | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
-				case "$remotever" in *[!0-9A-Za-z._-]*) remotever= ;; esac
+			case "$remotever" in *[!0-9A-Za-z._-]*) remotever= ;; esac
 			[ "$localmd5Other" ] && localmd5=$localmd5Other || localmd5="$(md5sum "$scriptloc" 2>/dev/null)"
 			localmd5="${localmd5%% *}"
 			upd="${GN_BG}$localver${NC}"
