@@ -240,7 +240,7 @@ check_friendly_name(){
 
 write_email_config_file(){
 	mkdir -p "${EMAIL_DIR}"
-	[ "$writePW" = 1 ] && echo -n $PASSWORD | /usr/sbin/openssl aes-256-cbc $emailPwEnc -out "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi
+	[ "$writePW" = 1 ] && printf '%s' "$PASSWORD" | /usr/sbin/openssl aes-256-cbc $emailPwEnc -out "${EMAIL_DIR}/emailpw.enc" -pass pass:ditbabot,isoi
 	writePW=
 	echo "# Email settings (mail envelope) #" > "${EMAIL_DIR}/email.conf"
 	echo "FROM_ADDRESS=\"$FROM_ADDRESS\"" >> "${EMAIL_DIR}/email.conf"
