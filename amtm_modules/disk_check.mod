@@ -63,8 +63,7 @@ disk_check_manage(){
 				fi
 				if [ $? -eq 0 ]; then
 					thisdevsize="$(echo $thisdevsize | awk '{ byte=$1/1000000000; printf "%.1f GB",byte }')"
-					eval mounts$i=\"$usb_dev $usb_name '('$thisdevsize')'\"
-					eval mtddev="\$mounts$i"
+					mtddev="$usb_dev $usb_name ($thisdevsize)"
 
 					printf " ${GN_BG} $mtddev ${NC}\\n\\n"
 					for device in $(/bin/mount | grep "^/dev/${mtddev:0:3}" | awk '{print $1}') ; do
@@ -85,7 +84,7 @@ disk_check_manage(){
 					e)			break;;
 					[$noad])	eval exclusion="\$exclusion$selection"
 								blkidExclude=
-								if [ -f "${add}"/disk_check.conf ] && grep -q $(echo "$exclusion" | grep -o 'UUID=".*"') "${add}"/disk_check.conf; then
+								if [ -f "${add}"/disk_check.conf ] && grep -q "$(echo "$exclusion" | grep -oE 'UUID="[0-9A-Fa-f-]+"' | head -n 1)" "${add}"/disk_check.conf; then
 									echo
 									echo "${E_BG} device is already exluded ${NC} $exclusion"
 									p_e_t return
@@ -93,10 +92,10 @@ disk_check_manage(){
 									[ -f "${add}"/disk_check.conf ] && . "${add}"/disk_check.conf
 									if [ "$blkidExclude" ]; then
 										sed -i '/blkidExclude/d' "${add}"/disk_check.conf
-										echo blkidExclude="'$(echo "$blkidExclude")$(echo "$exclusion" | grep -o 'UUID=".*"') '" >>"${add}"/disk_check.conf
+										echo blkidExclude="'$(echo "$blkidExclude")$(echo "$exclusion" | grep -oE 'UUID="[0-9A-Fa-f-]+"' | head -n 1) '" >>"${add}"/disk_check.conf
 									else
 										sed -i '/blkidExclude/d' "${add}"/disk_check.conf
-										echo blkidExclude="'$(echo "$exclusion" | grep -o 'UUID=".*"') '" >>"${add}"/disk_check.conf
+										echo blkidExclude="'$(echo "$exclusion" | grep -oE 'UUID="[0-9A-Fa-f-]+"' | head -n 1) '" >>"${add}"/disk_check.conf
 									fi
 									printf "\\n added exclusion for device:\\n $exclusion\\n"
 								fi
@@ -236,7 +235,7 @@ run_disk_check(){
 	TZ=$(cat /etc/TZ); export TZ
 
 	[ -f "${add}"/disk_check.conf ] && . "${add}"/disk_check.conf
-	if [ "$blkidExclude" ] && echo "$blkidExclude" | grep -q "$(blkid $1 | grep -o 'UUID=".*"')"; then
+	if [ "$blkidExclude" ] && [ -n "$(blkid $1 | grep -oE 'UUID="[0-9A-Fa-f-]+"' | head -n 1)" ] && echo "$blkidExclude" | grep -q "$(blkid $1 | grep -oE 'UUID="[0-9A-Fa-f-]+"' | head -n 1)"; then
 		if [ "$#" -lt 2 ]; then
 			text="$1 exluded from check ($(blkid $1 | grep -o 'UUID=".*"'))"
 		else
@@ -328,7 +327,7 @@ run_disk_check(){
 		text="Disk check done on $1"
 		printf "$(date) $text\\n" >> $CHKLOG
 		logger -t "$TAG" "$text"
-		errDCL=$(tail -n$(($(wc -l < $CHKLOG)-lcDCL)) $CHKLOG | grep 'error')
+		errDCL=$(tail -n$(($(wc -l < $CHKLOG)-lcDCL)) $CHKLOG | grep -E 'error|UNEXPECTED INCONSISTENCY')
 		[ "$errDCL" ] && printf "    - $1\\n" >>"${add}"/disk_check_err.log
 		if [ "$errDCL" ] && [ "$dcErrMail" = on -a "$(nvram get ntp_ready)" = 1 ]; then
 			EMAIL_DIR="${add}/mail"
