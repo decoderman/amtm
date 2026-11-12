@@ -193,6 +193,7 @@ entware_installed(){
 									echo " Updating / upgrading Entware packages"
 									echo "${GY}"
 									opkg upgrade
+									opkgUpgradeStatus=$?
 									echo "${NC}"
 
 									echo " Re-starting Entware services"
@@ -201,7 +202,11 @@ entware_installed(){
 									echo "${NC}"
 									p_e_t "return to menu"
 
-									show_amtm " Entware packages updated and upgraded"
+									if [ "$opkgUpgradeStatus" -eq 0 ]; then
+										show_amtm " Entware packages updated and upgraded"
+									else
+										show_amtm " Entware package upgrade failed"
+									fi
 								else
 									show_amtm " No Entware package updates available at\\n this time."
 								fi
@@ -294,11 +299,10 @@ entware_installed(){
 												case "$confirm" in
 													1)	echo "${GY}"
 														opkg update >/dev/null
-														opkg upgrade
-														if [ "$?" -ne "1" ]; then
+														if opkg upgrade; then
 															a_m " Entware packages action: all packages upgraded"
 														else
-															a_m " ! Entware packages action: upgrade failed, network error"
+															a_m " ! Entware packages action: upgrade failed"
 														fi
 														echo "${NC}"
 														show_amtm;break;;
@@ -476,11 +480,10 @@ entware_installed(){
 											case "$confirm" in
 												1)	echo "${GY}"
 													opkg update >/dev/null
-													opkg upgrade
-													if [ "$?" -ne "1" ]; then
+													if opkg upgrade; then
 														a_m " Entware packages action: all packages upgraded"
 													else
-														a_m " ! Entware packages action: upgrade failed, network error"
+														a_m " ! Entware packages action: upgrade failed"
 													fi
 													echo "${NC}"
 													show_amtm;break;;
