@@ -178,7 +178,7 @@ entware_installed(){
 			case "$continue" in
 				1)		echo
 						if $curlv -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
-							if $(opkg update | grep -q 'pdated list'); then
+							if opkg update; then
 								if [ "$(opkg list-upgradable)" ]; then
 									p_e_l
 									echo " These Entware updates are available:"
