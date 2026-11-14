@@ -74,7 +74,7 @@ c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])[ "$1" ] && r_m "$1";am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to play a game${NC}";}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
-s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
+s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";case "$i" in *.enc) ;; *) d_t_u "$i";; esac;fi;done;}
 set_vars(){ updErr=;c_ntp;tpw=1;su=1;suUpd=0;}
 tpu_check(){ rm -f /tmp/amtmNodeUpdate;su=1;suUpd=0;updErr=;tpu=1;> /tmp/amtm-tpu-check;show_amtm >/dev/null 2>&1;}
 upd_check(){ su=1;suUpd=0;updErr=;tpu=1;updcheck=1;rm -f /tmp/amtmNodeUpdate;echo "Available script updates:" >/tmp/amtm-tpu-check;update_amtm;show_amtm;}
@@ -1064,7 +1064,7 @@ auto_script_updates(){
 											*) 	printf "\\n input is not an option\\n";;
 										esac
 									done
-									printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"" >> "${add}"/amtmUpdate.conf
+									sed -i '/asuUpdDay/d;/asuUpdDOW/d' "${add}"/amtmUpdate.conf;printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"\\n" >> "${add}"/amtmUpdate.conf
 									cru a amtm_Automatic_script_update "45 23 * * $asuUpdDOW amtm autoupdate"
 									c_j_s /jffs/scripts/services-start
 									sed -i '/amtm_Automatic_script_update/d' /jffs/scripts/services-start
@@ -1139,6 +1139,7 @@ script_check(){
 		c_url "$remoteurl" -o /tmp/amtm_script_check
 		if grep -qF -m1 "$grepcheck" /tmp/amtm_script_check 2>/dev/null; then
 			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(grep -m1 "$scriptgrep" /tmp/amtm_script_check 2>/dev/null | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+			case "$remotever" in *[!0-9A-Za-z._-]*) remotever= ;; esac
 			[ "$localmd5Other" ] && localmd5=$localmd5Other || localmd5="$(md5sum "$scriptloc" 2>/dev/null)"
 			localmd5="${localmd5%% *}"
 			upd="${GN_BG}$localver${NC}"
@@ -1243,6 +1244,7 @@ update_amtm(){
 	if [ -z "$urlNOK" ]; then
 		amtmRemotever="$(grep -m1 "^version=" /tmp/amtm_check.mod 2>/dev/null)"
 		amtmRemotever="${amtmRemotever#version=}"
+		case "$amtmRemotever" in *[!0-9A-Za-z._-]*) amtmRemotever=0 ;; esac
 		localmd5="$(md5sum "${add}"/a_fw/amtm.mod 2>/dev/null)"
 		localmd5="${localmd5%% *}"
 		remotemd5="$(md5sum /tmp/amtm_check.mod 2>/dev/null)"
