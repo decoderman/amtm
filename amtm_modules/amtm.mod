@@ -1,7 +1,7 @@
 #!/bin/sh
 #bof
-version=7.1.2
-release="October 17 2026"
+version=7.1
+release="October 11 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.2 # Firmware update notification
@@ -69,16 +69,16 @@ about_amtm(){
 
 c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
 c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
-c_url(){ [ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsNL "$@";}
+c_url(){ [ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
 c_d(){ p_e_l;while true;do printf " Continue? [1=Yes e=Exit] ";read -r continue;case "$continue" in 1)echo;break;;[Ee])[ "$1" ] && r_m "$1";am=;show_amtm menu;break;;*)printf "\\n input is not an option\\n\\n";;esac done;}
 o_g_s(){ show_amtm " ${R}Open games section with${NC} ${GN_BG} g ${NC} ${R}to play a game${NC}";}
 p_e_t(){ printf "\\n Press Enter to $1 ";read -r;echo;}
-s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";d_t_u "$i";fi;done;}
+s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then [ ! -w "$i" ] && chmod 0666 "$i";case "$i" in *.enc) ;; *) d_t_u "$i";; esac;fi;done;}
 set_vars(){ updErr=;c_ntp;tpw=1;su=1;suUpd=0;}
 tpu_check(){ rm -f /tmp/amtmNodeUpdate;su=1;suUpd=0;updErr=;tpu=1;> /tmp/amtm-tpu-check;show_amtm >/dev/null 2>&1;}
 upd_check(){ su=1;suUpd=0;updErr=;tpu=1;updcheck=1;rm -f /tmp/amtmNodeUpdate;echo "Available script updates:" >/tmp/amtm-tpu-check;update_amtm;show_amtm;}
-auto_script_update(){ trim_file "$ASU_LOG";set_vars;unset scriptUpd auUPD;rm -f "${add}"/availUpd.txt /tmp/amtmNodeUpdate;autoupdate=1;checkAUenabled=1;allowUpdateNodes=1;show_amtm >/dev/null 2>&1;}
+auto_script_update(){ trim_file "$ASU_LOG";set_vars;unset scriptUpd auUPD;rm -f "${add}"/availUpd.txt /tmp/amtmNodeUpdate;autoupdate=1;allowUpdateNodes=1;show_amtm menu >/dev/null 2>&1;}
 trim_file(){ if [ -f "$1" ] && [ "$(wc -c < $1)" -gt "100000" ]; then sed -i '1,100d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";sed -i "1s/^/Truncated log file, size over 100KB, on $(date)\n\n/" "$1";fi;}
 v_c(){
 	local v1 v2 v3 v4
@@ -150,7 +150,6 @@ if [ -f /opt/.asusrouter ] && grep "mount-entware.mod" /jffs/scripts/post-mount 
 fi
 
 show_amtm(){
-	check_internet
 	if [ -f "${add}"/nodeUpdate.conf ]; then
 		g_m node_update.mod include
 		. "${add}"/nodeUpdate.conf
@@ -339,13 +338,10 @@ EOF
 						fi
 						knownScriptsCount=$ksc
 						if [ -f /tmp/amtm-autoupdate ]; then
-							logger -t "amtm autoupdate" "End update check"
 							rm -f /tmp/amtm-autoupdate
-							unset autoupdate checkAUenabled;exit 0
+							autoupdate=;exit 0
 						fi
-						if [ "$autoupdate" ]; then
-							touch /tmp/amtm-autoupdate
-						fi
+						[ "$autoupdate" ] && touch /tmp/amtm-autoupdate
 						[ "$updateNodes" = enabled ] && [ "$allowUpdateNodes" -o "$onlyCheckNodes" ] && update_nodes
 						;;
 			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo";;
@@ -363,6 +359,7 @@ EOF
 										rm /tmp/amtm-tpu-check
 									fi
 								fi
+								logger -t "amtm tpucheck" "Check done"
 								exit 0
 							fi
 							[ "$dlok" ] && tps=1 || tps=
@@ -398,10 +395,7 @@ EOF
 						case "$f2" in
 							skynet)	if [ -f "$scriptloc" ] && grep -qm1 'underd0se' "$scriptloc"; then
 										jumpScript=1;[ -f "${add}/${f2}.mod" ] && r_m ${f2}.mod
-									fi
-									;;
-								*)	jumpScript=
-									;;
+									fi;;
 						esac
 						if [ -f "$scriptloc" -a -z "$jumpScript" ]; then
 							[ -z "$scnt" ] && ksc=$((ksc+1))
@@ -660,10 +654,8 @@ EOF
 					g_i_m "${add}"
 					if [ "$updErr" = 1 ]; then
 						printf "amtm Automatic update aborted, could not retrieve version\\n" >>"$ASU_LOG"
-						logger -t "amtm autoupdate" "amtm Automatic update aborted, could not retrieve version"
 					else
 						printf "amtm sucessfully updated from v$version to v$amtmRemotever\\n" >>"$ASU_LOG"
-						logger -t "amtm autoupdate" "amtm sucessfully updated from v$version to v$amtmRemotever"
 					fi
 					exec "$0" " amtm $am"
 				else
@@ -714,8 +706,6 @@ EOF
 			else
 				if [ "$autoupdate" ]; then
 					printf "$(date +"%b %d %Y %T") Automatic update check: Everything's up to date\\n" | tee -a "$ASU_LOG"
-					logger -t "amtm autoupdate" "End update check: Everything is up to date"
-					unset autoupdate checkAUenabled
 					rm -f /tmp/amtm-autoupdate;autoupdate=;exit 0
 				else
 					a_m " Everything's up to date ($(date +"%b %d %Y %R"))"
@@ -930,29 +920,6 @@ s_l_f(){
 	fi
 }
 
-check_internet(){
-	if [ "$autoupdate" -a "$checkAUenabled" ] || [ "$su" -a "$tpu" -o "$su" -a "$tpw" ]; then
-		internet=
-		if ping -c2 -W3 209.244.0.3 >/dev/null; then
-			internet=1
-		elif ping -c2 -W3 1.1.1.1 >/dev/null; then
-			internet=1
-		elif ping -c2 -W3 8.8.8.8 >/dev/null; then
-			internet=1
-		else
-			if [ "$autoupdate" -a "$checkAUenabled" ] || [ "$su" -a "$tpu" ]; then
-				logger -t "amtm" "No internet access detected, aborting update check"
-				unset autoupdate checkAUenabled allowUpdateNodes onlyCheckNodes tpw tpu su suUpd
-				exit 0
-			else
-				unset autoupdate checkAUenabled allowUpdateNodes onlyCheckNodes tpw tpu su suUpd
-				show_amtm " No internet access detected, aborting\\n update check"
-			fi
-		fi
-		[ "$autoupdate" -a "$checkAUenabled" ] && logger -t "amtm autoupdate" "Begin update check"
-	fi
-}
-
 auto_script_updates(){
 
 	asu_loop(){
@@ -1097,7 +1064,7 @@ auto_script_updates(){
 											*) 	printf "\\n input is not an option\\n";;
 										esac
 									done
-									printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"" >> "${add}"/amtmUpdate.conf
+									sed -i '/asuUpdDay/d;/asuUpdDOW/d' "${add}"/amtmUpdate.conf;printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"\\n" >> "${add}"/amtmUpdate.conf
 									cru a amtm_Automatic_script_update "45 23 * * $asuUpdDOW amtm autoupdate"
 									c_j_s /jffs/scripts/services-start
 									sed -i '/amtm_Automatic_script_update/d' /jffs/scripts/services-start
@@ -1164,100 +1131,90 @@ asu_check(){
 }
 
 script_check(){
-	atii=1;auDontCheck=
+	atii=1
 	[ "$localVother" ] && localver=$localVother || localver="$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 	upd="${E_BG}${NC}$localver"
 	lvtpu=$localver
 	if [ "$su" = 1 -a -z "$asuc" ]; then
-		[ "$checkAUenabled" -a "$autoupdate" -a "$(grep "#$scriptname" "${add}"/amtmUpdateScripts)" ] && auDontCheck=1
-		if [ -z "$auDontCheck" ]; then
-			c_url "$remoteurl" -o /tmp/amtm_script_check
-			if grep -qF -m1 "$grepcheck" /tmp/amtm_script_check 2>/dev/null; then
-				[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(grep -m1 "$scriptgrep" /tmp/amtm_script_check 2>/dev/null | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
-				[ "$localmd5Other" ] && localmd5=$localmd5Other || localmd5="$(md5sum "$scriptloc" 2>/dev/null)"
-				localmd5="${localmd5%% *}"
-				upd="${GN_BG}$localver${NC}"
-				asu_check
+		c_url "$remoteurl" -o /tmp/amtm_script_check
+		if grep -qF -m1 "$grepcheck" /tmp/amtm_script_check 2>/dev/null; then
+			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(grep -m1 "$scriptgrep" /tmp/amtm_script_check 2>/dev/null | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+			case "$remotever" in *[!0-9A-Za-z._-]*) remotever= ;; esac
+			[ "$localmd5Other" ] && localmd5=$localmd5Other || localmd5="$(md5sum "$scriptloc" 2>/dev/null)"
+			localmd5="${localmd5%% *}"
+			upd="${GN_BG}$localver${NC}"
+			asu_check
 
-				if [ "$asuCompatible" = "yes" ]; then
-					if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
-						upd="${E_BG}<- $remotever${NC}"
-					elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
-						if [ "$allowAutoUpdate" -a "$auUPD" ]; then
-							[ "$autoupdate" ] && auUPDTxt='Automatic update of' || auUPDTxt=Updating
-							logger -t "amtm autoupdate" "$auUPDTxt $scriptname"
-							printf "$(date +"%b %d %Y %T") $auUPDTxt $scriptname\\n" | tee -a "$ASU_LOG"
-							"$scriptloc" amtmupdate
-							if [ "$?" -eq 0 ]; then
-								printf "$scriptname sucessfully updated from v$localver to v$remotever\\n" >>"$ASU_LOG"
-								logger -t "amtm autoupdate" "$scriptname sucessfully updated from v$localver to v$remotever"
-								[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
-							else
-								logger -t "amtm autoupdate" "$scriptname update v$localver to v$remotever failed"
-								printf "$scriptname update v$localver to v$remotever failed\\n" | tee -a "$ASU_LOG"
-							fi
-							localver=
-							upd="${GN_BG}$remotever${NC}"
+			if [ "$asuCompatible" = "yes" ]; then
+				if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
+					upd="${E_BG}<- $remotever${NC}"
+				elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
+					if [ "$allowAutoUpdate" -a "$auUPD" ]; then
+						[ "$autoupdate" ] && auUPDTxt='Automatic update of' || auUPDTxt=Updating
+						logger -t "amtm autoupdate" "$auUPDTxt $scriptname"
+						printf "$(date +"%b %d %Y %T") $auUPDTxt $scriptname\\n" | tee -a "$ASU_LOG"
+						"$scriptloc" amtmupdate
+						if [ "$?" -eq 0 ]; then
+							printf "$scriptname sucessfully updated from v$localver to v$remotever\\n" >>"$ASU_LOG"
+							logger -t "amtm autoupdate" "$scriptname sucessfully updated from v$localver to v$remotever"
+							[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
 						else
-							if [ "$allowAutoUpdate" ]; then
-								scriptUpd=1
-								upd="*${E_BG}-> $remotever${NC}"
-								[ "$autoupdate" ] && logger -t "amtm autoupdate" "$scriptname update available, updating..."
-							else
-								upd="${E_BG}-> $remotever${NC}"
-							fi
-							if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
-								forceOnlyUpdate=1
-							else
-								[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
-							fi
-							if [ "$tpu" ]; then
-								[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
-							fi
-							suUpd=1
+							logger -t "amtm autoupdate" "$scriptname update v$localver to v$remotever failed"
+							printf "$scriptname update v$localver to v$remotever failed\\n" | tee -a "$ASU_LOG"
 						fi
+						localver=
+						upd="${GN_BG}$remotever${NC}"
 					else
-						if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
-							localver="No MD5";NoMD5=1
+						if [ "$allowAutoUpdate" ]; then
+							scriptUpd=1
+							upd="*${E_BG}-> $remotever${NC}"
 						else
-							if [ -z "$autoupdate" ]; then
-								[ "$remotemd5Other" ] && remotemd5=$(grep -v '^readonly RELEASE_ASSET_KIND=' /tmp/amtm_script_check | md5sum 2>/dev/null) || remotemd5="$(md5sum /tmp/amtm_script_check 2>/dev/null)"
-								remotemd5="${remotemd5%% *}"
-								if [ "$localmd5" != "$remotemd5" ]; then
-									upd="${E_BG}-> MD5 upd${NC}"
-									tpUpd="-> MD5 upd"
-									[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
-									suUpd=1;MD5Show=1
-								else
-									localver=
-								fi
-							else
-								localver=
-							fi
+							upd="${E_BG}-> $remotever${NC}"
+						fi
+						if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
+							forceOnlyUpdate=1
+						else
+							[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
+						fi
+						if [ "$tpu" ]; then
+							[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
+						fi
+						suUpd=1
+					fi
+				elif [ -z "$autoupdate" ]; then
+					if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
+						localver="No MD5";NoMD5=1
+					else
+						[ "$remotemd5Other" ] && remotemd5=$(grep -v '^readonly RELEASE_ASSET_KIND=' /tmp/amtm_script_check | md5sum 2>/dev/null) || remotemd5="$(md5sum /tmp/amtm_script_check 2>/dev/null)"
+						remotemd5="${remotemd5%% *}"
+						if [ "$localmd5" != "$remotemd5" ]; then
+							upd="${E_BG}-> MD5 upd${NC}"
+							tpUpd="-> MD5 upd"
+							[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
+							suUpd=1;MD5Show=1
+						else
+							localver=
 						fi
 					fi
-					if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" -a -z "$autoupdate" ] && [ -z "$forceOnlyUpdate" ]; then
-						echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
-						echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
-					fi
-				else
-					localver="${E_BG}*incompatible${NC}"; upd=
-					isAsuCompatible=no
+				fi
+				if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" -a -z "$autoupdate" ] && [ -z "$forceOnlyUpdate" ]; then
+					echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
+					echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
 				fi
 			else
-				upd=" ${E_BG}upd err${NC}"
-				updErr=1
-				a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC}\\n is unreachable or file check failed."
-				[ "$autoupdate" ] && logger -t "amtm autoupdate" "$scriptname Server $(echo $remoteurl | awk -F[/:] '{print $4}') is unreachable or file check failed."
+				localver="${E_BG}*incompatible${NC}"; upd=
+				isAsuCompatible=no
 			fi
 		else
-			logger -t "amtm autoupdate" "$scriptname disabled for autoupdate."
+			upd=" ${E_BG}upd err${NC}"
+			updErr=1
+			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC}\\n unreachable or file check failed."
 		fi
 	else
 		localver=
 		[ "$asuc" ] && asu_check
 	fi
-	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate forceScriptUpdate forceOnlyUpdate localmd5Other remotemd5Other auDontCheck
+	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate forceScriptUpdate forceOnlyUpdate localmd5Other remotemd5Other
 	rm -f /tmp/amtm_script_check
 }
 
@@ -1275,11 +1232,10 @@ update_amtm(){
 			thisrem=" ${E_BG}upd err${NC}"
 			amtmUpd=0
 			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
-			a_m " ! amtm: ${R}${d_name}${NC} is unreachable"
-			[ "$autoupdate" ] && logger -t "amtm autoupdate" "amtm 1 Server ${d_name} is unreachable"
+			a_m " ! amtm: ${R}${d_name}${NC} unreachable"
 		else
 			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
-			show_amtm " ! amtm: ${R}${d_name}${NC} is unreachable"
+			show_amtm " ! amtm: ${R}${d_name}${NC} unreachable"
 		fi
 	else
 		urlNOK=
@@ -1288,6 +1244,7 @@ update_amtm(){
 	if [ -z "$urlNOK" ]; then
 		amtmRemotever="$(grep -m1 "^version=" /tmp/amtm_check.mod 2>/dev/null)"
 		amtmRemotever="${amtmRemotever#version=}"
+		case "$amtmRemotever" in *[!0-9A-Za-z._-]*) amtmRemotever=0 ;; esac
 		localmd5="$(md5sum "${add}"/a_fw/amtm.mod 2>/dev/null)"
 		localmd5="${localmd5%% *}"
 		remotemd5="$(md5sum /tmp/amtm_check.mod 2>/dev/null)"
@@ -1300,13 +1257,11 @@ update_amtm(){
 				thisUpd="-> $amtmRemotever"
 				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 				amtmUpd=1
-				[ "$autoupdate" ] && logger -t "amtm autoupdate" "amtm update available: $version to $amtmRemotever."
 			elif [ "$localmd5" != "$remotemd5" -a -z "$autoupdate" ]; then
 				thisrem="${E_BG}-> MD5 upd${NC}"
 				thisUpd="-> MD5 upd"
 				[ "$updcheck" ] && echo "- amtm $version, MD5 hash change detected" >>/tmp/amtm-tpu-check
 				amtmUpd=2;MD5Show=1
-				[ "$autoupdate" ] && logger -t "amtm autoupdate" "amtm $version: MD5 hash change detected."
 			else
 				thisrem="${GN_BG}$version${NC}"
 				amtmUpd=0
@@ -1339,7 +1294,7 @@ update_amtm(){
 			logger -s -t "amtm updcheck" "Exited check, Server $d_name is unreachable"
 			exit 0
 		elif [ "$autoupdate" = 1 ]; then
-			logger -s -t "amtm autoupdate" "amtm 2 Server $d_name is unreachable"
+			logger -s -t "amtm autoupdate" "Server $d_name is unreachable"
 			exit 0
 		elif [ "$updErr" = 1 -a "$tpu" = 1 ]; then
 			logger -s -t "amtm updcheck" "Server $d_name is unreachable"
