@@ -191,8 +191,11 @@ manage_swap(){
 									else
 										/bin/dd if=/dev/zero of="$swapDevice/myswap.swp" bs=1k count="$swsize"
 									fi
-									mkswap "$swapDevice/myswap.swp"
-									swapon "$swapDevice/myswap.swp"
+									ddStatus=$?
+									if [ "$ddStatus" -ne 0 ] || ! mkswap "$swapDevice/myswap.swp" || ! swapon "$swapDevice/myswap.swp"; then
+										show_amtm " Swap file creation or activation failed"
+										break
+									fi
 									nvram commit
 
 									c_j_s /jffs/scripts/post-mount
