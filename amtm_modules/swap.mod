@@ -13,6 +13,8 @@ check_swap(){
 	}
 
 	remove_swap_entries(){
+		swapondir="$(awk '$1=="swapon"{sub(/\/[^\/]*$/,"",$2);print $2;exit}' /jffs/scripts/post-mount)"
+		[ -n "$swapondir" ] && ! grep -q " $swapondir " /proc/mounts && return 0
 		if grep -q 'swapon.*\.' /jffs/scripts/post-mount && ! grep -q 'do-not-check-swap' /jffs/scripts/post-mount; then
 			sed -i '\~swapon ~d' /jffs/scripts/post-mount
 			swtxt=" No swap file found, reference removed in\\n /jffs/scripts/post-mount"
@@ -261,7 +263,7 @@ manage_swap(){
 		if [ "$findswap" ]; then
 			for swapfile in $findswap; do
 				echo " $i. ${GN}$swapfile${NC} $(du -h "$swapfile" | awk '{print $1}')"
-				eval swapfile$i="$swapfile"
+				eval swapfile$i="\$swapfile"
 				noad="${noad}${i} "
 				i=$((i+1))
 			done

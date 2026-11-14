@@ -32,7 +32,7 @@ elif [ "$opkgFile" ] && [ -d /opt/bin ]; then
 		logger -t Entware "Not starting Entware services on $opkgPath, Entware is already started"
 	fi
 else
-	opkgUnknown=$(/usr/bin/find "$opkgPath/entware*/bin/opkg" 2> /dev/null)
+	opkgUnknown=$(/usr/bin/find "$opkgPath"/entware*/bin/opkg 2> /dev/null)
 	if [ "$opkgUnknown" ]; then
 		mv "${opkgUnknown%/bin/opkg}" "${opkgUnknown%/entware*/bin/opkg}/entware"
 		logger -t Entware "(Alert) Entware folder ${opkgUnknown%/bin/opkg} renamed to $opkgPath/entware"
