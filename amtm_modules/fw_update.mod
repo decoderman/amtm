@@ -173,14 +173,17 @@ write_fw_update_file(){
 	    --crlf \\
 	    --user "\$USERNAME:\$(/usr/sbin/openssl aes-256-cbc \$emailPwEnc -d -in /jffs/addons/amtm/mail/emailpw.enc -pass pass:ditbabot,isoi)" \$SSL_FLAG
 
-	    if [ "\$?" = "0" ]; then
+	    curlStatus=\$?
+	    if [ "\$curlStatus" = "0" ]; then
 	        logger -t amtm "sent firmware notification"
 	    else
 	        logger -t amtm "was unable to send firmware notification, check settings"
 	    fi
 	    rm -f /tmp/amtm-mail*
+	    exit \$curlStatus
 	else
 	    logger -t amtm "was unable to send firmware notification, email.conf not found"
+	    exit 1
 	fi
 
 	EOF
