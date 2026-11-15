@@ -2,7 +2,7 @@
 #bof
 
 version=7.2
-release="October 17 2026"
+release="November 15 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
 fw_version=1.3 # Firmware update notification
