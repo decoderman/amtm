@@ -62,12 +62,14 @@ amtm
 | Auto SSH-Key - SSH Keygen for AiMesh devices | JB_1366 | [Link](https://www.snbforums.com/threads/97834/) |
 | IOCMON - Asuswrt-Merlin Security Intelligence Monitor | Viktor Jaep | [Link](https://www.snbforums.com/threads/97925/) |
 | SendEmail - Script Tool to Send Email Notifications | Martinski | [Link](https://www.snbforums.com/threads/97946/) |
+| ASN Manager - Advanced Policy-Based Routing for Asuswrt-Merlin | NoName79 | [Link](https://www.snbforums.com/threads/97832/) |
+| Arteria - Live, animated map of your network’s traffic (AiMesh aware) | Scoty | [Link](https://www.snbforums.com/threads/98274/) |
 
 amtm also offers an interface for managing a number of other features:
 
 | Other amtm features | Maintainer(s) |
 |----------------|-----------|
-| Entware | zyxmon, ryzhovau, themiron |
+| Entware - Software repository for embedded devices | zyxmon, ryzhovau, themiron |
 | USB disk check at boot | ColinTaylor, latenitetech, thelonelycoder |
 | Format disk | thelonelycoder, ColinTaylor |
 | Router LED control, smart router LED scheduler | thelonelycoder |
