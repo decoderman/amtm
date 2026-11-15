@@ -274,10 +274,10 @@ format_disk(){
 		printf " Set size$pn on\\n\\n ${GN_BG} $mtddev (${devmbsize} MB) ${NC}\\n\\n"
 
 		case "$partitions" in
-			2)	printf " 1. Use 50% ($((devmbsize/2)) MB) of ${devmbsize} MB\\n";;
+			2)	printf " 1. Use 50%% ($((devmbsize/2)) MB) of ${devmbsize} MB\\n";;
 			3)	case "$1" in
-					1)	printf " 1. Use 33% ($((devmbsize/3)) MB) of ${devmbsize} MB\\n";;
-					2)	printf " 1. Use 50% ($(((devmbsize-psize1)/2)) MB) of $((devmbsize-psize1)) MB\\n";;
+					1)	printf " 1. Use 33%% ($((devmbsize/3)) MB) of ${devmbsize} MB\\n";;
+					2)	printf " 1. Use 50%% ($(((devmbsize-psize1)/2)) MB) of $((devmbsize-psize1)) MB\\n";;
 				esac
 				;;
 		esac

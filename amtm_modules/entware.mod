@@ -20,6 +20,7 @@ entware_installed(){
 		[ "$(echo $ENTURL | grep 'aarch64\|armv7\|mipsel')" ] && entVersion="${ENTURL##*/}"
 		entServer='bin.entware.net Primary¦server¦by¦Entware¦team¦(recommended) primary¦server¦by¦Entware¦team
 		entware.diversion.ch Mirror¦by¦thelonelycoder mirror¦by¦thelonelycoder
+		entware.maghuro.top Mirror¦by¦maghuro mirror¦by¦maghuro
 		mirrors.cernet.edu.cn/entware Multiple¦mirrors¦by¦CERNET¦(China¦Education¦and¦Research¦Network) multiple¦mirrors¦by¦CERNET'
 	}
 	get_entware_identifiers
@@ -93,7 +94,7 @@ entware_installed(){
 					if [ "$tpu" ]; then
 						echo "- Entware, $(wc -l </tmp/amtm-entware-check) new package(s) available<br>" >>/tmp/amtm-tpu-check
 					else
-						[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> upd avail${NC}"
+						[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} en${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware" "${E_BG}-> upd avail${NC}"
 						i=0
 						while read line; do
 							i=$((i+1))
@@ -105,10 +106,10 @@ entware_installed(){
 						echo "EntwareMD5=\"$(md5sum /opt/lib/opkg/status | awk '{print $1}')\"">>"${add}"/availUpd.txt
 					fi
 				else
-					[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${GN_BG}no upd${NC}"
+					[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} en${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware             " " ${GN_BG}no upd${NC}"
 				fi
 			elif grep -q 'ailed to' /tmp/amtm-entware-check; then
-				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware packages    " " ${E_BG}upd err${NC}"
+				[ -z "$updcheck" -a -z "$ss" ] && printf "${GN_BG} en${NC} %-9s%-21s%${COR}s\\n" "manage" "Entware             " " ${E_BG}upd err${NC}"
 				a_m " Entware: ${R}All servers failed to respond${NC}"
 				[ "$updcheck" ] && echo "- Entware server is unreachable." >>/tmp/amtm-tpu-check
 			fi
@@ -124,13 +125,13 @@ entware_installed(){
 				unset EntwareUpdate EntwareMD5 entUpd
 			fi
 		fi
-		[ -z "$autoupdate" ] && [ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware packages" "${E_BG}-> $EntwareUpdate avail${NC}"
-		[ -z "$autoupdate" ] && [ -z "$entUpd" -a -z "$ss" ] && printf "${GN_BG} ep${NC} %-9s%s\\n" "manage" "Entware packages"
+		[ -z "$autoupdate" ] && [ "$entUpd" = 1 -a -z "$ss" ] && printf "${GN_BG} en${NC} %-9s%-20s%${COR}s\\n" "manage" "Entware" "${E_BG}-> $EntwareUpdate avail${NC}"
+		[ -z "$autoupdate" ] && [ -z "$entUpd" -a -z "$ss" ] && printf "${GN_BG} en${NC} %-9s%s\\n" "manage" "Entware"
 	fi
 
-	case_ep(){
+	case_en(){
 		p_e_l
-		echo " Entware package options"
+		echo " Entware options"
 		echo
 		sel=5
 		unset bpe bparm pUse
@@ -178,7 +179,7 @@ entware_installed(){
 			case "$continue" in
 				1)		echo
 						if $curlv -IsL https://$ENTDOMAIN | head -n 1 | grep 'OK\|Found' >/dev/null; then
-							if opkg update; then
+							if opkg update >/dev/null; then
 								if [ "$(opkg list-upgradable)" ]; then
 									p_e_l
 									echo " These Entware updates are available:"
@@ -230,7 +231,7 @@ entware_installed(){
 							echo " Installing required Entware package 'column'"
 							echo " for a better file presentation."
 							echo "${GY}"
-							opkg update
+							opkg update >/dev/null
 							opkg install column
 							echo "${NC}"
 							p_e_l

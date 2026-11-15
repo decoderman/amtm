@@ -1,16 +1,18 @@
 #!/bin/sh
 #bof
-version=7.1
-release="October 11 2026"
+
+version=7.2
+release="October 17 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
-fw_version=1.2 # Firmware update notification
+fw_version=1.3 # Firmware update notification
 wl_MD5=df39155b8ffe72c91f37247307fb031d # shared-amtm-whitelist
 EMAIL_DIR="${add}/mail"
 ASU_LOG="${add}"/amtmUpdate.log
 [ -f "${add}"/amtmBranch ] && . "${add}"/amtmBranch
-# Workaround for Entware ELF binaries compiled with RUNPATH, thanks @Martinski #
-unset LD_LIBRARY_PATH
+
+
+unset LD_LIBRARY_PATH # Workaround for Entware ELF binaries compiled with RUNPATH, thanks @Martinski
 
 # Begin updates for /usr/sbin/amtm
 r_m(){ [ -f "${add}/$1" ] && rm -f "${add}/$1";}
@@ -67,7 +69,7 @@ about_amtm(){
 	show_amtm menu
 }
 
-c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}ep${NC} to install Entware now.";}
+c_e(){ [ ! -f /opt/bin/opkg ] && show_amtm " $1 requires the Entware repository\\n installed. Enter ${GN_BG}en${NC} to install Entware now.";}
 c_ntp(){ [ "$(nvram get ntp_ready)" = 0 ] && show_amtm " NTP not ready, check that router time is synced";}
 c_url(){ [ -f /opt/bin/curl ] && curlv=/opt/bin/curl || curlv=/usr/sbin/curl;$curlv -fsNL --connect-timeout 10 --retry 3 --max-time 12 "$@";}
 c_j_s(){ if [ ! -f "$1" ]; then echo "#!/bin/sh" >"$1"; echo >>"$1"; elif [ -f "$1" ] && ! head -1 "$1" | grep -qE "^#!/bin/sh"; then c_nl "$1"; echo >>"$1"; sed -i '1s~^~#!/bin/sh\n~' "$1";fi; d_t_u "$1"; c_nl "$1"; [ ! -x "$1" ] && chmod 0755 "$1";}
@@ -78,18 +80,18 @@ s_p(){ for i in "$1"/*; do if [ -d "$i" ]; then s_p "$i";elif [ -f "$i" ]; then 
 set_vars(){ updErr=;c_ntp;tpw=1;su=1;suUpd=0;}
 tpu_check(){ rm -f /tmp/amtmNodeUpdate;su=1;suUpd=0;updErr=;tpu=1;> /tmp/amtm-tpu-check;show_amtm >/dev/null 2>&1;}
 upd_check(){ su=1;suUpd=0;updErr=;tpu=1;updcheck=1;rm -f /tmp/amtmNodeUpdate;echo "Available script updates:" >/tmp/amtm-tpu-check;update_amtm;show_amtm;}
-auto_script_update(){ trim_file "$ASU_LOG";set_vars;unset scriptUpd auUPD;rm -f "${add}"/availUpd.txt /tmp/amtmNodeUpdate;autoupdate=1;allowUpdateNodes=1;show_amtm menu >/dev/null 2>&1;}
+auto_script_update(){ trim_file "$ASU_LOG";set_vars;unset scriptUpd auUPD;rm -f "${add}"/availUpd.txt /tmp/amtmNodeUpdate;autoupdate=1;checkAUenabled=1;allowUpdateNodes=1;show_amtm >/dev/null 2>&1;}
 trim_file(){ if [ -f "$1" ] && [ "$(wc -c < $1)" -gt "100000" ]; then sed -i '1,100d' "$1"; [ -n "$(tail -c1 "$1")" ] && echo >> "$1";sed -i "1s/^/Truncated log file, size over 100KB, on $(date)\n\n/" "$1";fi;}
 v_c(){
 	local v1 v2 v3 v4
 	OIFS="$IFS"; IFS="."
-	set -f; set -- $1; set +f
+	set -f; set -- ${1#v}; set +f
 	IFS="$OIFS"
-	v1="${1%%[!0-9]*}"; v1="${v1:-0}"
-	v2="${2%%[!0-9]*}"; v2="${v2:-0}"
-	v3="${3%%[!0-9]*}"; v3="${v3:-0}"
-	v4="${4%%[!0-9]*}"; v4="${v4:-0}"
-	printf "%d%03d%03d%03d\n" "$v1" "$v2" "$v3" "$v4"
+	v1="${1%%[!0-9]*}"; v1="${v1#"${v1%%[!0]*}"}"
+	v2="${2%%[!0-9]*}"; v2="${v2#"${v2%%[!0]*}"}"
+	v3="${3%%[!0-9]*}"; v3="${v3#"${v3%%[!0]*}"}"
+	v4="${4%%[!0-9]*}"; v4="${v4#"${v4%%[!0]*}"}"
+	printf "%d%03d%03d%03d\n" "${v1:-0}" "${v2:-0}" "${v3:-0}" "${v4:-0}"
 }
 
 g_i_m(){
@@ -121,35 +123,20 @@ check_email_conf(){
 
 # Remove Download Master _if_ installed after Entware
 if [ -f /opt/.asusrouter ] && grep "mount-entware.mod" /jffs/scripts/post-mount >/dev/null 2>&1; then
-	opkgFile=$(/usr/bin/find /tmp/mnt/*/entware/bin/opkg 2> /dev/null)
-	if [ -f "$opkgFile" ]; then
-		opkgDevice=${opkgFile%/entware/bin/opkg}
-		printf "\\n------------------------------\\n\\n"
-		logger -s -t amtm "Found Download Master installed, while Entware is present on $opkgDevice"
-		logger -s -t amtm "Removing Download Master now as it is incompatible with Entware"
-		service stop_nasapps >/dev/null 2>&1
-		[ -d "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)" ] &&	rm -rf "$(nvram get apps_mounted_path)/$(nvram get apps_install_folder)"
-		nvram set apps_mounted_path=
-		nvram set apps_dev=
-		nvram set apps_state_autorun=
-		nvram set apps_state_enable=
-		nvram set apps_state_install=
-		nvram set apps_state_switch=
-		nvram set apps_swap_enable=
-		nvram commit
-		if [ -L /tmp/opt ]; then
-			rm -f /tmp/opt 2> /dev/null
-			rm -f /opt 2> /dev/null
-		fi
-		service start_nasapps >/dev/null 2>&1
-		logger -s -t amtm "Download Master removed, starting Entware services on $opkgDevice now"
-		sh /jffs/scripts/post-mount $opkgDevice >/dev/null 2>&1
-		printf "\\n------------------------------\\n"
-		sleep 14
-	fi
+	g_m rmDLmaster.mod include
 fi
 
+# Remove now unsupported .mod file
+r_m x3mRouting.mod
+
 show_amtm(){
+	# Correct invalid HDD Hibernation value during swap file creation from 0 to 300
+	if [ "$(nvram get usb_idle_timeout)" = 0 ]; then
+		nvram set usb_idle_timeout=300
+		nvram commit
+		a_m " - HDD Hibernation value correctly set to 300"
+	fi
+	check_internet
 	if [ -f "${add}"/nodeUpdate.conf ]; then
 		g_m node_update.mod include
 		. "${add}"/nodeUpdate.conf
@@ -267,7 +254,7 @@ EOF
 	/jffs/scripts/YazFi YazFi 4 YazFi¦-¦enhanced¦guest¦WiFi osr EntRec
 	/jffs/scripts/scribe scribe 5 scribe¦-¦syslog-ng¦and¦logrotate osr EntReq
 	spacer
-	/opt/bin/x3mMenu x3mRouting 6 x3mRouting¦-¦Selective¦Routing EntReq
+	/jffs/scripts/ASNmanager.sh ASNmanager 6 ASN¦Manager¦-¦Advanced¦Policy-Based¦Routing
 	/jffs/addons/unbound/unbound_manager.sh unbound_manager 7 unbound¦Manager¦-¦unbound¦utility EntReq
 	/jffs/scripts/MerlinAU.sh MerlinAU 8 MerlinAU¦-¦The¦Ultimate¦Firmware¦Auto-Updater
 	/jffs/scripts/iocmon.sh IOCMON 9 IOCMON¦-¦Asuswrt-Merlin¦Security¦Intelligence¦Monitor EntRec
@@ -302,8 +289,9 @@ EOF
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager EntReq
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor EntReq
+	/jffs/addons/arteria/arteria.sh Arteria ar Arteria¦-¦A¦live¦animated¦network¦traffic¦map
 	end3rdps
-	/opt/bin/opkg entware ep Entware¦-¦Software¦repository
+	/opt/bin/opkg entware en Entware¦-¦Software¦repository¦for¦embedded¦devices
 	osr
 	tpucheck
 	ntps
@@ -338,10 +326,13 @@ EOF
 						fi
 						knownScriptsCount=$ksc
 						if [ -f /tmp/amtm-autoupdate ]; then
+							logger -t "amtm autoupdate" "End update check"
 							rm -f /tmp/amtm-autoupdate
-							autoupdate=;exit 0
+							unset autoupdate checkAUenabled;exit 0
 						fi
-						[ "$autoupdate" ] && touch /tmp/amtm-autoupdate
+						if [ "$autoupdate" ]; then
+							touch /tmp/amtm-autoupdate
+						fi
 						[ "$updateNodes" = enabled ] && [ "$allowUpdateNodes" -o "$onlyCheckNodes" ] && update_nodes
 						;;
 			osr)		[ "$ss" ] && printf "${GN_BG}%-40s ${NC}\\n\\n" " * AMTM Orphaned Script Revival (AMTM-OSR) repo";;
@@ -359,7 +350,6 @@ EOF
 										rm /tmp/amtm-tpu-check
 									fi
 								fi
-								logger -t "amtm tpucheck" "Check done"
 								exit 0
 							fi
 							[ "$dlok" ] && tps=1 || tps=
@@ -395,7 +385,10 @@ EOF
 						case "$f2" in
 							skynet)	if [ -f "$scriptloc" ] && grep -qm1 'underd0se' "$scriptloc"; then
 										jumpScript=1;[ -f "${add}/${f2}.mod" ] && r_m ${f2}.mod
-									fi;;
+									fi
+									;;
+								*)	jumpScript=
+									;;
 						esac
 						if [ -f "$scriptloc" -a -z "$jumpScript" ]; then
 							[ -z "$scnt" ] && ksc=$((ksc+1))
@@ -436,52 +429,53 @@ EOF
 							fi
 							r_m ${f2}.mod
 							case $f3 in
-								1)			case_1(){ c_e Diversion;g_m Diversion.mod include;[ "$dlok" = 1 ] && install_Diversion || show_amtm menu;};;
-								2)			case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
-								3)			case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
-								4)			case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
-								5)			case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
-								6)			case_6(){ c_e x3mRouting;g_m x3mRouting.mod include;[ "$dlok" = 1 ] && install_x3mRouting || show_amtm menu;};;
-								7)			case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
-								8)			case_8(){ g_m MerlinAU.mod include;[ "$dlok" = 1 ] && install_MerlinAU || show_amtm menu;};;
-								9)			case_9(){ g_m IOCMON.mod include;[ "$dlok" = 1 ] && install_IOCMON || show_amtm menu;};;
-								[Ss][Ee])	case_se(){ g_m SendEmail.mod include;[ "$dlok" = 1 ] && install_SendEmail || show_amtm menu;};;
-								[Jj]1)		case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
-								[Jj]2)		case_j2(){ c_e ntpMerlin;g_m ntpMerlin.mod include;[ "$dlok" = 1 ] && install_ntpMerlin || show_amtm menu;};;
-								[Jj]3)		case_j3(){ g_m scMerlin.mod include;[ "$dlok" = 1 ] && install_scMerlin || show_amtm menu;};;
-								[Ww][Ii])	case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
-								[Jj]4)		case_j4(){ c_e spdMerlin;g_m spdMerlin.mod include;[ "$dlok" = 1 ] && install_spdMerlin || show_amtm menu;};;
-								[Ww][Xx])	case_wx(){ c_e WXMON;g_m wxmon.mod include;[ "$dlok" = 1 ] && install_wxmon || show_amtm menu;};;
-								[Ww][Rr])	case_wr(){ g_m Wireless_Report.mod include;[ "$dlok" = 1 ] && install_Wireless_Report || show_amtm menu;};;
-								[Jj]5)		case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
-								[Jj]6)		case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
-								[Jj]7)		case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
-								[Mm][Ss])	case_ms(){ g_m ModSyslogUI.mod include;[ "$dlok" = 1 ] && install_ModSyslogUI || show_amtm menu;};;
-								[Uu][Ss])	case_us(){ c_e 'Unbound Stats';g_m unbound_stats.mod include;[ "$dlok" = 1 ] && install_unbound_stats || show_amtm menu;};;
-								[Vv][Nn])	case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
-								[Vv][Pp])	case_vp(){ c_e VPNMON-R3;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
-								[Kk][Mm])	case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
-								[Rr][Tt])	case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
-								[Tt][Mm])	case_tm(){ c_e TAILMON;g_m tailmon.mod include;[ "$dlok" = 1 ] && install_tailmon|| show_amtm menu;};;
-								[Bb][Mm])	case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
-								[Dd][Ii])	case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
-								[Ww][Gg])	case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
-								[Aa][Gg])	case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
-								[Ww][Ff])	case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
-								[Kk][Nn])	case_kn(){ c_e Knock;g_m Knock.mod include;[ "$dlok" = 1 ] && install_Knock || show_amtm menu;};;
-								[Aa][Ss])	case_as(){ g_m AutoSSH_Key.mod include;[ "$dlok" = 1 ] && install_AutoSSH_Key || show_amtm menu;};;
-								[Vv][Rr])	case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
-								[Ee][Pp])	case_ep(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
-								[Pp])		case_p(){ g_m personal_script.mod include;[ "$dlok" = 1 ] && install_personal_script || show_amtm menu;};;
-								[Gg])		case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
-								[Dd][Cc])	case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
-								[Ll][Cc])	case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
-								[Ee][Mm])	case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
-								[Ff][Ww])	case_fw(){ g_m fw_update.mod include;[ "$dlok" = 1 ] && install_fw_update || show_amtm menu;};;
-								[Ss][Cc])	case_sc(){ g_m sc_update.mod include;[ "$dlok" = 1 ] && install_sc_update || show_amtm menu;};;
-								[Rr][Ss])	case_rs(){ g_m reboot_scheduler.mod include;[ "$dlok" = 1 ] && install_reboot_scheduler|| show_amtm menu;};;
-								[Ss][Hh])	case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
-								[Rr][Dd])	case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
+								1)					case_1(){ c_e Diversion;g_m Diversion.mod include;[ "$dlok" = 1 ] && install_Diversion || show_amtm menu;};;
+								2)					case_2(){ g_m skynet.mod include;[ "$dlok" = 1 ] && install_skynet || show_amtm menu;};;
+								3)					case_3(){ g_m FlexQoS.mod include;[ "$dlok" = 1 ] && install_FlexQoS || show_amtm menu;};;
+								4)					case_4(){ g_m YazFi.mod include;[ "$dlok" = 1 ] && install_YazFi || show_amtm menu;};;
+								5)					case_5(){ c_e scribe;g_m scribe.mod include;[ "$dlok" = 1 ] && install_scribe || show_amtm menu;};;
+								6)					case_6(){ g_m ASNmanager.mod include;[ "$dlok" = 1 ] && install_ASNmanager || show_amtm menu;};;
+								7)					case_7(){ c_e 'unbound Manager';g_m unbound_manager.mod include;[ "$dlok" = 1 ] && install_unbound_manager || show_amtm menu;};;
+								8)					case_8(){ g_m MerlinAU.mod include;[ "$dlok" = 1 ] && install_MerlinAU || show_amtm menu;};;
+								9)					case_9(){ g_m IOCMON.mod include;[ "$dlok" = 1 ] && install_IOCMON || show_amtm menu;};;
+								[Ss][Ee])			case_se(){ g_m SendEmail.mod include;[ "$dlok" = 1 ] && install_SendEmail || show_amtm menu;};;
+								[Jj]1)				case_j1(){ c_e connmon;g_m connmon.mod include;[ "$dlok" = 1 ] && install_connmon || show_amtm menu;};;
+								[Jj]2)				case_j2(){ c_e ntpMerlin;g_m ntpMerlin.mod include;[ "$dlok" = 1 ] && install_ntpMerlin || show_amtm menu;};;
+								[Jj]3)				case_j3(){ g_m scMerlin.mod include;[ "$dlok" = 1 ] && install_scMerlin || show_amtm menu;};;
+								[Ww][Ii])			case_wi(){ g_m wicens.mod include;[ "$dlok" = 1 ] && install_wicens || show_amtm menu;};;
+								[Jj]4)				case_j4(){ c_e spdMerlin;g_m spdMerlin.mod include;[ "$dlok" = 1 ] && install_spdMerlin || show_amtm menu;};;
+								[Ww][Xx])			case_wx(){ c_e WXMON;g_m wxmon.mod include;[ "$dlok" = 1 ] && install_wxmon || show_amtm menu;};;
+								[Ww][Rr])			case_wr(){ g_m Wireless_Report.mod include;[ "$dlok" = 1 ] && install_Wireless_Report || show_amtm menu;};;
+								[Jj]5)				case_j5(){ g_m uiDivStats.mod include;[ "$dlok" = 1 ] && install_uiDivStats || show_amtm menu;};;
+								[Jj]6)				case_j6(){ g_m uiScribe.mod include;[ "$dlok" = 1 ] && install_uiScribe || show_amtm menu;};;
+								[Jj]7)				case_j7(){ g_m YazDHCP.mod include;[ "$dlok" = 1 ] && install_YazDHCP || show_amtm menu;};;
+								[Mm][Ss])			case_ms(){ g_m ModSyslogUI.mod include;[ "$dlok" = 1 ] && install_ModSyslogUI || show_amtm menu;};;
+								[Uu][Ss])			case_us(){ c_e 'Unbound Stats';g_m unbound_stats.mod include;[ "$dlok" = 1 ] && install_unbound_stats || show_amtm menu;};;
+								[Vv][Nn])			case_vn(){ c_e Vnstat;g_m Vnstat.mod include;[ "$dlok" = 1 ] && install_Vnstat || show_amtm menu;};;
+								[Vv][Pp])			case_vp(){ c_e VPNMON-R3;g_m vpnmon.mod include;[ "$dlok" = 1 ] && install_vpnmon || show_amtm menu;};;
+								[Kk][Mm])			case_km(){ c_e KILLMON;g_m killmon.mod include;[ "$dlok" = 1 ] && install_killmon || show_amtm menu;};;
+								[Rr][Tt])			case_rt(){ c_e RTRMON;g_m rtrmon.mod include;[ "$dlok" = 1 ] && install_rtrmon || show_amtm menu;};;
+								[Tt][Mm])			case_tm(){ c_e TAILMON;g_m tailmon.mod include;[ "$dlok" = 1 ] && install_tailmon|| show_amtm menu;};;
+								[Bb][Mm])			case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
+								[Dd][Ii])			case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
+								[Aa][Rr])			case_ar(){ g_m Arteria.mod include;[ "$dlok" = 1 ] && install_Arteria || show_amtm menu;};;
+								[Ww][Gg])			case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
+								[Aa][Gg])			case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
+								[Ww][Ff])			case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
+								[Kk][Nn])			case_kn(){ c_e Knock;g_m Knock.mod include;[ "$dlok" = 1 ] && install_Knock || show_amtm menu;};;
+								[Aa][Ss])			case_as(){ g_m AutoSSH_Key.mod include;[ "$dlok" = 1 ] && install_AutoSSH_Key || show_amtm menu;};;
+								[Vv][Rr])			case_vr(){ g_m vpn_routing.mod include;[ "$dlok" = 1 ] && install_vpn_routing || show_amtm menu;};;
+								[Ee][Nn]|[Ee][Pp])	case_en(){ g_m entware_setup.mod include;[ "$dlok" = 1 ] && install_Entware || show_amtm menu;};;
+								[Pp])				case_p(){ g_m personal_script.mod include;[ "$dlok" = 1 ] && install_personal_script || show_amtm menu;};;
+								[Gg])				case_g(){ c_e 'router Games';g_m games.mod include;[ "$dlok" = 1 ] && install_Games || show_amtm menu;};;
+								[Dd][Cc])			case_dc(){ g_m disk_check.mod include;[ "$dlok" = 1 ] && install_disk_check || show_amtm menu;};;
+								[Ll][Cc])			case_lc(){ g_m led_control.mod include;[ "$dlok" = 1 ] && install_led_control || show_amtm menu;};;
+								[Ee][Mm])			case_em(){ g_m email.mod include;[ "$dlok" = 1 ] && install_email || show_amtm menu;};;
+								[Ff][Ww])			case_fw(){ g_m fw_update.mod include;[ "$dlok" = 1 ] && install_fw_update || show_amtm menu;};;
+								[Ss][Cc])			case_sc(){ g_m sc_update.mod include;[ "$dlok" = 1 ] && install_sc_update || show_amtm menu;};;
+								[Rr][Ss])			case_rs(){ g_m reboot_scheduler.mod include;[ "$dlok" = 1 ] && install_reboot_scheduler|| show_amtm menu;};;
+								[Ss][Hh])			case_sh(){ g_m shell_history.mod include;[ "$dlok" = 1 ] && install_shell_history || show_amtm menu;};;
+								[Rr][Dd])			case_rd(){ g_m router_date.mod include;[ "$dlok" = 1 ] && install_router_date || show_amtm menu;};;
 							esac
 						fi;;
 		esac
@@ -654,8 +648,10 @@ EOF
 					g_i_m "${add}"
 					if [ "$updErr" = 1 ]; then
 						printf "amtm Automatic update aborted, could not retrieve version\\n" >>"$ASU_LOG"
+						logger -t "amtm autoupdate" "amtm Automatic update aborted, could not retrieve version"
 					else
 						printf "amtm sucessfully updated from v$version to v$amtmRemotever\\n" >>"$ASU_LOG"
+						logger -t "amtm autoupdate" "amtm sucessfully updated from v$version to v$amtmRemotever"
 					fi
 					exec "$0" " amtm $am"
 				else
@@ -706,6 +702,8 @@ EOF
 			else
 				if [ "$autoupdate" ]; then
 					printf "$(date +"%b %d %Y %T") Automatic update check: Everything's up to date\\n" | tee -a "$ASU_LOG"
+					logger -t "amtm autoupdate" "End update check: Everything is up to date"
+					unset autoupdate checkAUenabled
 					rm -f /tmp/amtm-autoupdate;autoupdate=;exit 0
 				else
 					a_m " Everything's up to date ($(date +"%b %d %Y %R"))"
@@ -739,7 +737,7 @@ EOF
 		isAsuCompatible=
 		p_e_l
 	fi
-
+	freeze() { printf "\033[%dA\033[J" "${1:-1}"; }
 	while true; do
 		printf "${R_BG} Enter amtm option ${NC} ";read -r selection
 		s_d_u
@@ -775,13 +773,14 @@ EOF
 			[Tt][Mm])				case_tm;break;;
 			[Bb][Mm])				case_bm;break;;
 			[Dd][Ii])				case_di;break;;
+			[Aa][Rr])				case_ar;break;;
 			[Ww][Gg])				case_wg;break;;
 			[Aa][Gg])				case_ag;break;;
 			[Ww][Ff])				case_wf;break;;
 			[Kk][Nn])				case_kn;break;;
 			[Aa][Ss])				case_as;break;;
 			[Vv][Rr])				case_vr;break;;
-			[Ee][Pp])				case_ep;break;;
+			[Ee][Nn]|[Ee][Pp])		case_en;break;;
 			[Dd][Cc])				case_dc;break;;
 			dcl|DCL)				s_l_f disk_check.log;break;;
 			dce|DCE)				[ -f "${add}"/disk_check_err.log ] && rm "${add}"/disk_check_err.log;show_amtm "disk_check_err.log dismissed";break;;
@@ -864,7 +863,7 @@ EOF
 										show_amtm " You are not thelonelycoder!"
 									fi
 									break;;
-			*)						printf "\\n                    input is not an option\\n\\n";;
+			*) 						freeze 1; continue ;;
 		esac
 	done
 }
@@ -917,6 +916,37 @@ s_l_f(){
 		fi
 	else
 		show_amtm " No $1 found"
+	fi
+}
+
+check_internet(){
+	if [ "$autoupdate" -a "$checkAUenabled" ] || [ "$su" -a "$tpu" -o "$su" -a "$tpw" ]; then
+		if [ -z "$autoupdate" -a -z "$updcheck" ]; then
+			p_e_l
+			printf " Internet connection check:"
+		fi
+		if ping -c3 -W3 80.74.145.140 >/dev/null; then
+			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to diversion.ch\\n"
+		elif ping -c3 -W3 1.1.1.1 >/dev/null; then
+			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to Cloudfare\\n"
+		elif ping -c3 -W3 8.8.8.8 >/dev/null; then
+			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to Google\\n"
+		else
+			if [ "$autoupdate" -a "$checkAUenabled" ] || [ "$su" -a "$tpu" ]; then
+				logger -t "amtm" "No internet access detected, aborting update check"
+				unset autoupdate checkAUenabled allowUpdateNodes onlyCheckNodes tpw tpu su suUpd
+				exit 0
+			else
+				printf "\\n"
+				unset autoupdate checkAUenabled allowUpdateNodes onlyCheckNodes tpw tpu su suUpd
+				show_amtm " No internet access detected, aborting\\n update check"
+			fi
+		fi
+		if [ "$autoupdate" -a "$checkAUenabled" ]; then
+			logger -t "amtm autoupdate" "Begin update check"
+		else
+			sleep 2
+		fi
 	fi
 }
 
@@ -1064,7 +1094,8 @@ auto_script_updates(){
 											*) 	printf "\\n input is not an option\\n";;
 										esac
 									done
-									sed -i '/asuUpdDay/d;/asuUpdDOW/d' "${add}"/amtmUpdate.conf;printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"\\n" >> "${add}"/amtmUpdate.conf
+									sed -i '/asuUpdDay/d;/asuUpdDOW/d' "${add}"/amtmUpdate.conf
+									printf "asuUpdDay=\"$asuUpdDay\"\\nasuUpdDOW=\"$asuUpdDOW\"\\n" >> "${add}"/amtmUpdate.conf
 									cru a amtm_Automatic_script_update "45 23 * * $asuUpdDOW amtm autoupdate"
 									c_j_s /jffs/scripts/services-start
 									sed -i '/amtm_Automatic_script_update/d' /jffs/scripts/services-start
@@ -1131,90 +1162,101 @@ asu_check(){
 }
 
 script_check(){
-	atii=1
+	atii=1;auDontCheck=
 	[ "$localVother" ] && localver=$localVother || localver="$(grep "$scriptgrep" "$scriptloc" | grep -m1 -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
 	upd="${E_BG}${NC}$localver"
 	lvtpu=$localver
 	if [ "$su" = 1 -a -z "$asuc" ]; then
-		c_url "$remoteurl" -o /tmp/amtm_script_check
-		if grep -qF -m1 "$grepcheck" /tmp/amtm_script_check 2>/dev/null; then
-			[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(grep -m1 "$scriptgrep" /tmp/amtm_script_check 2>/dev/null | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
-			case "$remotever" in *[!0-9A-Za-z._-]*) remotever= ;; esac
-			[ "$localmd5Other" ] && localmd5=$localmd5Other || localmd5="$(md5sum "$scriptloc" 2>/dev/null)"
-			localmd5="${localmd5%% *}"
-			upd="${GN_BG}$localver${NC}"
-			asu_check
+		[ "$checkAUenabled" -a "$autoupdate" -a "$(grep "#$scriptname" "${add}"/amtmUpdateScripts)" ] && auDontCheck=1
+		if [ -z "$auDontCheck" ]; then
+			c_url "$remoteurl" -o /tmp/amtm_script_check
+			if grep -qF -m1 "$grepcheck" /tmp/amtm_script_check 2>/dev/null; then
+				[ "$remoteVother" ] && remotever=$remoteVother || remotever="$(grep -m1 "$scriptgrep" /tmp/amtm_script_check 2>/dev/null | grep -oE '[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')"
+				case "$remotever" in *[!0-9A-Za-z._-]*) remotever= ;; esac
+				[ "$localmd5Other" ] && localmd5=$localmd5Other || localmd5="$(md5sum "$scriptloc" 2>/dev/null)"
+				localmd5="${localmd5%% *}"
+				upd="${GN_BG}$localver${NC}"
+				asu_check
 
-			if [ "$asuCompatible" = "yes" ]; then
-				if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
-					upd="${E_BG}<- $remotever${NC}"
-				elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
-					if [ "$allowAutoUpdate" -a "$auUPD" ]; then
-						[ "$autoupdate" ] && auUPDTxt='Automatic update of' || auUPDTxt=Updating
-						logger -t "amtm autoupdate" "$auUPDTxt $scriptname"
-						printf "$(date +"%b %d %Y %T") $auUPDTxt $scriptname\\n" | tee -a "$ASU_LOG"
-						"$scriptloc" amtmupdate
-						if [ "$?" -eq 0 ]; then
-							printf "$scriptname sucessfully updated from v$localver to v$remotever\\n" >>"$ASU_LOG"
-							logger -t "amtm autoupdate" "$scriptname sucessfully updated from v$localver to v$remotever"
-							[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
-						else
-							logger -t "amtm autoupdate" "$scriptname update v$localver to v$remotever failed"
-							printf "$scriptname update v$localver to v$remotever failed\\n" | tee -a "$ASU_LOG"
-						fi
-						localver=
-						upd="${GN_BG}$remotever${NC}"
-					else
-						if [ "$allowAutoUpdate" ]; then
-							scriptUpd=1
-							upd="*${E_BG}-> $remotever${NC}"
-						else
-							upd="${E_BG}-> $remotever${NC}"
-						fi
-						if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
-							forceOnlyUpdate=1
-						else
-							[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
-						fi
-						if [ "$tpu" ]; then
-							[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
-						fi
-						suUpd=1
-					fi
-				elif [ -z "$autoupdate" ]; then
-					if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
-						localver="No MD5";NoMD5=1
-					else
-						[ "$remotemd5Other" ] && remotemd5=$(grep -v '^readonly RELEASE_ASSET_KIND=' /tmp/amtm_script_check | md5sum 2>/dev/null) || remotemd5="$(md5sum /tmp/amtm_script_check 2>/dev/null)"
-						remotemd5="${remotemd5%% *}"
-						if [ "$localmd5" != "$remotemd5" ]; then
-							upd="${E_BG}-> MD5 upd${NC}"
-							tpUpd="-> MD5 upd"
-							[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
-							suUpd=1;MD5Show=1
-						else
+				if [ "$asuCompatible" = "yes" ]; then
+					if [ "$(v_c $localver)" -gt "$(v_c $remotever)" ]; then
+						upd="${E_BG}<- $remotever${NC}"
+					elif [ "$(v_c $localver)" -lt "$(v_c $remotever)" ] || [ "$forceScriptUpdate" ]; then
+						if [ "$allowAutoUpdate" -a "$auUPD" ]; then
+							[ "$autoupdate" ] && auUPDTxt='Automatic update of' || auUPDTxt=Updating
+							logger -t "amtm autoupdate" "$auUPDTxt $scriptname"
+							printf "$(date +"%b %d %Y %T") $auUPDTxt $scriptname\\n" | tee -a "$ASU_LOG"
+							"$scriptloc" amtmupdate
+							if [ "$?" -eq 0 ]; then
+								printf "$scriptname sucessfully updated from v$localver to v$remotever\\n" >>"$ASU_LOG"
+								logger -t "amtm autoupdate" "$scriptname sucessfully updated from v$localver to v$remotever"
+								[ "$forceScriptUpdate" ] && auUPDAGHbinUpdate=1
+							else
+								logger -t "amtm autoupdate" "$scriptname update v$localver to v$remotever failed"
+								printf "$scriptname update v$localver to v$remotever failed\\n" | tee -a "$ASU_LOG"
+							fi
 							localver=
+							upd="${GN_BG}$remotever${NC}"
+						else
+							if [ "$allowAutoUpdate" ]; then
+								scriptUpd=1
+								upd="*${E_BG}-> $remotever${NC}"
+								[ "$autoupdate" ] && logger -t "amtm autoupdate" "$scriptname update available, updating..."
+							else
+								upd="${E_BG}-> $remotever${NC}"
+							fi
+							if [ "$forceScriptUpdate" -a "$(v_c $localver)" -eq "$(v_c $remotever)" ]; then
+								forceOnlyUpdate=1
+							else
+								[ "$forceScriptUpdate" ] && tpUpd="-> $remotever ($forceScriptUpdate)" || tpUpd="-> $remotever"
+							fi
+							if [ "$tpu" ]; then
+								[ "$forceScriptUpdate" ] && echo "- $scriptname $localver -> $remotever ($forceScriptUpdate) <br>" >>/tmp/amtm-tpu-check || echo "- $scriptname $localver -> $remotever <br>" >>/tmp/amtm-tpu-check
+							fi
+							suUpd=1
+						fi
+					else
+						if grep -q -m1 '^# amtm NoMD5check' "$scriptloc"; then
+							localver="No MD5";NoMD5=1
+						else
+							if [ -z "$autoupdate" ]; then
+								[ "$remotemd5Other" ] && remotemd5=$(grep -v '^readonly RELEASE_ASSET_KIND=' /tmp/amtm_script_check | md5sum 2>/dev/null) || remotemd5="$(md5sum /tmp/amtm_script_check 2>/dev/null)"
+								remotemd5="${remotemd5%% *}"
+								if [ "$localmd5" != "$remotemd5" ]; then
+									upd="${E_BG}-> MD5 upd${NC}"
+									tpUpd="-> MD5 upd"
+									[ "$tpu" ] && echo "- $scriptname $localver, MD5 update available <br>" >>/tmp/amtm-tpu-check
+									suUpd=1;MD5Show=1
+								else
+									localver=
+								fi
+							else
+								localver=
+							fi
 						fi
 					fi
-				fi
-				if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" -a -z "$autoupdate" ] && [ -z "$forceOnlyUpdate" ]; then
-					echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
-					echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
+					if [ -z "$tpu" -o "$updcheck" ] && [ "$tpUpd" -a -z "$autoupdate" ] && [ -z "$forceOnlyUpdate" ]; then
+						echo "$(echo $scriptname)Update=\"$tpUpd\"">>"${add}"/availUpd.txt
+						echo "$(echo $scriptname)MD5=\"$localmd5\"">>"${add}"/availUpd.txt
+					fi
+				else
+					localver="${E_BG}*incompatible${NC}"; upd=
+					isAsuCompatible=no
 				fi
 			else
-				localver="${E_BG}*incompatible${NC}"; upd=
-				isAsuCompatible=no
+				upd=" ${E_BG}upd err${NC}"
+				updErr=1
+				a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC}\\n is unreachable or file check failed."
+				[ "$autoupdate" ] && logger -t "amtm autoupdate" "$scriptname Server $(echo $remoteurl | awk -F[/:] '{print $4}') is unreachable or file check failed."
 			fi
 		else
-			upd=" ${E_BG}upd err${NC}"
-			updErr=1
-			a_m " ! $scriptname: ${R}$(echo $remoteurl | awk -F[/:] '{print $4}')${NC}\\n unreachable or file check failed."
+			logger -t "amtm autoupdate" "$scriptname disabled for autoupdate."
 		fi
 	else
 		localver=
 		[ "$asuc" ] && asu_check
 	fi
-	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate forceScriptUpdate forceOnlyUpdate localmd5Other remotemd5Other
+	unset tpUpd localVother remoteVother remotever localmd5 remotemd5 allowAutoUpdate forceScriptUpdate forceOnlyUpdate localmd5Other remotemd5Other auDontCheck
 	rm -f /tmp/amtm_script_check
 }
 
@@ -1232,10 +1274,11 @@ update_amtm(){
 			thisrem=" ${E_BG}upd err${NC}"
 			amtmUpd=0
 			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
-			a_m " ! amtm: ${R}${d_name}${NC} unreachable"
+			a_m " ! amtm: ${R}${d_name}${NC} is unreachable"
+			[ "$autoupdate" ] && logger -t "amtm autoupdate" "amtm 1 Server ${d_name} is unreachable"
 		else
 			d_name="${amtmURL#*//}"; d_name="${d_name%%/*}"
-			show_amtm " ! amtm: ${R}${d_name}${NC} unreachable"
+			show_amtm " ! amtm: ${R}${d_name}${NC} is unreachable"
 		fi
 	else
 		urlNOK=
@@ -1257,11 +1300,13 @@ update_amtm(){
 				thisUpd="-> $amtmRemotever"
 				[ "$updcheck" ] && echo "- amtm $version $thisUpd" >>/tmp/amtm-tpu-check
 				amtmUpd=1
+				[ "$autoupdate" ] && logger -t "amtm autoupdate" "amtm update available: $version to $amtmRemotever."
 			elif [ "$localmd5" != "$remotemd5" -a -z "$autoupdate" ]; then
 				thisrem="${E_BG}-> MD5 upd${NC}"
 				thisUpd="-> MD5 upd"
 				[ "$updcheck" ] && echo "- amtm $version, MD5 hash change detected" >>/tmp/amtm-tpu-check
 				amtmUpd=2;MD5Show=1
+				[ "$autoupdate" ] && logger -t "amtm autoupdate" "amtm $version: MD5 hash change detected."
 			else
 				thisrem="${GN_BG}$version${NC}"
 				amtmUpd=0
@@ -1294,7 +1339,7 @@ update_amtm(){
 			logger -s -t "amtm updcheck" "Exited check, Server $d_name is unreachable"
 			exit 0
 		elif [ "$autoupdate" = 1 ]; then
-			logger -s -t "amtm autoupdate" "Server $d_name is unreachable"
+			logger -s -t "amtm autoupdate" "amtm Server $d_name is unreachable"
 			exit 0
 		elif [ "$updErr" = 1 -a "$tpu" = 1 ]; then
 			logger -s -t "amtm updcheck" "Server $d_name is unreachable"
