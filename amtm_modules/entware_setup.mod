@@ -237,9 +237,10 @@ setup_Entware(){
 		p_e_l
 		printf " Testing Entware servers availability\\n\\n"
 		es=
-		entServer='bin.entware.net Primary¦server¦by¦Entware¦team¦(recommended) primary¦server
+		entServer='bin.entware.net Primary¦server¦by¦Entware¦team¦(recommended) primary¦server¦by¦Entware¦team
 		entware.diversion.ch Mirror¦by¦thelonelycoder mirror¦by¦thelonelycoder
-		mirrors.cernet.edu.cn/entware Multiple¦mirrors¦by¦CERNET¦(China¦Education¦and¦Research¦Network) mirrors¦by¦CERNET'
+		entware.maghuro.top Mirror¦by¦maghuro mirror¦by¦maghuro
+		mirrors.cernet.edu.cn/entware Multiple¦mirrors¦by¦CERNET¦(China¦Education¦and¦Research¦Network) multiple¦mirrors¦by¦CERNET'
 		IFS='
 		'
 		set -f
