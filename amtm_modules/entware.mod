@@ -345,18 +345,18 @@ entware_installed(){
 								else
 									printf "\\n Select Entware server to use [1-$es e=Exit] ";read -r selection
 									case "$selection" in
-										1|2|3) 	if [ "$selection" -ge 1 ] && [ "$selection" -le "$es" ]; then
-													eval entServer="\$entServers$selection"
-													sed -i "1s#.*#src\/gz entware https://$entServer/$entVersion#" /opt/etc/opkg.conf
-													show_amtm " Entware server $entServer set."
-												else
-													printf "\\n input is not an option\\n"
-													selectServer
-												fi
-												;;
-										[Ee])	show_amtm menu;break;;
-										*)		printf "\\n input is not an option\\n"
-												selectServer;break;;
+										1|2|3|4)	if [ "$selection" -ge 1 ] && [ "$selection" -le "$es" ]; then
+														eval entServer="\$entServers$selection"
+														sed -i "1s#.*#src\/gz entware https://$entServer/$entVersion#" /opt/etc/opkg.conf
+														show_amtm " Entware server $entServer set."
+													else
+														printf "\\n input is not an option\\n"
+														selectServer
+													fi
+													;;
+										[Ee])		show_amtm menu;break;;
+										*)			printf "\\n input is not an option\\n"
+													selectServer;break;;
 									esac
 								fi
 							}

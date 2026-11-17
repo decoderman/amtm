@@ -272,18 +272,18 @@ setup_Entware(){
 			else
 				printf "\\n Select Entware server to use [1-$es e=Exit] ";read -r selection
 				case "$selection" in
-					1|2|3) 	if [ "$selection" -ge 1 ] && [ "$selection" -le "$es" ]; then
-								eval entServer="\$entServers$selection"
-								INST_URL="https://$entServer/$INST_URL"
-							else
-								printf "\\n input is not an option\\n"
+					1|2|3|4)	if [ "$selection" -ge 1 ] && [ "$selection" -le "$es" ]; then
+									eval entServer="\$entServers$selection"
+									INST_URL="https://$entServer/$INST_URL"
+								else
+									printf "\\n input is not an option\\n"
+									selectServer
+								fi
+								;;
+					[Ee])		r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
+					*)			printf "\\n input is not an option\\n"
 								selectServer
-							fi
-							;;
-					[Ee])	r_m entware_setup.mod;am=;show_amtm " Exited Entware install function";;
-					*)		printf "\\n input is not an option\\n"
-							selectServer
-							;;
+								;;
 				esac
 			fi
 		}
