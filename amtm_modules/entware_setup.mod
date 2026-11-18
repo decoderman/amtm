@@ -3,28 +3,15 @@
 setup_Entware(){
 
 	check_device(){
-
-		check_device_nok(){
-		rm -rf "$1/rw_test"
-		r_m entware_setup.mod;am=;show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable"
-		}
-
-		mkdir -p $1/rw_test
-		if [ -d "$1/rw_test" ]; then
-			echo "rwTest=OK" >"$1/rw_test/rw_test.txt"
-			if [ -f "$1/rw_test/rw_test.txt" ]; then
-				. "$1/rw_test/rw_test.txt"
-				if [ "$rwTest" = "OK" ]; then
-					rm -rf "$1/rw_test"
-				else
-					check_device_nok "$1"
-				fi
-			else
-				check_device_nok "$1"
+		local testdir="$1/rw_test"
+		if mkdir "$testdir"; then
+			if echo "rwTest=OK" > "$testdir/rw_test.txt" && grep -qx 'rwTest=OK' "$testdir/rw_test.txt"; then
+				rm -rf "$testdir"
+				return 0
 			fi
-		else
-			check_device_nok "$1"
+			rm -rf "$testdir"
 		fi
+		r_m entware_setup.mod;am=;show_amtm " $1\\n has not passed the device test.\\n Check if device is read and writable"
 	}
 
 	check_device_free(){
