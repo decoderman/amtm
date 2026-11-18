@@ -28,9 +28,10 @@ install_ASNmanager(){
 	printf " This installs ASN Manager - Advanced Policy-Based\\n Routing for Asuswrt-Merlin on your router.\\n\\n"
 	printf " Author: NoName79\\n snbforums.com/threads/97832/\\n"
 	c_d
-	c_url https://raw.githubusercontent.com/Outlooieu/ASNmanager/main/ASNmanager.sh -o /jffs/scripts/ASNmanager.sh && chmod 755 /jffs/scripts/ASNmanager.sh && /jffs/scripts/ASNmanager.sh install
-	sleep 2
-	if [ -f /jffs/scripts/ASNmanager.sh ]; then
+	if c_url https://raw.githubusercontent.com/Outlooieu/ASNmanager/main/ASNmanager.sh -o /jffs/scripts/ASNmanager.sh &&
+		chmod 755 /jffs/scripts/ASNmanager.sh &&
+		/jffs/scripts/ASNmanager.sh install &&
+		[ -f /jffs/scripts/ASNmanager.sh ]; then
 		show_amtm " ASN Manager installed"
 	else
 		am=;show_amtm " ASN Manager installation failed"
