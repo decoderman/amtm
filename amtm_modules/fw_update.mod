@@ -23,7 +23,6 @@ install_fw_update(){
 fw_update(){
 	rm_fw_files(){
 		r_m fw_update.mod
-		rm -f /jffs/scripts/update-notification
 		am=
 	}
 
@@ -103,6 +102,7 @@ fw_update(){
 				2)		p_e_l
 						printf " This removes the Firmware update notification\\n script.\\n"
 						c_d
+						rm -f /jffs/scripts/update-notification
 						rm_fw_files
 						show_amtm " Firmware update notification script removed"
 						break;;
