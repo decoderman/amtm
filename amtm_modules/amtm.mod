@@ -153,7 +153,7 @@ show_amtm(){
 	else
 		[ -z "$updcheck" -a -z "$tpu" ] && r_m availUpd.txt
 	fi
-	unset dlok dfc end3rdps jumpScript scnt ksc
+	unset IFS dlok dfc end3rdps jumpScript scnt ksc
 	if [ -z "$updcheck" ]; then
 		echo
 		clear

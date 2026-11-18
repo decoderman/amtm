@@ -59,7 +59,7 @@ entware_installed(){
 					fi
 				done
 				set +f
-				IFS=
+				unset IFS
 			else
 				if grep -q 'maurerr.github.io' /opt/etc/opkg.conf; then
 					entServer=maurerr.github.io
@@ -335,7 +335,7 @@ entware_installed(){
 								fi
 							done
 							set +f
-							IFS=
+							unset IFS
 
 							selectServer() {
 								if [ -z "$es" ]; then

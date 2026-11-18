@@ -262,7 +262,7 @@ setup_Entware(){
 			fi
 		done
 		set +f
-		IFS=
+		unset IFS
 
 		selectServer() {
 			if [ -z "$es" ]; then
