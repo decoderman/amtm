@@ -63,6 +63,7 @@ amtm
 | SendEmail - Script Tool to Send Email Notifications | Martinski | [Link](https://www.snbforums.com/threads/97946/) |
 | ASN Manager - Advanced Policy-Based Routing for Asuswrt-Merlin | NoName79 | [Link](https://www.snbforums.com/threads/97832/) |
 | Arteria - Live, animated map of your network’s traffic (AiMesh aware) | Scoty | [Link](https://www.snbforums.com/threads/98274/) |
+| WiFi Insight - Asuswrt-Merlin WiFI Channel monitor | Scoty | [Link](https://www.snbforums.com/threads/98228/) |
 
 amtm also offers an interface for managing a number of other features:
 

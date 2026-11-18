@@ -295,8 +295,12 @@ install_node_update(){
 		show_amtm " This router has no AiMesh Nodes attached.\\n Automatic Node updates is not available."
 	elif [ ! -f "/root/.ssh/id_dropbear" ]; then
 		if [ ! -f /jffs/addons/AutoSSHKey/autosshkey.sh ]; then
+			r_m node_update.mod
+			am=
 			show_amtm " Install addon 'Auto SSH-Key' with ${R}as${NC} first.\\n Then Generate RSA Keys for AiMesh Nodes."
 		else
+			r_m node_update.mod
+			am=
 			show_amtm " Run ${R}as${NC} 'Auto SSH-Key' and\\n Generate RSA Keys for AiMesh Nodes."
 		fi
 	fi

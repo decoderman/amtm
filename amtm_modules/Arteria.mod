@@ -31,7 +31,6 @@ install_Arteria(){
 	c_d
 	c_url https://github.com/IfSugar/arteria/releases/latest/download/arteria.sh -o /tmp/arteria.sh && sh /tmp/arteria.sh install
 	p_e_t "return to amtm"
-	sleep 2
 	if [ -f /jffs/addons/arteria/arteria.sh ]; then
 		show_amtm " Arteria installed"
 	else

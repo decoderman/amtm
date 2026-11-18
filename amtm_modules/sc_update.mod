@@ -124,11 +124,13 @@ case "${1}" in
 				amtm updcheck
 
 				if [ -s /tmp/amtm-tpu-check ]; then
-					if grep -q 'No script updates available' /tmp/amtm-tpu-check; then
+					if grep -q '^No script updates' /tmp/amtm-tpu-check; then
 						haveUpd=
-					else
+					elif grep -q '^Available script' /tmp/amtm-tpu-check && grep -q '^-' /tmp/amtm-tpu-check; then
 						haveUpd=1
 						sed -i 's/^Available /Available amtm /' /tmp/amtm-tpu-check
+					else
+						haveUpd=
 					fi
 				else
 					logger -t amtm "unable to check for scripts update, unknown error"

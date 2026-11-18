@@ -11,7 +11,7 @@ format_disk(){
 
 	if ! grep -q "^. ${add}/disk_check.mod" /jffs/scripts/pre-mount 2>/dev/null; then
 		p_e_l
-		printf " You are about to format a USB disk\\n\\n It is highly recommended to also\\n install the amtm disk_check script.\\n\\n"
+		printf " You are about to format a USB disk\\n\\n It's highly recommended to also install\\n the amtm disk_check script.\\n\\n"
 		printf " It runs a filesystem check on compatible\\n USB storage devices before they are mounted\\n during (re)booting, fixing common errors.\\n"
 		while true; do
 			printf "\\n Install the disk_check script? [1=Yes 2=No] ";read -r diskcheck

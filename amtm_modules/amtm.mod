@@ -1,11 +1,11 @@
 #!/bin/sh
 #bof
 
-version=7.2
-release="November 15 2026"
+version=7.3
+release="November 18 2026"
 amtmTitle="Asuswrt-Merlin Terminal Menu"
 rd_version=1.3 # Router date keeper
-fw_version=1.3 # Firmware update notification
+fw_version=1.4 # Firmware update notification
 wl_MD5=df39155b8ffe72c91f37247307fb031d # shared-amtm-whitelist
 EMAIL_DIR="${add}/mail"
 ASU_LOG="${add}"/amtmUpdate.log
@@ -289,7 +289,9 @@ EOF
 	/jffs/addons/wireguard/wg_manager.sh wireguard_manager wg WireGuard¦Session¦Manager EntReq
 	/jffs/dnscrypt/installer dnscrypt di dnscrypt¦installer
 	/jffs/scripts/tailmon.sh tailmon tm TAILMON¦-¦Tailscale¦installer¦and¦monitor EntReq
+	spacer
 	/jffs/addons/arteria/arteria.sh Arteria ar Arteria¦-¦A¦live¦animated¦network¦traffic¦map
+	/jffs/addons/wifiinsight/wifiinsight.sh WiFiInsight in WiFi¦Insight¦-¦Asuswrt-Merlin¦WiFI¦Channel¦monitor
 	end3rdps
 	/opt/bin/opkg entware en Entware¦-¦Software¦repository¦for¦embedded¦devices
 	osr
@@ -318,13 +320,15 @@ EOF
 			end3rdps) 	[ -z "$updcheck" -a "$atii" ] || [ "$ss" ] && echo
 						atii=;end3rdps=1
 						scnt=1
-						[ -s "${add}"/amtmUpdate.conf ] && . "${add}"/amtmUpdate.conf
-						if [ -z "$knownScriptsCount" ]; then
-							echo "knownScriptsCount=$ksc" >> "${add}"/amtmUpdate.conf
-						elif [ "$ksc" != "$knownScriptsCount" ]; then
-							sed -i "s/knownScriptsCount.*/knownScriptsCount=$ksc/g" "${add}"/amtmUpdate.conf
+						if [ -s "${add}"/amtmUpdate.conf ]; then
+							. "${add}"/amtmUpdate.conf
+							if ! grep -q 'knownScriptsCount' "${add}"/amtmUpdate.conf && [ -z "$knownScriptsCount" ]; then
+								echo "knownScriptsCount=$ksc" >> "${add}"/amtmUpdate.conf
+							elif [ "$ksc" != "$knownScriptsCount" ]; then
+								sed -i "s/knownScriptsCount.*/knownScriptsCount=$ksc/g" "${add}"/amtmUpdate.conf
+							fi
+							knownScriptsCount=$ksc
 						fi
-						knownScriptsCount=$ksc
 						if [ -f /tmp/amtm-autoupdate ]; then
 							logger -t "amtm autoupdate" "End update check"
 							rm -f /tmp/amtm-autoupdate
@@ -459,6 +463,7 @@ EOF
 								[Bb][Mm])			case_bm(){ g_m backupmon.mod include;[ "$dlok" = 1 ] && install_backupmon || show_amtm menu;};;
 								[Dd][Ii])			case_di(){ g_m dnscrypt.mod include;[ "$dlok" = 1 ] && install_dnscrypt || show_amtm menu;};;
 								[Aa][Rr])			case_ar(){ g_m Arteria.mod include;[ "$dlok" = 1 ] && install_Arteria || show_amtm menu;};;
+								[Ii][Nn])			case_in(){ g_m WiFiInsight.mod include;[ "$dlok" = 1 ] && install_WiFiInsight || show_amtm menu;};;
 								[Ww][Gg])			case_wg(){ c_e 'WireGuard Session Manager';g_m wireguard_manager.mod include;[ "$dlok" = 1 ] && install_wireguard_manager || show_amtm menu;};;
 								[Aa][Gg])			case_ag(){ c_e 'Asuswrt-Merlin-AdGuardHome-Installer';g_m AdGuardHome.mod include;[ "$dlok" = 1 ] && install_AdGuardHome || show_amtm menu;};;
 								[Ww][Ff])			case_wf(){ g_m WAN_Failover.mod include;[ "$dlok" = 1 ] && install_WAN_Failover || show_amtm menu;};;
@@ -774,6 +779,7 @@ EOF
 			[Bb][Mm])				case_bm;break;;
 			[Dd][Ii])				case_di;break;;
 			[Aa][Rr])				case_ar;break;;
+			[Ii][Nn])				case_in;break;;
 			[Ww][Gg])				case_wg;break;;
 			[Aa][Gg])				case_ag;break;;
 			[Ww][Ff])				case_wf;break;;
@@ -809,7 +815,11 @@ EOF
 			[Ss][Hh])				case_sh;break;;
 			[Rr][Dd])				case_rd;break;;
 			[Cc][Jj])				c_j;break;;
-			[Aa][Uu])				[ "$knownScriptsCount" != "$(wc -l < ${add}/amtmUpdateScripts)" ] && auto_script_updates || auto_script_updates silent
+			[Aa][Uu])				if [ -s "${add}"/amtmUpdate.conf -a "$knownScriptsCount" ]; then
+										[ "$knownScriptsCount" != "$(wc -l < ${add}/amtmUpdateScripts)" ] && auto_script_updates || auto_script_updates silent
+									else
+										auto_script_updates
+									fi
 									break;;
 			[Aa][Nn])				if [ -f "${add}"/node_update.mod ]; then
 										g_m node_update.mod include
@@ -925,12 +935,24 @@ check_internet(){
 			p_e_l
 			printf " Internet connection check:"
 		fi
-		if ping -c3 -W3 80.74.145.140 >/dev/null; then
-			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to diversion.ch\\n"
-		elif ping -c3 -W3 1.1.1.1 >/dev/null; then
-			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to Cloudfare\\n"
-		elif ping -c3 -W3 8.8.8.8 >/dev/null; then
-			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to Google\\n"
+		# Server ping order changes at 01-19, 20-39 and 40-59 minutes router time when u or autoupdate runs.
+		case "$(date +"%M")" in
+			[0-1][0-9]) ping1=8.8.8.8;to1=Google
+						ping2=80.74.145.140;to2=diversion.ch
+						ping3=1.1.1.1;to3=Cloudfare;;
+			[2-3][0-9]) ping1=1.1.1.1;to1=Cloudfare
+						ping2=8.8.8.8;to2=Google
+						ping3=80.74.145.140;to3=diversion.ch;;
+			[4-5][0-9]) ping1=80.74.145.140;to1=diversion.ch
+						ping2=1.1.1.1;to2=Cloudfare
+						ping3=8.8.8.8;to3=Google;;
+		esac
+		if ping -c3 -W3 $ping1 >/dev/null; then
+			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to $to1\\n"
+		elif ping -c3 -W3 $ping2 >/dev/null; then
+			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to $to2\\n"
+		elif ping -c3 -W3 $ping3 >/dev/null; then
+			[ -z "$autoupdate" -a -z "$updcheck" ] && printf " OK to $to3\\n"
 		else
 			if [ "$autoupdate" -a "$checkAUenabled" ] || [ "$su" -a "$tpu" ]; then
 				logger -t "amtm" "No internet access detected, aborting update check"
@@ -951,7 +973,7 @@ check_internet(){
 }
 
 auto_script_updates(){
-
+	[ ! -f "${add}"/amtmUpdateScripts ] && touch "${add}"/amtmUpdateScripts
 	asu_loop(){
 		printf " Disable/Enable script for ${GN}amtmupdate${NC} in amtm\n\n"
 		printf " When enabled, this setting allows amtm to
@@ -1167,6 +1189,7 @@ script_check(){
 	upd="${E_BG}${NC}$localver"
 	lvtpu=$localver
 	if [ "$su" = 1 -a -z "$asuc" ]; then
+		[ ! -f "${add}"/amtmUpdateScripts ] && touch "${add}"/amtmUpdateScripts
 		[ "$checkAUenabled" -a "$autoupdate" -a "$(grep "#$scriptname" "${add}"/amtmUpdateScripts)" ] && auDontCheck=1
 		if [ -z "$auDontCheck" ]; then
 			c_url "$remoteurl" -o /tmp/amtm_script_check
