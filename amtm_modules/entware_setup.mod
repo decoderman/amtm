@@ -153,15 +153,16 @@ setup_Entware(){
 	echo " Select device to install Entware to"
 	echo
 
+	can_reuse_entware(){
+		[ -f "$1/entware/bin/opkg" ] && grep -q "$availEntVer" "$1/entware/etc/opkg.conf" || return 1
+		[ -n "$useBackport" ] || ! grep -q 'maurerr.github.io\|garycnew.github.io' "$1/entware/etc/opkg.conf"
+	}
+
 	i=1;unset noad usePreviousEntware
 	for mounted in $(/bin/mount | grep -E "$PART_TYPES" | cut -d" " -f3); do
 		echo " $i. ${GN}$mounted${NC}"
-		if [ -f "$mounted/entware/bin/opkg" ] && grep -q "$availEntVer" "$mounted/entware/etc/opkg.conf"; then
-			usePrevOK=1
-			if grep -q 'maurerr.github.io\|garycnew.github.io' "$mounted/entware/etc/opkg.conf" && [ -z "$useBackport" ]; then
-				usePrevOK=
-			fi
-			[ "$usePrevOK" ] && printf "    Found compatible previous Entware\\n    installation on this device.\\n"
+		if can_reuse_entware "$mounted"; then
+			printf "    Found compatible previous Entware\\n    installation on this device.\\n"
 		fi
 		eval mounts$i="$mounted"
 		noad="${noad}${i} "
@@ -195,7 +196,7 @@ setup_Entware(){
 	echo " Device checks passed"
 
 
-	if [ -f "$entDev/entware/bin/opkg" -a "$usePrevOK" ] && grep -q "$availEntVer" "$entDev/entware/etc/opkg.conf"; then
+	if can_reuse_entware "$entDev"; then
 		p_e_l
 		echo " ${GN_BG} $entDev ${NC}"
 		printf "\\n The above device contains a compatible\\n previous $entVer\\n installation, select what to do.\\n\\n"
